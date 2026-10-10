@@ -1,0 +1,10 @@
+.worktrees/
+.superpowers/
+.local/
+.venv/
+__pycache__/
+*.pyc
+.env
+test-results/
+*.pem
+*.db
