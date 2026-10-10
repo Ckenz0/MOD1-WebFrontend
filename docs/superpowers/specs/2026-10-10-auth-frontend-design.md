@@ -1,6 +1,7 @@
-# Proposta: frontend de demonstração da autenticação
+# Frontend de demonstração da autenticação
 
-Data: 10/10/2026. Status: proposta para revisão; implementação ainda não iniciada.
+Data: 10/10/2026. Status: especificação aprovada pelo usuário; aguardando revisão
+do plano de implementação.
 
 ## Objetivo e contexto
 
@@ -32,8 +33,8 @@ determina framework nem fornece um logotipo oficial utilizável como arquivo.
 3. **Next.js.** Possibilita lógica intermediária no servidor, mas adiciona um
    runtime e responsabilidades de autenticação que este MVP não precisa.
 
-A especificação abaixo detalha a recomendação 1 para aprovação. Não presume que
-ela já tenha sido escolhida pelo usuário.
+A abordagem aprovada é HTML, CSS e JavaScript com módulos ES, conforme a
+recomendação 1. As alternativas ficam registradas como contexto da decisão.
 
 ## Escopo e telas
 
@@ -188,7 +189,6 @@ comprova PostgreSQL, Docker ou deploy.
 
 ## Próxima etapa
 
-Revisar esta proposta, confirmar a abordagem e ajustar o que for necessário.
-Após aprovação da especificação, escrever o plano de implementação conforme
-`superpowers:writing-plans` e selecionar sua forma de execução. Só então
-iniciar o código do frontend.
+A especificação foi aprovada. Revisar o plano de implementação elaborado
+conforme `superpowers:writing-plans` e selecionar sua forma de execução. Só
+então iniciar o código do frontend.
