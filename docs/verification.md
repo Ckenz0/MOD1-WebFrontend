@@ -65,3 +65,6 @@ verificado por regressão e pela suíte, conforme o método de execução aprova
 
 PostgreSQL/Docker/deploy e revogação no servidor foram considerados na revisão:
 permanecem, respectivamente, pendentes de validação e fora do contrato de logout local.
+
+Entrega publicada na branch `feat/auth-ui`, com [PR #1 em rascunho](https://github.com/Ckenz0/MOD1-Frontend/pull/1)
+para revisão. A worktree local foi preservada para execução e ajustes.

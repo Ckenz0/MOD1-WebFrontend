@@ -257,7 +257,7 @@ Modificar produto somente para defeitos efetivamente encontrados.
 - [x] Revisar toda a entrega conforme o método de execução selecionado, corrigir
   achados relevantes e revalidar apenas o que mudou.
 - [x] Commit: `docs: document frontend usage and verification`.
-- [ ] Enviar a branch ao GitHub e entregar arquivos, evidências e instruções.
+- [x] Enviar a branch ao GitHub e entregar arquivos, evidências e instruções.
   Não presumir autorização para merge; disponibilizar o resultado para revisão.
 
 Comandos finais:
