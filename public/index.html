@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Acesso e identificação de usuários do módulo 1 de Engenharia de Software.">
+  <title>Autenticação · Módulo 1</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231E2A5A'/%3E%3Cpath d='M11 15v-4a5 5 0 0 1 10 0v4M9 15h14v10H9z' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="preload" href="assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/app.css">
+  <script type="module" src="scripts/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Ir para o conteúdo</a>
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 10V7a4 4 0 0 1 8 0v3M6 10h12v10H6zM12 14v2"/></svg></span>
+      <div><span class="brand-name">Autenticação</span><span class="brand-description">Módulo 1 · Engenharia de Software</span></div>
+    </div>
+    <button type="button" id="theme-toggle" class="theme-button" aria-label="Ativar tema escuro">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 14a8 8 0 0 1-10-10A8 8 0 1 0 20 14Z"/></svg><span id="theme-label">Tema escuro</span>
+    </button>
+  </header>
+  <main id="main" tabindex="-1">
+    <section id="login-view" class="auth-panel" aria-labelledby="login-title">
+      <h1 id="login-title" tabindex="-1">Entrar</h1>
+      <p class="intro">Acesse com a conta fornecida pelo responsável do módulo.</p>
+      <div id="login-message" class="message" role="alert" aria-atomic="true" hidden></div>
+      <form id="login-form">
+        <div class="field"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="username" placeholder="voce@exemplo.com" required spellcheck="false" autocapitalize="none"></div>
+        <div class="field"><label for="password">Senha</label><div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" required><button id="password-toggle" type="button" aria-label="Mostrar senha" aria-pressed="false" aria-controls="password">Mostrar</button></div></div>
+        <button id="login-button" class="button button-primary full-width" type="submit">Entrar<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+        <p id="login-progress" class="visually-hidden" role="status" aria-live="polite"></p>
+      </form>
+      <p class="access-note"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-9v1"/></svg><span>Ainda não tem acesso? Solicite uma conta ao responsável do módulo.</span></p>
+    </section>
+    <section id="profile-view" class="auth-panel profile-panel" aria-labelledby="profile-title" hidden>
+      <div class="identity-heading"><span class="avatar" id="avatar" aria-hidden="true"></span><h1 id="profile-title" tabindex="-1"></h1></div>
+      <p class="intro">Sua identidade foi confirmada. Estes são os dados da sua conta.</p>
+      <div id="profile-message" class="message" role="alert" aria-atomic="true" hidden></div>
+      <dl class="account-details">
+        <div><dt>E-mail</dt><dd id="profile-email"></dd></div>
+        <div><dt>Situação da conta</dt><dd class="account-status"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Ativa</dd></div>
+        <div><dt>Conta criada em</dt><dd id="profile-created"></dd></div>
+      </dl>
+      <div class="profile-actions"><button id="refresh-button" type="button" class="button button-primary">Atualizar dados</button><button id="logout-button" type="button" class="button button-secondary">Sair</button></div>
+      <p id="profile-progress" class="visually-hidden" role="status" aria-live="polite"></p>
+      <p class="session-note">Ao sair ou recarregar esta página, você precisará entrar novamente.</p>
+    </section>
+    <noscript><p class="message">Ative o JavaScript no navegador para acessar sua conta.</p></noscript>
+  </main>
+  <footer class="site-footer">Projeto de Engenharia de Software · 2026</footer>
+</body>
+</html>

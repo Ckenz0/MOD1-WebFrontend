@@ -1,0 +1,44 @@
+/* Shared identity: Guia Visual Módulo 6, v1.0, outubro/2026. */
+:root {
+  --color-primary: #1E2A5A;
+  --color-primary-hover: #2F3F7F;
+  --color-brand-accent: #C8102E;
+  --color-bg: #F6F7FA;
+  --color-surface: #FFFFFF;
+  --color-border: #E2E5EC;
+  --color-text: #1A1D29;
+  --color-text-muted: #5B6275;
+  --color-priority-critical: #DC2626;
+  --color-priority-high: #EA580C;
+  --color-priority-medium: #B45309;
+  --color-priority-low: #64748B;
+  --color-success: #16A34A;
+  --chart-1: #3B5BDB;
+  --chart-2: #0EA5A4;
+  --chart-3: #8B5CF6;
+  --chart-4: #F59E0B;
+  --chart-5: #EC4899;
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 24px;
+  --text-2xl: 32px;
+  --radius-panel: 16px;
+  --radius-control: 8px;
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 24px;
+  --space-lg: 32px;
+  --space-xl: 40px;
+}
+[data-theme="dark"] {
+  --color-bg: #0F1220;
+  --color-surface: #181C2E;
+  --color-border: #2A2F45;
+  --color-text: #E8EAF2;
+  --color-text-muted: #9AA0B4;
+}
+.metric { font-variant-numeric: tabular-nums; }
