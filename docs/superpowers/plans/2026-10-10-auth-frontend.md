@@ -1,6 +1,6 @@
 # Authentication Frontend Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Entregar um frontend de demonstração que autentica contas reais e
 consulta sua identidade, seguindo a identidade visual do módulo 6.
@@ -81,14 +81,14 @@ Documentação: `README.md`, `PRODUCT.md`, `DESIGN.md` e
   limpo. Para testar apenas módulos, o servidor oferece `/__test__/`, página vazia
   de mesma origem. `RealApiCase` será definida na Task 3 para integração sem mocks.
 
-- [ ] Criar infraestrutura de teste e fixar as dependências resolvidas. Testes
+- [x] Criar infraestrutura de teste e fixar as dependências resolvidas. Testes
   podem carregar módulos por uma página mínima servida pelo próprio suporte.
-- [ ] Escrever `test_literal_password_and_bearer_header`, capturando a chamada
+- [x] Escrever `test_literal_password_and_bearer_header`, capturando a chamada
   enviada e verificando `username`, senha `"  password12345  "`,
   `application/x-www-form-urlencoded` e `Authorization: Bearer synthetic-token`.
-- [ ] Escrever `test_invalid_responses_fail_closed` para JSON malformado,
+- [x] Escrever `test_invalid_responses_fail_closed` para JSON malformado,
   `expires_in` ausente/zero/string e identidade incompleta; nenhum gera sucesso.
-- [ ] Escrever `test_session_expires_and_never_persists`, com relógio injetado:
+- [x] Escrever `test_session_expires_and_never_persists`, com relógio injetado:
   token expira no limite, `clear()` remove acesso e local/sessionStorage ficam vazios.
 
 ```python
@@ -110,13 +110,13 @@ def test_session_expires_and_never_persists(self):
                              "active":False, "stored":0})
 ```
 
-- [ ] Escrever casos distintos para 401, 422, 503, rede, timeout e cancelamento;
+- [x] Escrever casos distintos para 401, 422, 503, rede, timeout e cancelamento;
   erros nunca incluem senha, JWT ou conteúdo bruto de exceção remota.
-- [ ] Executar os testes antes dos módulos; confirmar falha pela ausência do produto.
-- [ ] Implementar as interfaces, validação de resposta e AbortController combinado
+- [x] Executar os testes antes dos módulos; confirmar falha pela ausência do produto.
+- [x] Implementar as interfaces, validação de resposta e AbortController combinado
   com timeout; sessões expiradas não retornam token utilizável.
-- [ ] Executar novamente o conjunto alvo; confirmar zero falhas e fechar recursos.
-- [ ] Commit: `feat: add authentication client and in-memory session`.
+- [x] Executar novamente o conjunto alvo; confirmar zero falhas e fechar recursos.
+- [x] Commit: `feat: add authentication client and in-memory session`.
 
 Comando: `uv run --no-project --with-requirements tests/requirements.txt python -m unittest discover -s tests -p test_api_session.py -v`.
 
@@ -135,7 +135,7 @@ Comando: `uv run --no-project --with-requirements tests/requirements.txt python 
 - Perfil apresenta nome/e-mail reais e ações “Atualizar dados” e “Sair”.
 - Regiões de mensagem identificam carregamento e erros para leitores de tela.
 
-- [ ] Escrever testes de login válido: resposta de token sozinha não mostra perfil;
+- [x] Escrever testes de login válido: resposta de token sozinha não mostra perfil;
   perfil só aparece após `/auth/me`; segredo nunca aparece no DOM nem em storage.
 
 ```python
@@ -151,29 +151,29 @@ def test_login_displays_identity_without_exposing_token(self):
     self.assertEqual(self.page.evaluate("sessionStorage.length"), 0)
 ```
 
-- [ ] Escrever `test_login_errors_and_duplicate_submit`: 401 exibe
+- [x] Escrever `test_login_errors_and_duplicate_submit`: 401 exibe
   “E-mail ou senha inválidos”; envio duplo gera só um pedido; 503/rede permitem retry.
-- [ ] Escrever `test_logout_ignores_late_identity`: atrasar atualização do perfil,
+- [x] Escrever `test_logout_ignores_late_identity`: atrasar atualização do perfil,
   clicar “Sair”, liberar resposta e confirmar que a tela de login permanece.
-- [ ] Escrever `test_expiration_after_hidden_tab`: avançar relógio enquanto aba
+- [x] Escrever `test_expiration_after_hidden_tab`: avançar relógio enquanto aba
   está inativa; retomar e confirmar login antes de nova chamada autenticada.
-- [ ] Escrever `test_untrusted_long_identity_is_plain_text`: usar nome contendo
+- [x] Escrever `test_untrusted_long_identity_is_plain_text`: usar nome contendo
   `<img src=x onerror=alert(1)>`, e-mail longo e confirmar texto literal/sem overflow.
-- [ ] Escrever `test_theme_when_storage_is_blocked`: fazer Storage lançar erro;
+- [x] Escrever `test_theme_when_storage_is_blocked`: fazer Storage lançar erro;
   login e seleção de tema ainda funcionam. Incluir reload: sessão se perde, tema permanece
   apenas quando o armazenamento está disponível.
-- [ ] Executar o conjunto alvo e confirmar falhas pela ausência das telas.
-- [ ] Ler `impeccable` craft-floor antes de editar a UI; registrar composição
+- [x] Executar o conjunto alvo e confirmar falhas pela ausência das telas.
+- [x] Ler `impeccable` craft-floor antes de editar a UI; registrar composição
   aprovada e fontes oficiais com licenças, sem acrescentar capacidades ao MVP.
-- [ ] Implementar HTML/CSS/tokens com identificação textual e dois temas;
+- [x] Implementar HTML/CSS/tokens com identificação textual e dois temas;
   mensagens específicas, foco visível, teclado, campos e controles acessíveis.
-- [ ] Implementar eventos, senha literal, abort de pedidos, proteção contra
+- [x] Implementar eventos, senha literal, abort de pedidos, proteção contra
   resposta atrasada e retorno ao login em expiração/401. Falha de rede ao atualizar
   perfil preserva dados anteriores e informa o erro enquanto a sessão for válida.
-- [ ] Limpar a senha após login bem-sucedido ou saída; mostrar/ocultar preserva o
+- [x] Limpar a senha após login bem-sucedido ou saída; mostrar/ocultar preserva o
   valor e altera estado acessível. Enter envia pelo mesmo fluxo do botão.
-- [ ] Executar o conjunto alvo; confirmar zero falhas.
-- [ ] Commit: `feat: add branded login and authenticated user interface`.
+- [x] Executar o conjunto alvo; confirmar zero falhas.
+- [x] Commit: `feat: add branded login and authenticated user interface`.
 
 Comando: `uv run --no-project --with-requirements tests/requirements.txt python -m unittest discover -s tests -p test_ui.py -v`.
 
@@ -195,7 +195,7 @@ necessário em `tests/browser_support.py`; criar instruções iniciais em `READM
   sintética usa `conta@example.com`, nome `Conta de teste` e senha literal
   `"  password12345  "`. Não usar dados de pessoas reais nos fixtures.
 
-- [ ] Escrever `test_real_login_identity_update_and_logout`, usando navegador real
+- [x] Escrever `test_real_login_identity_update_and_logout`, usando navegador real
   e API real; verificar nome/e-mail, atualização, credenciais incorretas e saída.
 
 ```python
@@ -211,18 +211,18 @@ def test_real_login_identity_update_and_logout(self):
     expect(self.page.get_by_role("button", name="Entrar", exact=True)).to_be_visible()
 ```
 
-- [ ] Escrever `test_disallowed_origin_cannot_complete_login`, alterando apenas
+- [x] Escrever `test_disallowed_origin_cannot_complete_login`, alterando apenas
   CORS no fixture; a UI não autentica e explica falha de conexão.
-- [ ] Escrever `test_real_inactive_user_rejected`: desativar conta pelo caso de uso
+- [x] Escrever `test_real_inactive_user_rejected`: desativar conta pelo caso de uso
   administrativo no fixture; novo login é recusado e `/auth/me` deixa de autenticar.
-- [ ] Executar testes com backend configurado; qualquer falha de produto precisa
+- [x] Executar testes com backend configurado; qualquer falha de produto precisa
   ser investigada antes de ajustes. Skip não é considerado aprovação.
-- [ ] Ajustar integração ou fixture somente conforme falhas observadas; rodar
+- [x] Ajustar integração ou fixture somente conforme falhas observadas; rodar
   novamente os casos afetados até passarem.
-- [ ] Confirmar limpeza de banco/chave e encerramento dos subprocessos. Credenciais
+- [x] Confirmar limpeza de banco/chave e encerramento dos subprocessos. Credenciais
   são sintéticas; fixtures nunca usam bancos, chaves ou contas reais do usuário.
-- [ ] Documentar execução dos serviços, CORS, CLI de contas e limites do logout.
-- [ ] Commit: `test: verify browser authentication against the real API`.
+- [x] Documentar execução dos serviços, CORS, CLI de contas e limites do logout.
+- [x] Commit: `test: verify browser authentication against the real API`.
 
 Comandos PowerShell, após preparar o ambiente existente do backend:
 
@@ -241,22 +241,22 @@ Modificar produto somente para defeitos efetivamente encontrados.
 
 **Interfaces:** produto das Tasks 1–3; guia visual e especificação aprovada.
 
-- [ ] Capturar uma rodada conjunta: desktop 1440×1000 e celular 390×844, ambos
+- [x] Capturar uma rodada conjunta: desktop 1440×1000 e celular 390×844, ambos
   nos temas claro/escuro, cobrindo login e perfil. Inspecionar foco por teclado,
   mensagens anunciadas, contraste, fontes locais, texto longo e overflow.
-- [ ] Corrigir em um único lote os defeitos encontrados; confirmar somente as
+- [x] Corrigir em um único lote os defeitos encontrados; confirmar somente as
   capturas/verificações afetadas, com no máximo mais uma rodada visual.
-- [ ] Documentar o sistema construído em DESIGN.md e seu sidecar de tokens;
+- [x] Documentar o sistema construído em DESIGN.md e seu sidecar de tokens;
   registrar fontes, licenças, layouts e estados reais, sem inventar logotipo.
-- [ ] Finalizar README com `python -m http.server 5173 --bind 127.0.0.1 --directory public`,
+- [x] Finalizar README com `python -m http.server 5173 --bind 127.0.0.1 --directory public`,
   configuração pública da API, CORS e roteiro de demonstração login → perfil → sair.
-- [ ] Escrever matriz de cobertura em `docs/verification.md`: testes de navegador,
+- [x] Escrever matriz de cobertura em `docs/verification.md`: testes de navegador,
   integração HTTP real, CLI/JWKS em suíte do backend, PostgreSQL/Docker/deploy pendentes.
-- [ ] Rodar uma suíte final completa e `git diff --check`; ler saída integral e
+- [x] Rodar uma suíte final completa e `git diff --check`; ler saída integral e
   registrar aprovados, falhas e skips. Não repetir após sucesso sem novas mudanças.
 - [ ] Revisar toda a entrega conforme o método de execução selecionado, corrigir
   achados relevantes e revalidar apenas o que mudou.
-- [ ] Commit: `docs: document frontend usage and verification`.
+- [x] Commit: `docs: document frontend usage and verification`.
 - [ ] Enviar a branch ao GitHub e entregar arquivos, evidências e instruções.
   Não presumir autorização para merge; disponibilizar o resultado para revisão.
 

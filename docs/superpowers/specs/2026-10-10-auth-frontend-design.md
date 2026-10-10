@@ -1,7 +1,7 @@
 # Frontend de demonstração da autenticação
 
-Data: 10/10/2026. Status: especificação aprovada pelo usuário; aguardando revisão
-do plano de implementação.
+Data: 10/10/2026. Status: especificação e plano aprovados pelo usuário;
+implementados na branch `feat/auth-ui`. Evidências em `docs/verification.md`.
 
 ## Objetivo e contexto
 
@@ -189,6 +189,5 @@ comprova PostgreSQL, Docker ou deploy.
 
 ## Próxima etapa
 
-A especificação foi aprovada. Revisar o plano de implementação elaborado
-conforme `superpowers:writing-plans` e selecionar sua forma de execução. Só
-então iniciar o código do frontend.
+A especificação e o plano foram aprovados e implementados. A branch
+`feat/auth-ui` reúne o frontend, testes e documentação para revisão e integração.

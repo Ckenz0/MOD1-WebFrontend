@@ -78,4 +78,6 @@ podem ser reaproveitados. Projetos, equipes e backlog pertencem a outros serviç
 Para hospedagem futura, API e frontend precisam ser acessíveis entre si, com HTTPS
 e CORS configurados para a origem publicada.
 
-Fontes e licenças: [docs/font-sources.md](docs/font-sources.md).
+Sistema visual: [DESIGN.md](DESIGN.md). Fontes e licenças:
+[docs/font-sources.md](docs/font-sources.md). Cobertura, resultados e capturas:
+[docs/verification.md](docs/verification.md).

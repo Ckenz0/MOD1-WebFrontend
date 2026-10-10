@@ -1,0 +1,53 @@
+# Verificação do frontend
+
+Execução em 10/10/2026, Windows, Python 3.12 e Microsoft Edge com Playwright.
+Plano: `docs/superpowers/plans/2026-10-10-auth-frontend.md`.
+
+## Resultado reproduzível
+
+```powershell
+$env:AUTH_BACKEND_PATH = 'C:\Users\cauek\.codex\worktrees\2ecd\MOD1-EngenhariaSoftware'
+uv run --no-project --with-requirements tests/requirements.txt python -m unittest discover -s tests -v
+git diff --check
+```
+
+Resultado: **24 testes aprovados, zero falhas, zero skips**, em 24,027 s.
+`git diff --check` passou. A integração usa a implementação `feat/auth-mvp`
+do backend, com SQLite, chave RSA e conta sintéticos temporários.
+
+| Área | Evidência | Limite |
+| --- | --- | --- |
+| Cliente HTTP e sessão | 6 testes: formulário literal, Bearer, validação de respostas, erros seguros, timeout/cancelamento, expiração e ausência de persistência | Respostas controladas no navegador |
+| Interface | 15 testes: identidade confirmada, senha, teclado, envio único, saída, resposta atrasada, expiração, atualização, 401, rede, tema, recarga, texto não confiável e contraste de seleção | Microsoft Edge; não substitui auditoria com leitor de tela |
+| API real | 3 testes: login/JWT/identidade/atualização/saída, CORS bloqueado e conta desativada | HTTP real com SQLite; não valida PostgreSQL |
+| Identidade visual | Tokens do guia do módulo 6, fontes locais licenciadas, claro/escuro e oito capturas | Sem logotipo oficial disponível; identificação textual e ícone geométrico |
+| CLI, JWKS, saúde, hashing e regras JWT | Cobertos pela suíte própria do backend; verificação anterior: 93 aprovados e 6 pulados | Não expostos como telas; essa suíte não foi reexecutada nesta entrega |
+| PostgreSQL, Docker e deploy | Pendentes | Não comprovados pelos testes do frontend |
+
+## Inspeção visual
+
+Login e perfil inspecionados em **1440 × 1000** e **390 × 844**, nos dois temas.
+As oito combinações carregaram Inter local, mantiveram textos de pelo menos 12 px
+e não tiveram overflow horizontal. Foco visível, labels, regiões de alerta/status,
+texto longo e navegação por teclado foram conferidos. A seleção de texto no tema
+escuro tinha contraste de 1,23:1; o teste reproduziu a falha e passou após manter
+o primeiro plano branco sobre o azul primário. O alvo do botão de senha mede 44 px.
+
+Capturas com conta sintética, após concluir a animação de entrada:
+
+| Tamanho | Claro | Escuro |
+| --- | --- | --- |
+| Desktop / login | [Captura](screenshots/desktop-light-login.png) | [Captura](screenshots/desktop-dark-login.png) |
+| Desktop / perfil | [Captura](screenshots/desktop-light-profile.png) | [Captura](screenshots/desktop-dark-profile.png) |
+| Celular / login | [Captura](screenshots/mobile-light-login.png) | [Captura](screenshots/mobile-dark-login.png) |
+| Celular / perfil | [Captura](screenshots/mobile-light-profile.png) | [Captura](screenshots/mobile-dark-profile.png) |
+
+## Escopo da demonstração
+
+O frontend permite verificar o fluxo público de autenticação implementado.
+Administração de contas continua na CLI. Sair limpa a sessão local e não revoga o
+JWT no servidor; recarregar exige novo login. Sem cadastro, recuperação de senha,
+refresh token ou telas de projetos, equipes e backlog. O portal final será
+integrado ao módulo 6.
+
+Revisão independente da branch: em andamento; resultado registrado antes da entrega.

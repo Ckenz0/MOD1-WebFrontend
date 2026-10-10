@@ -5,7 +5,7 @@
 html { color-scheme: light; scrollbar-color: var(--color-text-muted) var(--color-bg); }
 html[data-theme="dark"] { color-scheme: dark; }
 body { margin: 0; min-height: 100svh; display: flex; flex-direction: column; background: var(--color-bg); color: var(--color-text); font: 400 var(--text-sm)/1.6 var(--font-sans); }
-::selection { background: var(--color-primary); color: var(--color-surface); }
+::selection { background: var(--color-primary); color: var(--color-on-primary); }
 button, input { font: inherit; }
 button { cursor: pointer; }
 svg { width: 20px; height: 20px; flex-shrink: 0; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
@@ -13,7 +13,7 @@ svg { width: 20px; height: 20px; flex-shrink: 0; stroke: currentColor; stroke-wi
 input { caret-color: var(--color-text); }
 .site-header { width: min(1120px, 100%); margin: 0 auto; padding: var(--space-lg) var(--space-xl); display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); }
 .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
-.brand-symbol { width: 40px; height: 40px; display: grid; place-items: center; background: var(--color-primary); color: var(--color-surface); border-radius: 10px; }
+.brand-symbol { width: 40px; height: 40px; display: grid; place-items: center; background: var(--color-primary); color: var(--color-on-primary); border-radius: 10px; }
 .brand-symbol svg { width: 24px; height: 24px; }
 .brand-name { display: block; font-size: var(--text-md); font-weight: 600; line-height: 1.35; }
 .brand-description { display: block; font-size: var(--text-xs); color: var(--color-text-muted); }
@@ -31,12 +31,10 @@ input::placeholder { color: var(--color-text-muted); opacity: 1; }
 input:hover { border-color: var(--color-text); }
 .password-field { position: relative; }
 .password-field input { padding-right: 94px; }
-.password-field button { position: absolute; inset: 3px 3px 3px auto; padding: 0 12px; color: var(--color-text-muted); background: var(--color-surface); border: 0; border-radius: 6px; font-size: var(--text-sm); font-weight: 500; }
+.password-field button { position: absolute; inset: 2px 2px 2px auto; padding: 0 12px; color: var(--color-text-muted); background: var(--color-surface); border: 0; border-radius: 6px; font-size: var(--text-sm); font-weight: 500; }
 .password-field button:hover { color: var(--color-text); }
 .button { min-height: 48px; display: inline-flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 18px; border: 1px solid transparent; border-radius: var(--radius-control); font-size: var(--text-md); font-weight: 500; line-height: 1.4; }
-.button-primary { background: var(--color-primary); color: var(--color-surface); }
-/* On both themes, brand actions keep the light foreground from the guide. */
-[data-theme="dark"] .button-primary, [data-theme="dark"] .brand-symbol, [data-theme="dark"] .avatar { color: var(--color-text); }
+.button-primary { background: var(--color-primary); color: var(--color-on-primary); }
 .button-primary:hover:not(:disabled) { background: var(--color-primary-hover); }
 .button-secondary { background: transparent; color: var(--color-text); border-color: var(--color-text-muted); }
 .button-secondary:hover { background: var(--color-bg); }
@@ -49,7 +47,7 @@ input:hover { border-color: var(--color-text); }
 .message[data-tone="notice"] { border-color: var(--color-border); }
 .identity-heading { display: flex; align-items: flex-start; gap: var(--space-sm); margin-bottom: var(--space-sm); }
 .identity-heading h1 { font-size: var(--text-xl); padding-top: 4px; min-width: 0; }
-.avatar { width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--radius-control); background: var(--color-primary); color: var(--color-surface); display: grid; place-items: center; font-size: var(--text-sm); font-weight: 600; }
+.avatar { width: 40px; height: 40px; flex-shrink: 0; border-radius: var(--radius-control); background: var(--color-primary); color: var(--color-on-primary); display: grid; place-items: center; font-size: var(--text-sm); font-weight: 600; }
 .account-details { margin: 0; }
 .account-details > div { padding: var(--space-sm) 0; border-top: 1px solid var(--color-border); }
 dt { color: var(--color-text-muted); font-size: var(--text-xs); margin-bottom: 4px; }

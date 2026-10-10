@@ -139,6 +139,22 @@ class UiTests(BrowserCase):
         self.login()
         expect(self.page.get_by_text('conta@example.com', exact=True)).to_be_visible()
 
+    def test_selected_text_contrast_in_both_themes(self):
+        for theme in ('light', 'dark'):
+            self.page.locator('html').evaluate('(el, theme) => el.dataset.theme = theme', theme)
+            contrast = self.page.evaluate('''() => {
+              const style = getComputedStyle(document.body, '::selection');
+              const luminance = color => {
+                const channels = color.match(/\\d+/g).slice(0,3).map(Number)
+                  .map(value => value / 255)
+                  .map(value => value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4);
+                return channels[0] * .2126 + channels[1] * .7152 + channels[2] * .0722;
+              };
+              const values = [luminance(style.color), luminance(style.backgroundColor)].sort((a,b)=>a-b);
+              return (values[1] + .05) / (values[0] + .05);
+            }''')
+            self.assertGreaterEqual(contrast, 4.5, f'Selected text must be readable in {theme} theme')
+
     def test_reload_loses_session_and_preserves_theme(self):
         self.mock_auth()
         self.page.goto(self.base_url)

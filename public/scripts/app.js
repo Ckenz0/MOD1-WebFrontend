@@ -46,7 +46,7 @@ function setBusy(value, view) {
   busy = value;
   const login = byId("login-button");
   login.disabled = value && view === "login";
-  login.textContent = login.disabled ? "Entrando…" : "Entrar";
+  byId("login-label").textContent = login.disabled ? "Entrando…" : "Entrar";
   byId("login-form").setAttribute("aria-busy", String(login.disabled));
   byId("login-progress").textContent = login.disabled ? "Confirmando seu acesso." : "";
   const refresh = byId("refresh-button");
