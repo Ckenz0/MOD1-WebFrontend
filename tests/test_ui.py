@@ -11,6 +11,35 @@ class UiTests(BrowserCase):
         self.assertEqual(self.page.get_by_role('heading', name='Entrar', exact=True).count(), 1,
                          'The page must present the login form')
 
+    def assert_uninitialized_login_is_inert(self, *, javascript_enabled):
+        with self.browser.new_context(java_script_enabled=javascript_enabled) as context:
+            page = context.new_page()
+            if javascript_enabled:
+                page.route('**/scripts/app.js', lambda route: route.abort())
+            page.goto(self.base_url)
+            expect(page.get_by_label('E-mail', exact=True)).to_be_disabled(timeout=1000)
+            expect(page.get_by_label('Senha', exact=True)).to_be_disabled(timeout=1000)
+            expect(page.get_by_role('button', name='Entrar', exact=True)).to_be_disabled(timeout=1000)
+            expect(page.get_by_text('Se os campos permanecerem desativados, recarregue a página.')).to_be_visible()
+            self.assertNotIn('?', page.url)
+            # Exercise native submission too: even prefilled disabled controls
+            # must never put credentials in the URL or the fallback request.
+            with page.expect_request(lambda request: request.is_navigation_request()) as fallback:
+                page.evaluate('''() => {
+                  document.getElementById('email').value = 'synthetic@example.com';
+                  document.getElementById('password').value = 'synthetic-secret';
+                  document.querySelector('form').requestSubmit();
+                }''')
+            self.assertEqual(fallback.value.method, 'POST')
+            self.assertNotIn('?', fallback.value.url)
+            self.assertNotIn('synthetic-secret', fallback.value.post_data or '')
+
+    def test_disabled_javascript_cannot_submit_credentials(self):
+        self.assert_uninitialized_login_is_inert(javascript_enabled=False)
+
+    def test_unavailable_app_module_cannot_submit_credentials(self):
+        self.assert_uninitialized_login_is_inert(javascript_enabled=True)
+
     def test_login_displays_identity_without_exposing_token(self):
         self.mock_auth()
         self.page.goto(self.base_url)

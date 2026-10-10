@@ -171,3 +171,9 @@ byId("refresh-button").addEventListener("click", async () => {
   }
 });
 byId("logout-button").addEventListener("click", () => endSession("Você saiu da sua conta."));
+
+// Credentials stay inert until all handlers have initialized successfully.
+for (const id of ["email", "password", "password-toggle", "login-button"]) {
+  byId(id).disabled = false;
+}
+byId("initialization-message").hidden = true;

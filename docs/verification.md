@@ -11,14 +11,14 @@ uv run --no-project --with-requirements tests/requirements.txt python -m unittes
 git diff --check
 ```
 
-Resultado: **24 testes aprovados, zero falhas, zero skips**, em 24,027 s.
+Resultado final: **26 testes aprovados, zero falhas, zero skips**, em 25,153 s.
 `git diff --check` passou. A integração usa a implementação `feat/auth-mvp`
 do backend, com SQLite, chave RSA e conta sintéticos temporários.
 
 | Área | Evidência | Limite |
 | --- | --- | --- |
 | Cliente HTTP e sessão | 6 testes: formulário literal, Bearer, validação de respostas, erros seguros, timeout/cancelamento, expiração e ausência de persistência | Respostas controladas no navegador |
-| Interface | 15 testes: identidade confirmada, senha, teclado, envio único, saída, resposta atrasada, expiração, atualização, 401, rede, tema, recarga, texto não confiável e contraste de seleção | Microsoft Edge; não substitui auditoria com leitor de tela |
+| Interface | 17 testes: identidade confirmada, senha, teclado, envio único, saída, resposta atrasada, expiração, atualização, 401, rede, tema, recarga, texto não confiável, contraste de seleção e inicialização segura | Microsoft Edge; não substitui auditoria com leitor de tela |
 | API real | 3 testes: login/JWT/identidade/atualização/saída, CORS bloqueado e conta desativada | HTTP real com SQLite; não valida PostgreSQL |
 | Identidade visual | Tokens do guia do módulo 6, fontes locais licenciadas, claro/escuro e oito capturas | Sem logotipo oficial disponível; identificação textual e ícone geométrico |
 | CLI, JWKS, saúde, hashing e regras JWT | Cobertos pela suíte própria do backend; verificação anterior: 93 aprovados e 6 pulados | Não expostos como telas; essa suíte não foi reexecutada nesta entrega |
@@ -50,4 +50,18 @@ JWT no servidor; recarregar exige novo login. Sem cadastro, recuperação de sen
 refresh token ou telas de projetos, equipes e backlog. O portal final será
 integrado ao módulo 6.
 
-Revisão independente da branch: em andamento; resultado registrado antes da entrega.
+## Revisão independente
+
+Revisão da branch `862ebd3..f822233` concluída: nenhum achado crítico ou menor;
+um achado importante corrigido. Quando o JavaScript estava desabilitado ou o
+módulo falhava ao carregar, o formulário nativo podia enviar credenciais pela URL.
+
+Os controles agora permanecem desativados até todos os handlers serem instalados.
+O fallback usa POST e os campos desativados não enviam credenciais. Os dois testes
+de regressão falharam antes da correção e passaram depois; também exercitam o envio
+nativo forçado com valores sintéticos. A suíte completa passou com 26 testes,
+incluindo o envio normal pelo teclado. Sem nova rodada de revisão: o achado foi
+verificado por regressão e pela suíte, conforme o método de execução aprovado.
+
+PostgreSQL/Docker/deploy e revogação no servidor foram considerados na revisão:
+permanecem, respectivamente, pendentes de validação e fora do contrato de logout local.

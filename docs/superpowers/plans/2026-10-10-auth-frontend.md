@@ -254,7 +254,7 @@ Modificar produto somente para defeitos efetivamente encontrados.
   integração HTTP real, CLI/JWKS em suíte do backend, PostgreSQL/Docker/deploy pendentes.
 - [x] Rodar uma suíte final completa e `git diff --check`; ler saída integral e
   registrar aprovados, falhas e skips. Não repetir após sucesso sem novas mudanças.
-- [ ] Revisar toda a entrega conforme o método de execução selecionado, corrigir
+- [x] Revisar toda a entrega conforme o método de execução selecionado, corrigir
   achados relevantes e revalidar apenas o que mudou.
 - [x] Commit: `docs: document frontend usage and verification`.
 - [ ] Enviar a branch ao GitHub e entregar arquivos, evidências e instruções.

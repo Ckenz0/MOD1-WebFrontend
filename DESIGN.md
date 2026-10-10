@@ -232,6 +232,8 @@ The authentication panel uses panel fill, quiet outline, panel radius, and respo
 
 Fields have persistent visible labels, panel fill, supporting-ink borders, control radius, and 48px height. Hover changes the border to main ink; keyboard focus adds the shared outline. Placeholders use supporting ink at full opacity. The password field reserves 94px right padding for an inset show/hide control, whose accessible pressed state and label track visibility.
 
+Credential controls begin disabled until initialization completes. A supporting instruction remains visible if initialization fails; successful initialization hides it and enables the controls.
+
 ### Messages and account status
 
 Messages use main-ink text, critical-red outlines, control radius, and 12px by 16px padding. Informational session notices use quiet outlines. Alert semantics announce changes without relying on red alone.
