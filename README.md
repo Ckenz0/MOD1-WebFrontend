@@ -1,9 +1,8 @@
-# MOD1 Frontend
+#Frontend
 
 Versão candidata SemVer: `0.1.0`, definida em [VERSION](VERSION).
 Mudanças registradas em [CHANGELOG.md](CHANGELOG.md).
 
-## Projetos do módulo de Brian
 
 Após entrar, escolha **Meus projetos** para criar, listar e consultar os seus projetos.
 O responsável é definido pela API usando a identidade autenticada. Outra conta não
