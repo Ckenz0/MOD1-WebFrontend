@@ -89,3 +89,29 @@ permanecem, respectivamente, pendentes de validação e fora do contrato de logo
 
 Entrega publicada na branch `feat/auth-ui`, com [PR #1 em rascunho](https://github.com/Ckenz0/MOD1-Frontend/pull/1)
 para revisão. A worktree local foi preservada para execução e ajustes.
+
+## Projetos do Brian — 11/10/2026
+
+Ampliação do frontend com **Meus projetos**, criação validada, listagem paginada,
+consulta de detalhe, retorno à conta e saída. Usa a API independente na porta 8001,
+JWKS de identidade e persistência Neon no schema `projects`.
+
+O fluxo com duas APIs reais passou: cadastrar A, entrar pelo navegador, criar um
+projeto, reiniciar projetos, reencontrar os dados e verificar lista vazia/404 para B.
+Smoke separado no Neon comprovou 201 na criação, 404 para outra conta, 401 sem
+autenticação e 200 para o mesmo projeto após reinício da API.
+
+Capturas de uma inspeção conjunta, usando apenas dados sintéticos:
+
+- [Desktop claro](screenshots/projects-desktop-light.png)
+- [Celular escuro](screenshots/projects-mobile-dark.png)
+- [Validação no celular](screenshots/projects-validation-mobile.png)
+
+Os testes também cobrem nome/descrição em Unicode, HTML mostrado como texto,
+submissão única, erro recuperável, teclado e descarte de respostas antigas após
+logout/troca de sessão. Layout 390/1440 sem overflow horizontal.
+
+Resultado: **47 testes passaram**, sem skips quando `AUTH_BACKEND_PATH` e
+`PROJECTS_BACKEND_PATH` estão configurados. Backend de projetos: **68 passaram,
+1 teste PostgreSQL local opt-in pendente**; lint, tipos e wheel/sdist passaram.
+Revisão independente final em andamento.
