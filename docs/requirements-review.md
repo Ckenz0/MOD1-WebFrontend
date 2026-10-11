@@ -1,106 +1,33 @@
 # Conferência dos requisitos — MVP P6 — 11/10/2026
 
-## Referências e alcance
+Referências fornecidas pelo aluno: documento da disciplina, slide P6 (demonstração,
+link para versão específica e apresentação parcial) e Guia_Visual_Modulo6.pdf v1.0.
+A orientação informada permite recorte local, com valor demonstrável ao usuário.
 
-- Documento fornecido pelo aluno: `Projeto de Engenharia de Software com Microsserviços 2026-2.pdf`, páginas 2, 4 e 5.
-- Slide da P6 fornecido: demonstração do MVP, link para a versão específica do código e demonstração na apresentação parcial.
-- Orientação informada pelo aluno: nesta etapa o MVP pode executar localmente e representar uma parte do projeto, mostrando valor ao usuário.
-- Recorte de projetos e contrato da API: `README.md` e `docs/verification.md` no repositório de Brian.
-- Identidade visual: `Guia_Visual_Modulo6.pdf`, v1.0, e `DESIGN.md` deste frontend.
+Recorte atual: cadastro → login → projeto → histórias priorizadas → progresso
+persistente. Frontend `0.2.0`, backlog `0.1.0`; identidade/projetos permanecem nos
+seus repositórios. A entrega não representa a conclusão do módulo 1 inteiro.
 
-A conferência abrange requisitos funcionais e dependências. O recorte aprovado é
-cadastro → login → criação/consulta de projeto persistente, com acesso restrito ao
-responsável. Ele não representa a conclusão do módulo 1 inteiro. A publicação das
-branches, abertura/atualização dos PRs e solicitação de revisão por Brian foram
-autorizadas após esta conferência. Os três componentes têm versão candidata `0.1.0`.
-
-## Requisitos do recorte aprovado
-
-| Requisito | Situação | Evidência |
-| --- | --- | --- |
-| Criar conta e entrar imediatamente | Atendido | API `/auth/register`, `/auth/token` e integração real do navegador |
-| Validar nome, e-mail, senha e confirmação | Atendido | Backend, mensagens junto aos campos, foco no primeiro erro; confirmação apenas no frontend |
-| Preservar conta existente em cadastro repetido | Atendido | Testes de duplicidade, senha original e conta inativa |
-| Armazenar senha com hash e assinar JWT | Atendido | Argon2, RS256 e JWKS somente público |
-| Consultar identidade e demonstrar permitir/bloquear acesso | Atendido | `/auth/me`, antes/depois de login e logout |
-| Criar, listar e consultar os próprios projetos | Atendido | POST/GET `/projects`, paginação, detalhe |
-| Definir responsável no servidor | Atendido | `owner_id` vem do `sub` validado; campos extras recusados |
-| Impedir consulta a projeto de outra conta | Atendido | Filtros de responsável; UUID conhecido e inexistente retornam 404 |
-| Persistir após reinício | Atendido | Integração isolada com APIs reais e smoke separado no Neon |
-| Separar serviços e dados | Atendido | Identidade 8000 / schema `mod1_identity`; projetos 8001 / schema `projects`; sem FK/join entre módulos |
-| Falhas recuperáveis e envio único | Atendido | Rede/503, clique duplicado, timeout e descarte de resposta antiga após logout |
-| Interface conforme guia do módulo 6 | Atendido no recorte | Tokens, Inter, ações azul-marinho, temas, teclado e layout 390/1440; capturas em `screenshots/` |
-| Mostrar valor ao usuário | Demonstrável | Registrar objetivo/escopo do projeto, reencontrar dados e proteger o conteúdo de outras contas |
-
-Tokens ficam em memória no navegador. Logout não revoga JWT no servidor. Cadastro
-não confirma posse do e-mail e não oferece recuperação de senha. Uma conta
-desativada perde login e `/auth/me`; consumidores podem aceitar JWT emitido até
-expirar. Esses limites acompanham a entrega, sem prometer funcionalidades ausentes.
-
-## Requisitos do módulo completo
-
-| Parte prevista no documento da disciplina | Situação nesta etapa |
+| Requisito | Situação / evidência |
 | --- | --- |
-| Autenticação/controle de acesso | Identidade e isolamento por responsável implementados |
-| Cadastro e gerenciamento de projetos | Criar/listar/consultar implementados; editar/excluir ficam para evolução |
-| Gestão de equipes | Ainda não implementada; responsabilidade do serviço de projetos |
-| RBAC por projeto (PO, PM/Scrum Master, desenvolvedor/aluno) | Ainda não implementado; proprietário único não equivale a RBAC |
-| Backlog/User Stories/tarefas | Ainda não implementado; próximo recorte do Igor após publicar projetos |
-| IA para composição de equipes/permissões, aplicação sugerida no PDF | Ainda não implementada |
-| Portal central do módulo 6 e integração com outros grupos | Frontend atual demonstra o MVP; integração com o portal definitivo permanece futura |
+| Cadastro e login imediato | API real, validação dos campos e senha preservada |
+| Identidade e acesso protegido | Permitir/bloquear confirmado pela API |
+| Projetos persistentes por proprietário | Criar/listar/consultar; outra conta recebe 404 |
+| Histórias por projeto | Título, descrição e critérios de aceite |
+| Prioridades e progresso | Alta/média/baixa, a fazer/em andamento/concluído |
+| Autorização do backlog | JWT e confirmação pela API de projetos em cada operação |
+| Persistência após reinício | Três APIs temporárias + smoke separado no Neon |
+| Responsabilidades/dados separados | Identidade 8000, projetos 8001, backlog 8002; schemas próprios |
+| Falhas e envio único | 401/404/503, duplo submit, cancelamento e gravação confirmada com recarga falha |
+| Validação visual | Mensagens junto aos campos, foco, teclado, temas e celular 390px |
+| Identidade visual | Tokens e fontes do DESIGN.md, sem mudar o sistema visual |
+| Valor demonstrável | Necessidades verificáveis, prioridades claras e progresso salvo |
 
-Deploy e CI/CD pertencem às próximas entregas do cronograma (P7/P8); Docker e
-Azure não foram validados em execução nesta conferência. Esta avaliação comprova
-o recorte local aprovado, sem substituir a avaliação do professor.
+Permanecem fora do recorte: equipes/RBAC, tarefas/sprints, estimativas, IA,
+edição/exclusão de histórias e integração com o portal definitivo do módulo 6.
+Cadastro não confirma posse do e-mail nem recupera senha; logout não revoga JWT
+já emitido. Proprietário único não equivale a controle por papéis.
 
-## Dependências e testes
-
-| Repositório | Fonte das dependências | Resultado da conferência |
-| --- | --- | --- |
-| MOD1-EngenhariaSoftware | `pyproject.toml` + `uv.lock`, Python >= 3.12 | Lock atualizado, ambiente compatível, Ruff/formatação/mypy passaram |
-| projeto_eng_soft | `pyproject.toml` + `uv.lock`, Python >= 3.12 | Lock atualizado, ambiente compatível, Ruff/mypy passaram |
-| MOD1-Frontend | `tests/requirements.txt`, Python 3.12 para testes | Playwright/pyee/greenlet fixados e compatíveis; HTML/CSS/JS sem pacotes de produto |
-
-Não é necessário duplicar as dependências dos backends em `requirements.txt`;
-`pyproject.toml` define o pacote e `uv.lock` registra a resolução reproduzível.
-PyJWT usa o extra `crypto`, pwdlib usa `argon2`, e psycopg usa `binary`. Bibliotecas
-dos backends não são enviadas ao frontend. Para os testes integrados, ambas as APIs
-precisam estar instaladas em suas `.venv` e os dois paths precisam ser configurados.
-
-Resultados finais desta conferência:
-
-- Autenticação: **108 passaram, 5 PostgreSQL local opt-in ignorados**.
-- Projetos: **73 passaram, 1 PostgreSQL local opt-in ignorado**.
-- Frontend: **48 passaram**, com ambas as APIs reais configuradas.
-- Neon: evidência real anterior e consulta direta confirmaram persistência; os testes descartáveis não usam Neon.
-- Wheel/sdist de projetos excluem arquivos privados; seleção atual do sdist e artefatos existentes da autenticação também foram conferidos.
-
-A primeira execução do frontend mostrou uma falha de limpeza depois de um fluxo
-bem-sucedido: `users.db` ainda estava ocupado no Windows. Foi acrescentada espera
-limitada a 5 segundos, depois de encerrar os processos próprios, e uma regressão
-com arquivo realmente aberto. Teste e suíte passaram após a correção.
-
-Na autenticação, duas regressões comprovaram que `host`/`hostaddr` na query da URL
-de teste passavam pela proteção de host. A fixture agora recusa esses parâmetros
-antes de inicializar o banco. Nenhuma conexão remota foi usada nessa regressão.
-
-## Antes de publicar e entregar
-
-- **Pendência de commit da autenticação resolvida**: o recorte revisado foi
-  commitado em `feat/auth-mvp`, commit `60eecaa`, excluindo arquivos ignorados.
-- Projetos está em `feat/projects-mvp`, commit `d9b8f37`; o frontend está em
-  `feat/auth-ui`, com os commits de projetos, a correção de teste desta conferência
-  e o versionamento SemVer em `VERSION`. A publicação usa essas branches/worktrees.
-- Incluir `Co-authored-by: Brian Freire <briankfreire@outlook.com>` nos novos commits,
-  conforme a coautoria solicitada. Não reescrever commits anteriores.
-- Manter `.env`, DSNs, senhas, JWTs, chaves e `.local/` fora dos commits. Isso já está
-  coberto pelos arquivos de ignore e pela conferência de distribuição.
-- Depois da publicação, usar links para os commits específicos do MVP, e não apenas
-  a página inicial do repositório. Os links ficam pendentes da publicação do aluno.
-- Capturas e roteiro estão em `docs/verification.md`; selecionar/gravar a demonstração
-  a enviar e apresentar o fluxo. Um PR ou uma captura isolada não substitui todos os
-  entregáveis do slide da P6.
-
-O próximo backlog deverá usar o JWT de identidade e confirmar acesso ao projeto
-pela API de projetos; não consultar diretamente schemas dos demais serviços. O
-desenho desse recorte será discutido quando a entrega de projetos estiver publicada.
+Resultados e roteiro: [verification.md](verification.md). Para P6, grave ou capture
+a demonstração e informe os links das versões específicas após publicar/revisar
+as alterações. Docker, deploy e CI/CD não foram validados nesta etapa.

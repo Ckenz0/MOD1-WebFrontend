@@ -142,18 +142,20 @@ class BacklogUiTests(BrowserCase):
         expect(self.page.locator('#backlog-view')).to_be_hidden()
 
     def test_late_response_after_project_switch_and_logout_is_ignored(self):
-        self.page.evaluate('''async p => {
+        self.page.evaluate('''async ({p,s}) => {
           const {createBacklogController}=await import('/scripts/backlog.js');
           let resolveOld; let token='token';
           const api={list:(_,id)=>id===p.id?new Promise(r=>resolveOld=r):Promise.resolve({items:[],total:0,limit:20,offset:0})};
           const c=createBacklogController({api,getToken:()=>token,onUnauthorized:()=>{},onBack:()=>{}});
           const old=c.open(p); await c.open({id:'44444444-4444-4444-8444-444444444444',name:'Outro projeto'});
-          resolveOld({items:[],total:0,limit:20,offset:0}); await old;
-          window.testBacklog=c; window.testToken=()=>{token=null};
-        }''', PROJECT)
-        expect(self.page.locator('#backlog-project-name')).to_have_text('Outro projeto')
-        self.page.evaluate('window.testToken();window.testBacklog.clear()')
+          resolveOld({items:[s],total:1,limit:20,offset:0}); await old;
+          let resolveLogout;
+          api.list=()=>new Promise(r=>resolveLogout=r);
+          const pending=c.open({id:'55555555-5555-4555-8555-555555555555',name:'Projeto pendente'});
+          token=null; c.clear(); resolveLogout({items:[s],total:1,limit:20,offset:0}); await pending;
+        }''', {'p': PROJECT, 's': STORY})
         expect(self.page.locator('#backlog-view')).to_be_hidden()
+        expect(self.page.locator('#backlog-list')).to_be_empty()
 
     def test_double_submit_creates_only_once(self):
         self.page.get_by_label('Título da história', exact=True).fill('Apenas uma vez')

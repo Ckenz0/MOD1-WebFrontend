@@ -10,6 +10,9 @@ agents.md
 __pycache__/
 *.pyc
 .env
+.env.*
+!.env.example
+.impeccable/review/
 test-results/
 *.pem
 *.db

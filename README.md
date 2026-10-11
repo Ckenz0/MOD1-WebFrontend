@@ -1,111 +1,90 @@
-# MOD1 Frontend
+# MOD1 Web Frontend
 
-Versão candidata SemVer: `0.1.0`, definida em [VERSION](VERSION).
-Mudanças registradas em [CHANGELOG.md](CHANGELOG.md).
+MVP integrado: criar conta, entrar, organizar projetos e acompanhar histórias
+priorizadas até a conclusão. Versão candidata SemVer `0.2.0` em [VERSION](VERSION);
+alterações em [CHANGELOG.md](CHANGELOG.md).
 
-## Projetos do módulo de Brian
-
-Após entrar, escolha **Meus projetos** para criar, listar e consultar os seus projetos.
-O responsável é definido pela API usando a identidade autenticada. Outra conta não
-consegue consultar um projeto seu, mesmo conhecendo seu UUID.
-
-Em `public/config.js`, configure `PROJECTS_API_BASE_URL` com a URL pública da API de
-projetos (`http://127.0.0.1:8001` na demonstração local). Mantenha `API_BASE_URL`
-apontando para autenticação (`http://127.0.0.1:8000`). Não coloque chaves ou senhas
-na configuração pública. As duas APIs precisam permitir a origem do frontend.
-
-No Windows com ambientes temporários bloqueados, os testes podem usar:
-
-```powershell
-uv venv --python 3.12 .venv
-uv pip install --python .venv/Scripts/python.exe -r tests/requirements.txt
-$env:AUTH_BACKEND_PATH = 'C:\CAMINHO\MOD1-EngenhariaSoftware'
-$env:PROJECTS_BACKEND_PATH = 'C:\CAMINHO\projeto_eng_soft'
-.venv/Scripts/python.exe -m unittest discover -s tests -v
-```
-
-Frontend de demonstração da autenticação: cadastro, login, identidade do usuário,
-consulta dos dados, verificação de acesso protegido e saída. HTML, CSS e JavaScript modular; sem dependências de produto ou build.
-Identidade visual compartilhada com o módulo 6, com fontes locais e temas claro/escuro.
+HTML/CSS/JavaScript modular, sem dependências de produto ou build. Identidade visual
+do módulo 6, fontes locais e temas claro/escuro. O portal definitivo será o do módulo 6;
+esta interface demonstra o recorte local e permite reaproveitar clientes/tokens visuais.
 
 ## Executar
 
-Requer um servidor HTTP estático; com Python instalado, execute na raiz do projeto:
+Prepare cada backend pelo README correspondente:
+
+| API | Repositório | Porta |
+| --- | --- | --- |
+| Identidade | [MOD1-IdentityService](https://github.com/Ckenz0/MOD1-IdentityService) | 8000 |
+| Projetos | [MOD1-ProjectsServices](https://github.com/briankfreire/MOD1-ProjectsServices) | 8001 |
+| Backlog | [MOD1-BacklogService](https://github.com/igorcpds/MOD1-BacklogService) | 8002 |
+
+Identidade precisa de banco/chave RSA preparados; projetos/backlog precisam de seus
+schemas/tabelas. Configure CORS nas três APIs para `http://127.0.0.1:5173` e inicie
+os serviços em terminais próprios. Use as instruções de instalação de cada repositório.
+
+Na raiz do frontend, com Python instalado:
 
 ```powershell
 python -m http.server 5173 --bind 127.0.0.1 --directory public
 ```
 
-Abra **http://127.0.0.1:5173**. `file://` não suporta este fluxo de módulos e API.
+Abra **http://127.0.0.1:5173**. URLs públicas estão em `public/config.js`:
+`API_BASE_URL`, `PROJECTS_API_BASE_URL`, `BACKLOG_API_BASE_URL`. Coloque somente URLs,
+sem chaves, DSNs ou senhas. `localhost` e `127.0.0.1` são origens distintas.
+Para hospedagem, use HTTPS e CORS correspondente à origem publicada.
 
-Prepare e inicie o [backend de autenticação](https://github.com/Ckenz0/MOD1-EngenhariaSoftware)
-seguindo seu README. O backend precisa do banco e da chave RSA previamente inicializados.
-Em seu ambiente, configure:
+## Demonstrar
 
-```dotenv
-CORS_ORIGINS=["http://127.0.0.1:5173"]
-```
+1. Verifique o acesso antes de entrar: a consulta protegida deve ser recusada.
+2. Crie conta e entre; confira validação dos campos e dados da identidade.
+3. Abra **Meus projetos**, crie um projeto e escolha **Backlog** no detalhe.
+4. Crie histórias com descrição/critérios de aceite e prioridades alta/média/baixa.
+5. Abra uma história, altere a prioridade e avance de **A fazer** para **Em andamento**
+   e **Concluído**. A lista reflete a prioridade e o progresso salvos.
+6. Reinicie o backlog, atualize as histórias e confira persistência. Outra conta
+   não pode acessar o projeto nem suas histórias.
+7. Teste teclado, temas e celular; saia e confira novamente o acesso.
 
-O endereço da API está em `public/config.js`, inicialmente `http://127.0.0.1:8000`.
-Essa configuração é pública e deve conter apenas o endereço do serviço. Para outra
-origem de frontend, ajuste o CORS no backend; `localhost` e `127.0.0.1` são origens distintas.
+O valor é tornar necessidades, critérios de entrega, prioridades e progresso visíveis,
+preservando dados e acesso por conta. [Resultados e capturas](docs/verification.md).
 
-No diretório do backend, inicie a API:
+JWT fica somente em memória; recarregar a página exige login. Só o tema pode persistir.
+Logout não revoga JWT no servidor. Cadastro permite login imediato, sem confirmação
+de posse do e-mail ou recuperação de senha. Projetos têm proprietário único; não há
+equipes/RBAC. Backlog não inclui tarefas, sprints, estimativas, exclusão ou edição do texto.
 
-```powershell
-uv run --locked python -m uvicorn mod1_auth.main:create_app --factory --host 127.0.0.1 --port 8000
-```
-
-Use **Criar conta** para cadastrar nome, e-mail e senha (12 a 128 caracteres), confirmando a senha no formulário. O cadastro permite login imediato; não verifica a posse do e-mail nem oferece recuperação de senha. Criação administrativa e desativação/reativação continuam disponíveis na CLI do backend. Este frontend exige a versão do backend que fornece `POST /auth/register`.
-
-## Demonstração
-
-1. Use **Verificar acesso** antes de entrar: a API deve recusar a consulta protegida.
-2. Crie uma conta e teste as mensagens junto aos campos. Espaços na senha são preservados.
-3. Entre e confira nome, e-mail, situação da conta e data de criação.
-4. Use **Verificar acesso** após o login: a API deve permitir a consulta.
-5. Use **Atualizar dados**, teste credenciais incorretas e os temas claro/escuro.
-6. Use **Sair** e verifique o acesso novamente: a consulta sem sessão deve ser recusada.
-
-O resultado de acesso vem de `/auth/me`; erro de rede ou serviço indisponível aparece como impossibilidade de verificar, não como bloqueio. Cadastro repetido não altera senha ou situação de uma conta existente e recebe a mesma confirmação geral.
-
-O JWT fica apenas em memória. Recarregar/fechar a página exige novo login; somente
-a preferência de tema pode persistir. Sair não revoga tokens no servidor. Expiração
-ou 401 retorna ao login; uma falha de rede ao atualizar conserva os dados anteriores
-enquanto a sessão estiver válida.
+Falha de rede não equivale a acesso negado. Se POST/PATCH tiver sucesso e a recarga
+falhar, a tela confirma a gravação e orienta atualizar a lista. Timeout não confirma
+gravação; não há reenvio automático. 401/expiração retorna ao login.
 
 ## Testes
 
-Ferramentas de desenvolvimento: [uv](https://docs.astral.sh/uv/), Python 3.12 e
-Microsoft Edge instalado. Playwright usa o navegador existente; as dependências
-de teste estão fixadas e não são enviadas ao frontend.
+Requer Python 3.12, uv e Microsoft Edge instalado. Na raiz do frontend:
 
 ```powershell
-uv run --no-project --with-requirements tests/requirements.txt python -m unittest discover -s tests -v
+uv venv --python 3.12 .venv
+uv pip install --python .venv/Scripts/python.exe -r tests/requirements.txt
+$env:AUTH_BACKEND_PATH = 'C:\CAMINHO\MOD1-IdentityService'
+$env:PROJECTS_BACKEND_PATH = 'C:\CAMINHO\MOD1-ProjectsServices'
+$env:BACKLOG_BACKEND_PATH = 'C:\CAMINHO\MOD1-BacklogService'
+.venv/Scripts/python.exe -m unittest discover -s tests -v
 ```
 
-Para executar também a integração real, aponte ao checkout do backend com `.venv`
-e pacote preparados. Neste ambiente, a implementação está na worktree `feat/auth-mvp`:
+Os caminhos representam seus checkouts; cada backend deve ter `.venv` e pacote
+preparados. Em Unix:
 
-```powershell
-$env:AUTH_BACKEND_PATH = 'C:\Users\cauek\.codex\worktrees\2ecd\MOD1-EngenhariaSoftware'
-uv run --no-project --with-requirements tests/requirements.txt python -m unittest discover -s tests -v
+```sh
+uv venv --python 3.12 .venv
+uv pip install --python .venv/bin/python -r tests/requirements.txt
+export AUTH_BACKEND_PATH=/CAMINHO/MOD1-IdentityService
+export PROJECTS_BACKEND_PATH=/CAMINHO/MOD1-ProjectsServices
+export BACKLOG_BACKEND_PATH=/CAMINHO/MOD1-BacklogService
+.venv/bin/python -m unittest discover -s tests -v
 ```
 
-Os testes criam banco SQLite, chave e conta sintéticos temporários, iniciam a API
-real e verificam HTTP/CORS no navegador. Não usam dados, contas ou bancos de produção.
-Sem `AUTH_BACKEND_PATH`, três testes são pulados: integração real fica pendente.
-SQLite não comprova PostgreSQL, Docker ou deploy.
+Fixtures usam SQLite, chaves/contas temporárias e portas livres; não acessam Neon.
+Sem os caminhos, integrações correspondentes são puladas explicitamente (seis testes
+quando nenhum backend está configurado). Isso não comprova PostgreSQL, Docker ou deploy.
 
-## Integração futura
-
-O portal central pertence ao módulo 6. Tokens CSS, cliente HTTP e fluxo de sessão
-podem ser reaproveitados. Projetos, equipes e backlog pertencem a outros serviços.
-Para hospedagem futura, API e frontend precisam ser acessíveis entre si, com HTTPS
-e CORS configurados para a origem publicada.
-
-Sistema visual: [DESIGN.md](DESIGN.md). Fontes e licenças:
-[docs/font-sources.md](docs/font-sources.md). Cobertura, resultados e capturas:
-[docs/verification.md](docs/verification.md).
-Conferência dos requisitos, dependências e pendências antes de publicar:
-[docs/requirements-review.md](docs/requirements-review.md).
+Sistema visual: [DESIGN.md](DESIGN.md); [fontes e licenças](docs/font-sources.md).
+[Conferência dos requisitos](docs/requirements-review.md).
