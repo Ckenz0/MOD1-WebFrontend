@@ -26,7 +26,9 @@ class StaticHandler(SimpleHTTPRequestHandler):
         elif self.path.split('?')[0] == '/config.js' and self.server.api_url:
             body = ('export const API_BASE_URL = ' + json.dumps(self.server.api_url) + ';\n'
                     + 'export const PROJECTS_API_BASE_URL = '
-                    + json.dumps(self.server.projects_api_url or 'http://127.0.0.1:8001') + ';').encode()
+                    + json.dumps(self.server.projects_api_url or 'http://127.0.0.1:8001') + ';\n'
+                    + 'export const BACKLOG_API_BASE_URL = '
+                    + json.dumps(self.server.backlog_api_url or 'http://127.0.0.1:8002') + ';').encode()
             self.send_response(200)
             self.send_header('Content-Type', 'text/javascript')
             self.end_headers()
@@ -45,6 +47,7 @@ class BrowserCase(unittest.TestCase):
             StaticHandler, directory=str(ROOT / 'public')))
         cls.server.api_url = None
         cls.server.projects_api_url = None
+        cls.server.backlog_api_url = None
         cls.thread = threading.Thread(target=cls.server.serve_forever, daemon=True)
         cls.thread.start()
         cls.base_url = f'http://127.0.0.1:{cls.server.server_port}'

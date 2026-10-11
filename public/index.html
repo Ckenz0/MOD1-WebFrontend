@@ -71,7 +71,7 @@
           <div class="projects-list-heading"><h2>Seus projetos</h2><button id="projects-refresh" type="button" class="text-button">Atualizar projetos</button></div>
           <div id="projects-list" aria-label="Lista de projetos"></div>
           <nav class="projects-pagination" aria-label="Páginas de projetos"><button id="projects-previous" class="button button-secondary" type="button" disabled>Anterior</button><span id="projects-count" role="status"></span><button id="projects-next" class="button button-secondary" type="button" disabled>Próxima</button></nav>
-          <article id="project-detail" aria-labelledby="project-detail-title" hidden><h2 id="project-detail-title" tabindex="-1"></h2><p id="project-detail-date" class="project-date"></p><p id="project-detail-description"></p></article>
+          <article id="project-detail" aria-labelledby="project-detail-title" hidden><h2 id="project-detail-title" tabindex="-1"></h2><p id="project-detail-date" class="project-date"></p><p id="project-detail-description"></p><button id="project-backlog" type="button" class="button button-primary">Backlog</button></article>
         </div>
         <div class="project-create"><h2>Criar projeto</h2><p class="intro">Dê um nome ao que você quer desenvolver.</p>
           <form id="project-form" method="post">
@@ -82,6 +82,37 @@
         </div>
       </div>
       <button id="projects-back" type="button" class="text-button projects-back">Voltar para minha conta</button>
+    </section>
+    <section id="backlog-view" class="auth-panel projects-panel backlog-panel" aria-labelledby="backlog-title" hidden>
+      <div class="projects-heading"><div><h1 id="backlog-title" tabindex="-1">Backlog</h1><p id="backlog-project-name" class="backlog-project-name"></p><p class="intro">Priorize o que entrega valor e acompanhe o progresso de cada história.</p></div><button id="backlog-logout" type="button" class="button button-secondary">Sair</button></div>
+      <div id="backlog-status" class="message" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+      <div class="projects-layout">
+        <div class="projects-content">
+          <div class="projects-list-heading"><h2>Histórias do projeto</h2><button id="backlog-refresh" type="button" class="text-button">Atualizar histórias</button></div>
+          <p class="field-hint backlog-order">Alta, média e baixa prioridade. As mais antigas aparecem primeiro em cada prioridade.</p>
+          <div id="backlog-list" aria-label="Lista de histórias"></div>
+          <nav class="projects-pagination" aria-label="Páginas de histórias"><button id="backlog-previous" class="button button-secondary" type="button" disabled>Anterior</button><span id="backlog-count" role="status"></span><button id="backlog-next" class="button button-secondary" type="button" disabled>Próxima</button></nav>
+          <article id="story-detail" aria-labelledby="story-detail-title" hidden>
+            <h2 id="story-detail-title" tabindex="-1"></h2><p id="story-detail-date" class="project-date"></p>
+            <h3>Descrição</h3><p id="story-detail-description" class="story-text"></p>
+            <h3>Critérios de aceite</h3><p id="story-detail-criteria" class="story-text"></p>
+            <form id="story-update-form" method="post"><div class="story-update-fields">
+              <div class="field"><label for="story-update-priority">Prioridade da história</label><select id="story-update-priority" name="priority"><option value="high">Alta</option><option value="medium">Média</option><option value="low">Baixa</option></select></div>
+              <div class="field"><label for="story-update-status">Status da história</label><select id="story-update-status" name="status"><option value="todo">A fazer</option><option value="in_progress">Em andamento</option><option value="done">Concluído</option></select></div>
+            </div><button id="story-save" type="submit" class="button button-primary">Salvar alterações</button></form>
+          </article>
+        </div>
+        <div class="project-create"><h2>Criar história</h2><p class="intro">Descreva uma necessidade do usuário e como verificar a entrega.</p>
+          <form id="backlog-form" method="post">
+            <div class="field"><label for="story-title">Título da história</label><input id="story-title" name="title" type="text" required aria-describedby="story-title-hint story-title-error"><p id="story-title-hint" class="field-hint">Até 120 caracteres.</p><p id="story-title-error" class="field-error" hidden></p></div>
+            <div class="field"><label for="story-description">Descrição da história</label><textarea id="story-description" name="description" rows="3" aria-describedby="story-description-hint story-description-error"></textarea><p id="story-description-hint" class="field-hint">Opcional. Até 2000 caracteres.</p><p id="story-description-error" class="field-error" hidden></p></div>
+            <div class="field"><label for="story-criteria">Critérios de aceite</label><textarea id="story-criteria" name="acceptance_criteria" rows="3" aria-describedby="story-criteria-hint story-criteria-error"></textarea><p id="story-criteria-hint" class="field-hint">O que precisa funcionar? Opcional, até 2000 caracteres.</p><p id="story-criteria-error" class="field-error" hidden></p></div>
+            <div class="field"><label for="story-priority">Prioridade</label><select id="story-priority" name="priority"><option value="high">Alta</option><option value="medium" selected>Média</option><option value="low">Baixa</option></select></div>
+            <button id="story-submit" class="button button-primary full-width" type="submit">Criar história</button>
+          </form>
+        </div>
+      </div>
+      <button id="backlog-back" type="button" class="text-button projects-back">Voltar para projetos</button>
     </section>
     <section id="access-check" class="access-check" aria-labelledby="access-title">
       <h2 id="access-title">Confira seu acesso</h2>

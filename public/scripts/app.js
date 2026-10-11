@@ -1,8 +1,10 @@
-import { API_BASE_URL, PROJECTS_API_BASE_URL } from "../config.js";
+import { API_BASE_URL, PROJECTS_API_BASE_URL, BACKLOG_API_BASE_URL } from "../config.js";
 import { ApiError, createApiClient } from "./api.js";
 import { createSession } from "./session.js";
 import { createProjectsApiClient } from "./projects-api.js";
 import { createProjectsController } from "./projects.js";
+import { createBacklogApiClient } from "./backlog-api.js";
+import { createBacklogController } from "./backlog.js";
 import { createFormValidation, emailError, loginPasswordError, nameError,
   newPasswordError, confirmationError } from "./validation.js";
 
@@ -18,12 +20,29 @@ let identity = null;
 let busy = false;
 let authenticating = false;
 let projects;
+let backlog;
+let backlogConfigurationFailed = false;
+try {
+  backlog = createBacklogController({ api: createBacklogApiClient({ baseUrl: BACKLOG_API_BASE_URL }),
+    getToken: () => session.getToken(),
+    onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar."),
+    onBack: () => projects.open(),
+  });
+} catch { backlogConfigurationFailed = true; }
 let projectsConfigurationFailed = false;
 try {
   projects = createProjectsController({ api: createProjectsApiClient({ baseUrl: PROJECTS_API_BASE_URL }),
     getToken: () => session.getToken(),
     onUnauthorized: () => endSession("Sua sessão terminou. Entre novamente para continuar."),
     onBack: () => { byId("profile-view").hidden = false; byId("profile-title").focus(); },
+    onOpenBacklog: project => {
+      if (!checkExpiry()) return;
+      if (backlogConfigurationFailed) {
+        byId("projects-status").textContent = "O serviço de backlog não está configurado. Informe o responsável do módulo.";
+        byId("projects-status").hidden = false; return;
+      }
+      projects.close(); backlog.open(project);
+    },
   });
 } catch { projectsConfigurationFailed = true; }
 const loginValidation = createFormValidation("login-form", {
@@ -134,6 +153,7 @@ byId("password-toggle").addEventListener("click", () => {
 });
 
 function endSession(text = "", tone = "notice") {
+  backlog?.clear();
   projects?.clear();
   epoch += 1;
   controller?.abort();
@@ -172,6 +192,7 @@ window.addEventListener("pageshow", checkExpiry);
 setInterval(checkExpiry, 1000);
 
 function renderIdentity(user) {
+  backlog?.close();
   projects?.close();
   identity = user;
   byId("profile-title").textContent = `Olá, ${user.display_name}`;
@@ -247,6 +268,7 @@ byId("refresh-button").addEventListener("click", async () => {
 });
 byId("logout-button").addEventListener("click", () => endSession("Você saiu da sua conta."));
 byId("projects-logout").addEventListener("click", () => endSession("Você saiu da sua conta."));
+byId("backlog-logout").addEventListener("click", () => endSession("Você saiu da sua conta."));
 byId("open-projects").addEventListener("click", () => {
   if (!checkExpiry() || busy || !identity) return;
   if (projectsConfigurationFailed) {

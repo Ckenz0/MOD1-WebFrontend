@@ -15,9 +15,12 @@ Cadastro público com login imediato, validação de formulário, login por e-ma
 consulta da identidade, verificação real de acesso protegido, saída local e
 temas claro/escuro. API real em configuração pública; sessão somente em memória.
 Administração de contas também existe na CLI do backend. Não há confirmação de posse
-do e-mail, recuperação de senha, equipes, backlog ou revogação no logout.
+do e-mail, recuperação de senha, equipes ou revogação no logout.
 Projetos do módulo de Brian: criar, listar e consultar os próprios projetos usando
 a sessão atual, com formulário validado e uma API separada em configuração pública.
+Backlog do módulo de Igor: criar e consultar histórias do projeto, registrar critérios
+de aceite, priorizar e alterar o progresso, com dados persistidos no serviço de backlog.
+O MVP não inclui tarefas, sprints, estimativas, edição do texto ou exclusão de histórias.
 
 ## Brand commitments
 Seguir Guia_Visual_Modulo6.pdf v1.0: tokens compartilhados, ações azul-marinho,
@@ -31,3 +34,5 @@ expiração. Teclado, celular e temas claros/escuros funcionam. Evidências de
 browser/API real ficam separadas de PostgreSQL, Docker e deploy.
 Demonstrar também criar projeto → consultar → reencontrar após reinício;
 uma segunda conta não acessa os dados da primeira.
+Demonstrar projeto → histórias priorizadas → entrega concluída → reencontrar após
+reinício do backlog; explicar o valor de tornar necessidades e critérios de entrega visíveis.
