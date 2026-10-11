@@ -25,16 +25,30 @@
   <main id="main" tabindex="-1">
     <section id="login-view" class="auth-panel" aria-labelledby="login-title">
       <h1 id="login-title" tabindex="-1">Entrar</h1>
-      <p class="intro">Acesse com a conta fornecida pelo responsável do módulo.</p>
+      <p class="intro">Entre com sua conta para confirmar sua identidade e acessar seus dados.</p>
       <p id="initialization-message" class="intro" role="status">Se os campos permanecerem desativados, recarregue a página.</p>
       <div id="login-message" class="message" role="alert" aria-atomic="true" hidden></div>
       <form id="login-form" method="post">
-        <div class="field"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="username" placeholder="voce@exemplo.com" required spellcheck="false" autocapitalize="none" disabled></div>
-        <div class="field"><label for="password">Senha</label><div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" required disabled><button id="password-toggle" type="button" aria-label="Mostrar senha" aria-pressed="false" aria-controls="password" disabled>Mostrar</button></div></div>
+        <div class="field"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="username" placeholder="voce@exemplo.com" required spellcheck="false" autocapitalize="none" aria-describedby="email-error" disabled><p id="email-error" class="field-error" hidden></p></div>
+        <div class="field"><label for="password">Senha</label><div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" required aria-describedby="password-error" disabled><button id="password-toggle" type="button" aria-label="Mostrar senha" aria-pressed="false" aria-controls="password" disabled>Mostrar</button></div><p id="password-error" class="field-error" hidden></p></div>
         <button id="login-button" class="button button-primary full-width" type="submit" disabled><span id="login-label">Entrar</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
         <p id="login-progress" class="visually-hidden" role="status" aria-live="polite"></p>
       </form>
-      <p class="access-note"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5m0-9v1"/></svg><span>Ainda não tem acesso? Solicite uma conta ao responsável do módulo.</span></p>
+      <div class="account-switch"><span>Ainda não tem uma conta?</span><button id="open-register" type="button" class="text-button" disabled>Criar conta</button></div>
+    </section>
+    <section id="register-view" class="auth-panel" aria-labelledby="register-title" hidden>
+      <h1 id="register-title" tabindex="-1">Criar conta</h1>
+      <p class="intro">Cadastre seus dados. Você poderá entrar assim que concluir.</p>
+      <div id="register-message" class="message" role="alert" aria-atomic="true" hidden></div>
+      <form id="register-form" method="post">
+        <div class="field"><label for="register-name">Nome</label><input id="register-name" name="display_name" type="text" autocomplete="name" required aria-describedby="register-name-error" disabled><p id="register-name-error" class="field-error" hidden></p></div>
+        <div class="field"><label for="register-email">E-mail de cadastro</label><input id="register-email" name="email" type="email" autocomplete="username" placeholder="voce@exemplo.com" required spellcheck="false" autocapitalize="none" aria-describedby="register-email-error" disabled><p id="register-email-error" class="field-error" hidden></p></div>
+        <div class="field"><label for="register-password">Crie uma senha</label><div class="password-field"><input id="register-password" name="password" type="password" autocomplete="new-password" required aria-describedby="register-password-hint register-password-error" disabled><button id="register-password-toggle" type="button" aria-label="Mostrar senha de cadastro" aria-pressed="false" aria-controls="register-password" disabled>Mostrar</button></div><p id="register-password-hint" class="field-hint">Use de 12 a 128 caracteres. Espaços também contam.</p><p id="register-password-error" class="field-error" hidden></p></div>
+        <div class="field"><label for="register-confirm">Confirme sua senha</label><input id="register-confirm" name="confirmation" type="password" autocomplete="new-password" required aria-describedby="register-confirm-error" disabled><p id="register-confirm-error" class="field-error" hidden></p></div>
+        <button id="register-button" class="button button-primary full-width" type="submit" disabled>Cadastrar</button>
+        <p id="register-progress" class="visually-hidden" role="status" aria-live="polite"></p>
+      </form>
+      <div class="account-switch"><span>Já tem uma conta?</span><button id="back-login" type="button" class="text-button" disabled>Voltar para entrar</button></div>
     </section>
     <section id="profile-view" class="auth-panel profile-panel" aria-labelledby="profile-title" hidden>
       <div class="identity-heading"><span class="avatar" id="avatar" aria-hidden="true"></span><h1 id="profile-title" tabindex="-1"></h1></div>
@@ -48,6 +62,12 @@
       <div class="profile-actions"><button id="refresh-button" type="button" class="button button-primary">Atualizar dados</button><button id="logout-button" type="button" class="button button-secondary">Sair</button></div>
       <p id="profile-progress" class="visually-hidden" role="status" aria-live="polite"></p>
       <p class="session-note">Ao sair ou recarregar esta página, você precisará entrar novamente.</p>
+    </section>
+    <section id="access-check" class="access-check" aria-labelledby="access-title">
+      <h2 id="access-title">Confira seu acesso</h2>
+      <p class="access-description">Veja se sua sessão permite consultar os dados protegidos da sua conta.</p>
+      <div id="access-result" class="access-result" role="status" aria-live="polite" aria-atomic="true" data-state="idle"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 10V7a4 4 0 0 1 8 0v3M6 10h12v10H6z"/></svg><div><strong id="access-state">Acesso ainda não verificado</strong><p id="access-detail">Verifique antes de entrar, depois do login e após sair.</p></div></div>
+      <button id="access-button" type="button" class="button button-secondary full-width" disabled>Verificar acesso</button>
     </section>
     <noscript><p class="message">Ative o JavaScript no navegador para acessar sua conta.</p></noscript>
   </main>

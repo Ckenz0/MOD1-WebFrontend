@@ -1,6 +1,8 @@
 import { API_BASE_URL } from "../config.js";
 import { ApiError, createApiClient } from "./api.js";
 import { createSession } from "./session.js";
+import { createFormValidation, emailError, loginPasswordError, nameError,
+  newPasswordError, confirmationError } from "./validation.js";
 
 const byId = (id) => document.getElementById(id);
 const session = createSession();
@@ -13,6 +15,13 @@ let controller = null;
 let identity = null;
 let busy = false;
 let authenticating = false;
+const loginValidation = createFormValidation("login-form", {
+  email: emailError, password: loginPasswordError,
+});
+const registerValidation = createFormValidation("register-form", {
+  "register-name": nameError, "register-email": emailError,
+  "register-password": newPasswordError, "register-confirm": confirmationError,
+});
 
 const themePreference = matchMedia("(prefers-color-scheme: dark)");
 let explicitTheme = false;
@@ -44,16 +53,60 @@ function message(view, text = "", tone = "error") {
 
 function setBusy(value, view) {
   busy = value;
-  const login = byId("login-button");
-  login.disabled = value && view === "login";
-  byId("login-label").textContent = login.disabled ? "Entrando…" : "Entrar";
-  byId("login-form").setAttribute("aria-busy", String(login.disabled));
-  byId("login-progress").textContent = login.disabled ? "Confirmando seu acesso." : "";
-  const refresh = byId("refresh-button");
-  refresh.disabled = value && view === "profile";
-  refresh.textContent = refresh.disabled ? "Atualizando…" : "Atualizar dados";
-  if (refresh.disabled) byId("profile-progress").textContent = "Atualizando os dados da sua conta.";
+  for (const id of ["login-button", "refresh-button", "register-button", "access-button", "open-register", "back-login"]) byId(id).disabled = value;
+  byId("login-label").textContent = value && view === "login" ? "Entrando…" : "Entrar";
+  byId("login-form").setAttribute("aria-busy", String(value && view === "login"));
+  byId("login-progress").textContent = value && view === "login" ? "Confirmando seu acesso." : "";
+  byId("refresh-button").textContent = value && view === "profile" ? "Atualizando…" : "Atualizar dados";
+  if (value && view === "profile") byId("profile-progress").textContent = "Atualizando os dados da sua conta.";
+  byId("register-button").textContent = value && view === "register" ? "Cadastrando…" : "Cadastrar";
+  byId("register-form").setAttribute("aria-busy", String(value && view === "register"));
+  byId("register-progress").textContent = value && view === "register" ? "Preparando sua conta." : "";
+  byId("access-button").textContent = value && view === "access" ? "Verificando…" : "Verificar acesso";
 }
+
+function accessResult(state, title, detail) {
+  byId("access-result").dataset.state = state;
+  byId("access-state").textContent = title;
+  byId("access-detail").textContent = detail;
+}
+
+function clearRegistrationSecrets() {
+  byId("register-password").value = "";
+  byId("register-confirm").value = "";
+  byId("register-password").type = "password";
+  byId("register-password-toggle").textContent = "Mostrar";
+  byId("register-password-toggle").setAttribute("aria-pressed", "false");
+  byId("register-password-toggle").setAttribute("aria-label", "Mostrar senha de cadastro");
+}
+
+function showLogin() {
+  byId("register-view").hidden = true;
+  byId("profile-view").hidden = true;
+  byId("login-view").hidden = false;
+  clearRegistrationSecrets();
+  registerValidation.clear();
+  byId("login-title").focus();
+}
+
+byId("open-register").addEventListener("click", () => {
+  if (busy) return;
+  byId("password").value = "";
+  passwordHidden();
+  message("register");
+  registerValidation.clear();
+  byId("login-view").hidden = true;
+  byId("register-view").hidden = false;
+  byId("register-title").focus();
+});
+byId("back-login").addEventListener("click", () => { if (!busy) showLogin(); });
+byId("register-password-toggle").addEventListener("click", () => {
+  const reveal = byId("register-password").type === "password";
+  byId("register-password").type = reveal ? "text" : "password";
+  byId("register-password-toggle").textContent = reveal ? "Ocultar" : "Mostrar";
+  byId("register-password-toggle").setAttribute("aria-pressed", String(reveal));
+  byId("register-password-toggle").setAttribute("aria-label", `${reveal ? "Ocultar" : "Mostrar"} senha de cadastro`);
+});
 
 function passwordHidden() {
   byId("password").type = "password";
@@ -88,6 +141,9 @@ function endSession(text = "", tone = "notice") {
   message("profile");
   byId("profile-progress").textContent = "";
   message("login", text, tone);
+  byId("register-view").hidden = true;
+  clearRegistrationSecrets();
+  accessResult("idle", "Acesso ainda não verificado", "Sua sessão foi encerrada. Verifique novamente para conferir o bloqueio.");
   byId("login-title").focus();
 }
 
@@ -111,11 +167,17 @@ function renderIdentity(user) {
   byId("avatar").textContent = user.display_name.trim().split(/\s+/).slice(0, 2).map((part) => Array.from(part)[0]).join("").toLocaleUpperCase("pt-BR");
   byId("login-view").hidden = true;
   byId("profile-view").hidden = false;
+  byId("register-view").hidden = true;
+  accessResult("allowed", "Acesso permitido", "Sua identidade foi confirmada. Você pode consultar os dados da sua conta.");
 }
 
 byId("login-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   if (busy) return;
+  if (!loginValidation.validate()) {
+    message("login", "Confira os campos destacados para continuar.");
+    return;
+  }
   if (apiConfigurationFailed) {
     message("login", "O serviço não está configurado. Informe o responsável do módulo.");
     return;
@@ -172,8 +234,70 @@ byId("refresh-button").addEventListener("click", async () => {
 });
 byId("logout-button").addEventListener("click", () => endSession("Você saiu da sua conta."));
 
+byId("register-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (busy) return;
+  if (!registerValidation.validate()) {
+    message("register", "Confira os campos destacados para criar sua conta.");
+    return;
+  }
+  if (apiConfigurationFailed) {
+    message("register", "O serviço não está configurado. Informe o responsável do módulo.");
+    return;
+  }
+  const current = ++epoch;
+  controller = new AbortController();
+  const email = byId("register-email").value;
+  message("register");
+  setBusy(true, "register");
+  try {
+    await api.register(byId("register-name").value, email, byId("register-password").value, { signal: controller.signal });
+    if (current !== epoch) return;
+    byId("email").value = email;
+    loginValidation.clear();
+    byId("register-form").reset();
+    showLogin();
+    message("login", "Cadastro recebido. Se o e-mail estava disponível, sua conta já está pronta. Entre para continuar.", "notice");
+  } catch (error) {
+    if (current !== epoch) return;
+    if (error.kind !== "cancelled") message("register", error instanceof ApiError ? error.message : "Não foi possível cadastrar. Tente novamente.");
+  } finally {
+    if (current === epoch) { controller = null; setBusy(false, "register"); }
+  }
+});
+
+byId("access-button").addEventListener("click", async () => {
+  if (busy) return;
+  checkExpiry();
+  if (apiConfigurationFailed) {
+    accessResult("unavailable", "Não foi possível verificar", "O serviço não está configurado. Informe o responsável do módulo.");
+    return;
+  }
+  const current = ++epoch;
+  controller = new AbortController();
+  setBusy(true, "access");
+  accessResult("checking", "Verificando seu acesso…", "Aguardando a confirmação do serviço.");
+  try {
+    await api.getMe(session.getToken(), { signal: controller.signal });
+    if (current !== epoch || !checkExpiry()) return;
+    accessResult("allowed", "Acesso permitido", "Sua sessão foi confirmada. Você pode consultar os dados protegidos.");
+  } catch (error) {
+    if (current !== epoch || error.kind === "cancelled") return;
+    if (error.kind === "unauthorized") {
+      if (identity) endSession("Sua sessão não permite continuar. Entre novamente.");
+      accessResult("blocked", "Acesso bloqueado", "Você precisa entrar com uma conta válida para consultar seus dados.");
+    } else {
+      accessResult("unavailable", "Não foi possível verificar", error instanceof ApiError ? error.message : "Tente novamente em instantes.");
+    }
+  } finally {
+    if (current === epoch) { controller = null; setBusy(false, "access"); }
+  }
+});
+
 // Credentials stay inert until all handlers have initialized successfully.
-for (const id of ["email", "password", "password-toggle", "login-button"]) {
+loginValidation.enable();
+registerValidation.enable();
+for (const id of ["email", "password", "password-toggle", "login-button", "open-register", "back-login", "register-name", "register-email", "register-password", "register-confirm", "register-password-toggle", "register-button", "access-button"]) {
   byId(id).disabled = false;
 }
 byId("initialization-message").hidden = true;

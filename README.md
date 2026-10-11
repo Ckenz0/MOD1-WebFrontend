@@ -1,7 +1,7 @@
 # MOD1 Frontend
 
-Frontend de demonstração da autenticação: login, identidade do usuário, atualização
-dos dados e saída. HTML, CSS e JavaScript modular; sem dependências de produto ou build.
+Frontend de demonstração da autenticação: cadastro, login, identidade do usuário,
+consulta dos dados, verificação de acesso protegido e saída. HTML, CSS e JavaScript modular; sem dependências de produto ou build.
 Identidade visual compartilhada com o módulo 6, com fontes locais e temas claro/escuro.
 
 ## Executar
@@ -26,22 +26,24 @@ O endereço da API está em `public/config.js`, inicialmente `http://127.0.0.1:8
 Essa configuração é pública e deve conter apenas o endereço do serviço. Para outra
 origem de frontend, ajuste o CORS no backend; `localhost` e `127.0.0.1` são origens distintas.
 
-No diretório do backend, crie a conta por CLI, digitando a senha de forma oculta:
+No diretório do backend, inicie a API:
 
 ```powershell
-uv run --locked python -m mod1_auth.cli create-user --email seu-email@example.com --name "Seu nome"
 uv run --locked python -m uvicorn mod1_auth.main:create_app --factory --host 127.0.0.1 --port 8000
 ```
 
-Contas são administradas no backend; não existe cadastro ou recuperação de senha nesta interface.
+Use **Criar conta** para cadastrar nome, e-mail e senha (12 a 128 caracteres), confirmando a senha no formulário. O cadastro permite login imediato; não verifica a posse do e-mail nem oferece recuperação de senha. Criação administrativa e desativação/reativação continuam disponíveis na CLI do backend. Este frontend exige a versão do backend que fornece `POST /auth/register`.
 
 ## Demonstração
 
-1. Entre com o e-mail e a senha da conta criada. Espaços na senha são preservados.
-2. Confira nome, e-mail, situação da conta e data de criação.
-3. Use **Atualizar dados** para consultar novamente a identidade na API.
-4. Teste credenciais incorretas e os temas claro/escuro.
-5. Use **Sair** para encerrar a sessão deste navegador.
+1. Use **Verificar acesso** antes de entrar: a API deve recusar a consulta protegida.
+2. Crie uma conta e teste as mensagens junto aos campos. Espaços na senha são preservados.
+3. Entre e confira nome, e-mail, situação da conta e data de criação.
+4. Use **Verificar acesso** após o login: a API deve permitir a consulta.
+5. Use **Atualizar dados**, teste credenciais incorretas e os temas claro/escuro.
+6. Use **Sair** e verifique o acesso novamente: a consulta sem sessão deve ser recusada.
+
+O resultado de acesso vem de `/auth/me`; erro de rede ou serviço indisponível aparece como impossibilidade de verificar, não como bloqueio. Cadastro repetido não altera senha ou situação de uma conta existente e recebe a mesma confirmação geral.
 
 O JWT fica apenas em memória. Recarregar/fechar a página exige novo login; somente
 a preferência de tema pode persistir. Sair não revoga tokens no servidor. Expiração

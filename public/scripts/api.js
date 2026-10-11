@@ -86,6 +86,13 @@ export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000 
   }
 
   return {
+    register(displayName, email, password, { signal } = {}) {
+      return request("/auth/register", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ display_name: displayName, email, password }),
+      }, (value) => value !== null && typeof value === "object"
+        && typeof value.message === "string" && value.message.length > 0, signal);
+    },
     login(email, password, { signal } = {}) {
       return request("/auth/token", {
         method: "POST",
@@ -95,7 +102,7 @@ export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000 
     },
     getMe(token, { signal } = {}) {
       return request("/auth/me", {
-        method: "GET", headers: { Authorization: `Bearer ${token}` },
+        method: "GET", headers: token ? { Authorization: `Bearer ${token}` } : {},
       }, isIdentity, signal);
     },
   };

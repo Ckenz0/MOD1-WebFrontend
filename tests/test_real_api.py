@@ -122,6 +122,29 @@ class RealApiTests(BrowserCase):
         self.page.get_by_role('button', name='Entrar', exact=True).click()
         expect(self.page.get_by_role('alert')).to_contain_text('E-mail ou senha inválidos')
 
+    def test_public_registration_and_access_check_before_login_and_after_logout(self):
+        self.page.goto(self.base_url)
+        opener = self.page.get_by_role('button', name='Criar conta', exact=True)
+        self.assertEqual(opener.count(), 1, 'Public registration must be available')
+        self.page.get_by_role('button', name='Verificar acesso', exact=True).click()
+        expect(self.page.locator('#access-result')).to_contain_text('Acesso bloqueado')
+        opener.click()
+        self.page.get_by_label('Nome', exact=True).fill('Pessoa nova')
+        self.page.get_by_label('E-mail de cadastro', exact=True).fill('nova@example.com')
+        self.page.get_by_label('Crie uma senha', exact=True).fill('  senha-nova-12345  ')
+        self.page.get_by_label('Confirme sua senha', exact=True).fill('  senha-nova-12345  ')
+        with self.page.expect_response('**/auth/register') as registered:
+            self.page.get_by_role('button', name='Cadastrar', exact=True).click()
+        self.assertEqual(registered.value.status, 202)
+        self.page.get_by_label('Senha', exact=True).fill('  senha-nova-12345  ')
+        self.page.get_by_role('button', name='Entrar', exact=True).click()
+        expect(self.page.get_by_text('nova@example.com', exact=True)).to_be_visible()
+        self.page.get_by_role('button', name='Verificar acesso', exact=True).click()
+        expect(self.page.locator('#access-result')).to_contain_text('Acesso permitido')
+        self.page.get_by_role('button', name='Sair', exact=True).click()
+        self.page.get_by_role('button', name='Verificar acesso', exact=True).click()
+        expect(self.page.locator('#access-result')).to_contain_text('Acesso bloqueado')
+
     def test_disallowed_origin_cannot_complete_login(self):
         self.env['CORS_ORIGINS'] = '[]'
         self.start_backend()

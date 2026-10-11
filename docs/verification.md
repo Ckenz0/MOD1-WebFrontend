@@ -3,7 +3,28 @@
 Execução em 10/10/2026, Windows, Python 3.12 e Microsoft Edge com Playwright.
 Plano: `docs/superpowers/plans/2026-10-10-auth-frontend.md`.
 
-## Resultado reproduzível
+## Extensão: cadastro público e acesso protegido
+
+Verificada localmente em 10/10/2026, após a entrega inicial abaixo:
+
+- **34 testes aprovados, zero falhas e zero skips**, em 32,177 s, usando o mesmo comando de suíte abaixo com `AUTH_BACKEND_PATH`.
+- Sete testes novos de interface: validação de login, limites e confirmação de senha, preservação/limpeza de senha literal, primeira submissão em celular, domínio de e-mail, acesso sem sessão e distinção entre falha de rede e bloqueio.
+- Quarto teste de API real: cadastro pelo navegador, login imediato e consulta protegida antes de entrar, após login e após sair. Essa suíte usa banco/chave/contas sintéticos isolados com SQLite.
+- Demonstração separada no **Neon PostgreSQL**: uma conta sintética nova criada pelo navegador recebeu 202; login e acesso autenticado receberam 200; consultas sem sessão, antes do login e após logout, receberam 401. Cadastro repetido preservou a senha anterior.
+- Capturas reais em 1440 × 1100 e 390 × 844; temas claro/escuro, nenhum overflow horizontal e zero erros de JavaScript.
+- Revisão independente sem achados críticos ou importantes. A diferença de validação de nome/e-mail foi corrigida com regressões. O deslocamento de botão causado pela validação no blur em celular também foi reproduzido e corrigido: ao focar submit, a validação aguarda a submissão para não deslocar o alvo do clique.
+
+| Estado | Captura real |
+| --- | --- |
+| Cadastro / desktop claro | [Captura](screenshots/registration-desktop-light.png) |
+| Cadastro / celular escuro | [Captura](screenshots/registration-mobile-dark.png) |
+| Campos inválidos / celular escuro | [Captura](screenshots/validation-mobile-dark.png) |
+| Acesso permitido / desktop claro | [Captura](screenshots/access-allowed-desktop-light.png) |
+| Acesso bloqueado após sair / celular escuro | [Captura](screenshots/access-blocked-mobile-dark.png) |
+
+O cadastro atual permite login imediato e não verifica posse do e-mail. Administração e desativação continuam na CLI. As alterações desta extensão estão na worktree; os dados e a revisão da entrega inicial abaixo são históricos.
+
+## Resultado reproduzível da entrega inicial
 
 ```powershell
 $env:AUTH_BACKEND_PATH = 'C:\Users\cauek\.codex\worktrees\2ecd\MOD1-EngenhariaSoftware'
@@ -42,7 +63,7 @@ Capturas com conta sintética, após concluir a animação de entrada:
 | Celular / login | [Captura](screenshots/mobile-light-login.png) | [Captura](screenshots/mobile-dark-login.png) |
 | Celular / perfil | [Captura](screenshots/mobile-light-profile.png) | [Captura](screenshots/mobile-dark-profile.png) |
 
-## Escopo da demonstração
+## Escopo da demonstração inicial
 
 O frontend permite verificar o fluxo público de autenticação implementado.
 Administração de contas continua na CLI. Sair limpa a sessão local e não revoga o
