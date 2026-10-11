@@ -1,5 +1,7 @@
 .worktrees/
+# Artefatos locais do Superpowers (inclui docs/superpowers/)
 .superpowers/
+superpowers/
 .local/
 .venv/
 __pycache__/

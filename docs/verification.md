@@ -1,7 +1,6 @@
 # Verificação do frontend
 
 Execução em 10/10/2026, Windows, Python 3.12 e Microsoft Edge com Playwright.
-Plano: `docs/superpowers/plans/2026-10-10-auth-frontend.md`.
 
 ## Extensão: cadastro público e acesso protegido
 

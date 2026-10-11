@@ -5,7 +5,7 @@
 - Documento fornecido pelo aluno: `Projeto de Engenharia de Software com Microsserviços 2026-2.pdf`, páginas 2, 4 e 5.
 - Slide da P6 fornecido: demonstração do MVP, link para a versão específica do código e demonstração na apresentação parcial.
 - Orientação informada pelo aluno: nesta etapa o MVP pode executar localmente e representar uma parte do projeto, mostrando valor ao usuário.
-- Recorte aprovado de projetos: `docs/superpowers/specs/2026-10-11-projects-mvp-design.md` no repositório de Brian.
+- Recorte de projetos e contrato da API: `README.md` e `docs/verification.md` no repositório de Brian.
 - Identidade visual: `Guia_Visual_Modulo6.pdf`, v1.0, e `DESIGN.md` deste frontend.
 
 A conferência abrange requisitos funcionais e dependências. O recorte aprovado é
