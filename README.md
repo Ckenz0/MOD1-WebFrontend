@@ -1,4 +1,4 @@
-# MOD1 Web Frontend
+# Frontend
 
 MVP integrado: criar conta, entrar, organizar projetos e acompanhar histórias
 priorizadas até a conclusão. Versão candidata SemVer `0.2.0` em [VERSION](VERSION);
