@@ -15,7 +15,9 @@ Cadastro público com login imediato, validação de formulário, login por e-ma
 consulta da identidade, verificação real de acesso protegido, saída local e
 temas claro/escuro. API real em configuração pública; sessão somente em memória.
 Administração de contas também existe na CLI do backend. Não há confirmação de posse
-do e-mail, recuperação de senha, projetos, equipes, backlog ou revogação no logout.
+do e-mail, recuperação de senha, equipes, backlog ou revogação no logout.
+Projetos do módulo de Brian: criar, listar e consultar os próprios projetos usando
+a sessão atual, com formulário validado e uma API separada em configuração pública.
 
 ## Brand commitments
 Seguir Guia_Visual_Modulo6.pdf v1.0: tokens compartilhados, ações azul-marinho,
@@ -27,3 +29,5 @@ Demonstrar cadastro → login → dados reais da conta → atualizar → sair, c
 acesso recusado sem sessão e permitido após login; explicar erros e
 expiração. Teclado, celular e temas claros/escuros funcionam. Evidências de
 browser/API real ficam separadas de PostgreSQL, Docker e deploy.
+Demonstrar também criar projeto → consultar → reencontrar após reinício;
+uma segunda conta não acessa os dados da primeira.

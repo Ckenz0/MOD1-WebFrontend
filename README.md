@@ -1,5 +1,26 @@
 # MOD1 Frontend
 
+## Projetos do módulo de Brian
+
+Após entrar, escolha **Meus projetos** para criar, listar e consultar os seus projetos.
+O responsável é definido pela API usando a identidade autenticada. Outra conta não
+consegue consultar um projeto seu, mesmo conhecendo seu UUID.
+
+Em `public/config.js`, configure `PROJECTS_API_BASE_URL` com a URL pública da API de
+projetos (`http://127.0.0.1:8001` na demonstração local). Mantenha `API_BASE_URL`
+apontando para autenticação (`http://127.0.0.1:8000`). Não coloque chaves ou senhas
+na configuração pública. As duas APIs precisam permitir a origem do frontend.
+
+No Windows com ambientes temporários bloqueados, os testes podem usar:
+
+```powershell
+uv venv --python 3.12 .venv
+uv pip install --python .venv/Scripts/python.exe -r tests/requirements.txt
+$env:AUTH_BACKEND_PATH = 'C:\CAMINHO\MOD1-EngenhariaSoftware'
+$env:PROJECTS_BACKEND_PATH = 'C:\CAMINHO\projeto_eng_soft'
+.venv/Scripts/python.exe -m unittest discover -s tests -v
+```
+
 Frontend de demonstração da autenticação: cadastro, login, identidade do usuário,
 consulta dos dados, verificação de acesso protegido e saída. HTML, CSS e JavaScript modular; sem dependências de produto ou build.
 Identidade visual compartilhada com o módulo 6, com fontes locais e temas claro/escuro.

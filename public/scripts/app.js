@@ -1,6 +1,8 @@
-import { API_BASE_URL } from "../config.js";
+import { API_BASE_URL, PROJECTS_API_BASE_URL } from "../config.js";
 import { ApiError, createApiClient } from "./api.js";
 import { createSession } from "./session.js";
+import { createProjectsApiClient } from "./projects-api.js";
+import { createProjectsController } from "./projects.js";
 import { createFormValidation, emailError, loginPasswordError, nameError,
   newPasswordError, confirmationError } from "./validation.js";
 
@@ -15,6 +17,15 @@ let controller = null;
 let identity = null;
 let busy = false;
 let authenticating = false;
+let projects;
+let projectsConfigurationFailed = false;
+try {
+  projects = createProjectsController({ api: createProjectsApiClient({ baseUrl: PROJECTS_API_BASE_URL }),
+    getToken: () => session.getToken(),
+    onUnauthorized: () => endSession("Sua sessão terminou. Entre novamente para continuar."),
+    onBack: () => { byId("profile-view").hidden = false; byId("profile-title").focus(); },
+  });
+} catch { projectsConfigurationFailed = true; }
 const loginValidation = createFormValidation("login-form", {
   email: emailError, password: loginPasswordError,
 });
@@ -53,7 +64,7 @@ function message(view, text = "", tone = "error") {
 
 function setBusy(value, view) {
   busy = value;
-  for (const id of ["login-button", "refresh-button", "register-button", "access-button", "open-register", "back-login"]) byId(id).disabled = value;
+  for (const id of ["login-button", "refresh-button", "register-button", "access-button", "open-register", "back-login", "open-projects"]) byId(id).disabled = value;
   byId("login-label").textContent = value && view === "login" ? "Entrando…" : "Entrar";
   byId("login-form").setAttribute("aria-busy", String(value && view === "login"));
   byId("login-progress").textContent = value && view === "login" ? "Confirmando seu acesso." : "";
@@ -123,6 +134,7 @@ byId("password-toggle").addEventListener("click", () => {
 });
 
 function endSession(text = "", tone = "notice") {
+  projects?.clear();
   epoch += 1;
   controller?.abort();
   controller = null;
@@ -160,6 +172,7 @@ window.addEventListener("pageshow", checkExpiry);
 setInterval(checkExpiry, 1000);
 
 function renderIdentity(user) {
+  projects?.close();
   identity = user;
   byId("profile-title").textContent = `Olá, ${user.display_name}`;
   byId("profile-email").textContent = user.email;
@@ -233,6 +246,16 @@ byId("refresh-button").addEventListener("click", async () => {
   }
 });
 byId("logout-button").addEventListener("click", () => endSession("Você saiu da sua conta."));
+byId("projects-logout").addEventListener("click", () => endSession("Você saiu da sua conta."));
+byId("open-projects").addEventListener("click", () => {
+  if (!checkExpiry() || busy || !identity) return;
+  if (projectsConfigurationFailed) {
+    message("profile", "O serviço de projetos não está configurado. Informe o responsável do módulo.");
+    return;
+  }
+  byId("profile-view").hidden = true;
+  projects.open();
+});
 
 byId("register-form").addEventListener("submit", async (event) => {
   event.preventDefault();

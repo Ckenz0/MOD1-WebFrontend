@@ -59,9 +59,29 @@
         <div><dt>Situação da conta</dt><dd class="account-status"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Ativa</dd></div>
         <div><dt>Conta criada em</dt><dd id="profile-created"></dd></div>
       </dl>
-      <div class="profile-actions"><button id="refresh-button" type="button" class="button button-primary">Atualizar dados</button><button id="logout-button" type="button" class="button button-secondary">Sair</button></div>
+      <div class="profile-actions"><button id="open-projects" type="button" class="button button-primary">Meus projetos</button><button id="refresh-button" type="button" class="button button-secondary">Atualizar dados</button><button id="logout-button" type="button" class="button button-secondary">Sair</button></div>
       <p id="profile-progress" class="visually-hidden" role="status" aria-live="polite"></p>
       <p class="session-note">Ao sair ou recarregar esta página, você precisará entrar novamente.</p>
+    </section>
+    <section id="projects-view" class="auth-panel projects-panel" aria-labelledby="projects-title" hidden>
+      <div class="projects-heading"><div><h1 id="projects-title" tabindex="-1">Meus projetos</h1><p class="intro">Organize seu trabalho. Os projetos ficam salvos e disponíveis para sua conta.</p></div><button id="projects-logout" type="button" class="button button-secondary">Sair</button></div>
+      <div id="projects-status" class="message" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+      <div class="projects-layout">
+        <div class="projects-content">
+          <div class="projects-list-heading"><h2>Seus projetos</h2><button id="projects-refresh" type="button" class="text-button">Atualizar projetos</button></div>
+          <div id="projects-list" aria-label="Lista de projetos"></div>
+          <nav class="projects-pagination" aria-label="Páginas de projetos"><button id="projects-previous" class="button button-secondary" type="button" disabled>Anterior</button><span id="projects-count" role="status"></span><button id="projects-next" class="button button-secondary" type="button" disabled>Próxima</button></nav>
+          <article id="project-detail" aria-labelledby="project-detail-title" hidden><h2 id="project-detail-title" tabindex="-1"></h2><p id="project-detail-date" class="project-date"></p><p id="project-detail-description"></p></article>
+        </div>
+        <div class="project-create"><h2>Criar projeto</h2><p class="intro">Dê um nome ao que você quer desenvolver.</p>
+          <form id="project-form" method="post">
+            <div class="field"><label for="project-name">Nome do projeto</label><input id="project-name" name="name" type="text" required aria-describedby="project-name-hint project-name-error" disabled><p id="project-name-hint" class="field-hint">Até 120 caracteres.</p><p id="project-name-error" class="field-error" hidden></p></div>
+            <div class="field"><label for="project-description">Descrição</label><textarea id="project-description" name="description" rows="4" aria-describedby="project-description-hint project-description-error" disabled></textarea><p id="project-description-hint" class="field-hint">Opcional. Até 2000 caracteres.</p><p id="project-description-error" class="field-error" hidden></p></div>
+            <button id="project-submit" class="button button-primary full-width" type="submit" disabled>Criar projeto</button>
+          </form>
+        </div>
+      </div>
+      <button id="projects-back" type="button" class="text-button projects-back">Voltar para minha conta</button>
     </section>
     <section id="access-check" class="access-check" aria-labelledby="access-title">
       <h2 id="access-title">Confira seu acesso</h2>
