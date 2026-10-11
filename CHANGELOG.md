@@ -1,10 +1,17 @@
 # Changelog
 
-Versão candidata: `0.1.0`, definida em `VERSION`. O frontend possui versão SemVer
+Versão candidata: `0.2.0`, definida em `VERSION`. O frontend possui versão SemVer
 independente dos serviços. A versão será publicada após revisão e integração;
 esta mudança não cria tag ou release.
 
 ## Unreleased
+
+### Backlog (0.2.0)
+
+- Histórias por projeto com título, descrição e critérios de aceite.
+- Prioridades alta/média/baixa e progresso a fazer/em andamento/concluído.
+- Paginação, validação dos campos, confirmação de gravação e recuperação de falhas.
+- Integração com três APIs, isolamento de contas e persistência após reinício.
 
 ### Added
 

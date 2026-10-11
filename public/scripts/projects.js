@@ -4,10 +4,11 @@ import { createFormValidation, nameError } from "./validation.js";
 const byId = (id) => document.getElementById(id);
 const date = (value) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date(value));
 
-export function createProjectsController({ api, getToken, onUnauthorized, onBack }) {
+export function createProjectsController({ api, getToken, onUnauthorized, onBack, onOpenBacklog }) {
   let generation = 0;
   let controller = null;
   let busy = false;
+  let selectedProject = null;
   let page = { items: [], total: 0, limit: 20, offset: 0 };
   const form = byId("project-form");
   const validation = createFormValidation("project-form", {
@@ -34,10 +35,12 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
     for (const button of byId("projects-list").querySelectorAll("button")) button.disabled = value;
   }
   function hideDetail() {
+    selectedProject = null;
     byId("project-detail").hidden = true;
     for (const id of ["project-detail-title", "project-detail-description", "project-detail-date"]) byId(id).textContent = "";
   }
   function renderDetail(project) {
+    selectedProject = project;
     byId("project-detail-title").textContent = project.name;
     byId("project-detail-description").textContent = project.description || "Sem descrição.";
     byId("project-detail-date").textContent = `Criado em ${date(project.created_at)}`;
@@ -127,6 +130,9 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
   byId("projects-previous").addEventListener("click", () => { if (!busy) load(Math.max(0, page.offset - 20)); });
   byId("projects-next").addEventListener("click", () => { if (!busy) load(page.offset + 20); });
   byId("projects-back").addEventListener("click", () => { close(); onBack(); });
+  byId("project-backlog").addEventListener("click", () => {
+    if (!busy && selectedProject && onOpenBacklog) onOpenBacklog(selectedProject);
+  });
   setBusy(false);
   return {
     async open() {
