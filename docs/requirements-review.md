@@ -10,8 +10,9 @@
 
 A conferência abrange requisitos funcionais e dependências. O recorte aprovado é
 cadastro → login → criação/consulta de projeto persistente, com acesso restrito ao
-responsável. Ele não representa a conclusão do módulo 1 inteiro. Publicação das
-branches, abertura de PRs e solicitação de revisão ficam com Caue, conforme pedido.
+responsável. Ele não representa a conclusão do módulo 1 inteiro. A publicação das
+branches, abertura/atualização dos PRs e solicitação de revisão por Brian foram
+autorizadas após esta conferência. Os três componentes têm versão candidata `0.1.0`.
 
 ## Requisitos do recorte aprovado
 
@@ -85,13 +86,11 @@ antes de inicializar o banco. Nenhuma conexão remota foi usada nessa regressão
 
 ## Antes de publicar e entregar
 
-- **Autenticação ainda tem alterações sem commit** na worktree `feat/auth-mvp`.
-  O último commit nela é `c4eeb15`, anterior à implementação atual. Publicar somente
-  a branch nesse estado não envia os arquivos do novo serviço. Commitar o recorte
-  revisado, excluindo arquivos ignorados, antes de disponibilizá-lo ao revisor.
-- Projetos está em `feat/projects-mvp`, commit `9317975`; o frontend está em
-  `feat/auth-ui`, com os commits de projetos e a correção de teste desta conferência.
-  Confirmar que a publicação usa essas branches/worktrees.
+- **Pendência de commit da autenticação resolvida**: o recorte revisado foi
+  commitado em `feat/auth-mvp`, commit `60eecaa`, excluindo arquivos ignorados.
+- Projetos está em `feat/projects-mvp`, commit `d9b8f37`; o frontend está em
+  `feat/auth-ui`, com os commits de projetos, a correção de teste desta conferência
+  e o versionamento SemVer em `VERSION`. A publicação usa essas branches/worktrees.
 - Incluir `Co-authored-by: Brian Freire <briankfreire@outlook.com>` nos novos commits,
   conforme a coautoria solicitada. Não reescrever commits anteriores.
 - Manter `.env`, DSNs, senhas, JWTs, chaves e `.local/` fora dos commits. Isso já está
