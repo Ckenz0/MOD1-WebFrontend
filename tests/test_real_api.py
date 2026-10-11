@@ -51,7 +51,7 @@ class RealApiTests(BrowserCase):
         self.assertTrue(python.is_file(), 'Prepare the backend virtual environment first')
         self.python = str(python)
         self.temp = tempfile.TemporaryDirectory(prefix='mod1-ui-integration-')
-        self.addCleanup(self.temp.cleanup)
+        self.addCleanup(self.cleanup_temp)
         root = Path(self.temp.name)
         self.env = dict(os.environ, DATABASE_URL=f"sqlite:///{(root / 'users.db').as_posix()}",
                         DATABASE_SCHEMA='mod1_identity', JWT_PRIVATE_KEY_PATH=str(root / 'key.pem'),
@@ -72,6 +72,18 @@ class RealApiTests(BrowserCase):
         result = subprocess.run([self.python, '-c', script], cwd=self.backend, env=self.env,
                                 capture_output=True, text=True, timeout=30, creationflags=self.flags)
         self.assertEqual(result.returncode, 0, 'Synthetic backend fixture failed: ' + result.stderr)
+
+    def cleanup_temp(self):
+        # Owned processes stop first; Windows may release their SQLite handles afterward.
+        deadline = time.monotonic() + 5
+        while True:
+            try:
+                self.temp.cleanup()
+                return
+            except PermissionError:
+                if time.monotonic() >= deadline:
+                    raise
+                time.sleep(0.05)
 
     def start_backend(self):
         self.stop_backend()

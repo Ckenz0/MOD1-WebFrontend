@@ -104,3 +104,5 @@ e CORS configurados para a origem publicada.
 Sistema visual: [DESIGN.md](DESIGN.md). Fontes e licenças:
 [docs/font-sources.md](docs/font-sources.md). Cobertura, resultados e capturas:
 [docs/verification.md](docs/verification.md).
+Conferência dos requisitos, dependências e pendências antes de publicar:
+[docs/requirements-review.md](docs/requirements-review.md).

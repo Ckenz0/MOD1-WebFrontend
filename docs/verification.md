@@ -111,10 +111,16 @@ Os testes também cobrem nome/descrição em Unicode, HTML mostrado como texto,
 submissão única, erro recuperável, teclado e descarte de respostas antigas após
 logout/troca de sessão. Layout 390/1440 sem overflow horizontal.
 
-Resultado: **47 testes passaram**, sem skips quando `AUTH_BACKEND_PATH` e
+Resultado após a conferência de requisitos: **48 testes passaram**, sem skips quando `AUTH_BACKEND_PATH` e
 `PROJECTS_BACKEND_PATH` estão configurados. Backend de projetos: **73 passaram,
 1 teste PostgreSQL local opt-in pendente**; lint, tipos e wheel/sdist passaram.
 Revisão independente final concluída. Os dois achados importantes sobre JWKS
 foram corrigidos com testes de regressão; uma auditoria adicional garantiu que
 wheel/sdist excluem configurações privadas. Após as correções e outro reinício,
 o mesmo projeto persistido no Neon retornou 200.
+
+Na conferência antes de publicar, a primeira execução passou pelo cadastro real,
+mas falhou ao limpar `users.db` no Windows. A fixture de identidade agora aguarda
+por até 5 segundos a liberação de arquivos depois de parar seu processo próprio;
+uma regressão com arquivo aberto e a suíte completa passaram após a correção.
+Requisitos e pendências de entrega estão em [requirements-review.md](requirements-review.md).
