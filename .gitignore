@@ -1,0 +1,15 @@
+.worktrees/
+# Artefatos locais do Superpowers (inclui docs/superpowers/)
+.superpowers/
+superpowers/
+# Instruções locais de agentes
+AGENTS.md
+agents.md
+.local/
+.venv/
+__pycache__/
+*.pyc
+.env
+test-results/
+*.pem
+*.db

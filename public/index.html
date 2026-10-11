@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Acesso e identificação de usuários do módulo 1 de Engenharia de Software.">
+  <title>Autenticação · Módulo 1</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231E2A5A'/%3E%3Cpath d='M11 15v-4a5 5 0 0 1 10 0v4M9 15h14v10H9z' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+  <link rel="preload" href="assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles/tokens.css">
+  <link rel="stylesheet" href="styles/app.css">
+  <script type="module" src="scripts/app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Ir para o conteúdo</a>
+  <header class="site-header">
+    <div class="brand">
+      <span class="brand-symbol" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M8 10V7a4 4 0 0 1 8 0v3M6 10h12v10H6zM12 14v2"/></svg></span>
+      <div><span class="brand-name">Autenticação</span><span class="brand-description">Módulo 1 · Engenharia de Software</span></div>
+    </div>
+    <button type="button" id="theme-toggle" class="theme-button" aria-label="Ativar tema escuro">
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20 14a8 8 0 0 1-10-10A8 8 0 1 0 20 14Z"/></svg><span id="theme-label">Tema escuro</span>
+    </button>
+  </header>
+  <main id="main" tabindex="-1">
+    <section id="login-view" class="auth-panel" aria-labelledby="login-title">
+      <h1 id="login-title" tabindex="-1">Entrar</h1>
+      <p class="intro">Entre com sua conta para confirmar sua identidade e acessar seus dados.</p>
+      <p id="initialization-message" class="intro" role="status">Se os campos permanecerem desativados, recarregue a página.</p>
+      <div id="login-message" class="message" role="alert" aria-atomic="true" hidden></div>
+      <form id="login-form" method="post">
+        <div class="field"><label for="email">E-mail</label><input id="email" name="email" type="email" autocomplete="username" placeholder="voce@exemplo.com" required spellcheck="false" autocapitalize="none" aria-describedby="email-error" disabled><p id="email-error" class="field-error" hidden></p></div>
+        <div class="field"><label for="password">Senha</label><div class="password-field"><input id="password" name="password" type="password" autocomplete="current-password" required aria-describedby="password-error" disabled><button id="password-toggle" type="button" aria-label="Mostrar senha" aria-pressed="false" aria-controls="password" disabled>Mostrar</button></div><p id="password-error" class="field-error" hidden></p></div>
+        <button id="login-button" class="button button-primary full-width" type="submit" disabled><span id="login-label">Entrar</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
+        <p id="login-progress" class="visually-hidden" role="status" aria-live="polite"></p>
+      </form>
+      <div class="account-switch"><span>Ainda não tem uma conta?</span><button id="open-register" type="button" class="text-button" disabled>Criar conta</button></div>
+    </section>
+    <section id="register-view" class="auth-panel" aria-labelledby="register-title" hidden>
+      <h1 id="register-title" tabindex="-1">Criar conta</h1>
+      <p class="intro">Cadastre seus dados. Você poderá entrar assim que concluir.</p>
+      <div id="register-message" class="message" role="alert" aria-atomic="true" hidden></div>
+      <form id="register-form" method="post">
+        <div class="field"><label for="register-name">Nome</label><input id="register-name" name="display_name" type="text" autocomplete="name" required aria-describedby="register-name-error" disabled><p id="register-name-error" class="field-error" hidden></p></div>
+        <div class="field"><label for="register-email">E-mail de cadastro</label><input id="register-email" name="email" type="email" autocomplete="username" placeholder="voce@exemplo.com" required spellcheck="false" autocapitalize="none" aria-describedby="register-email-error" disabled><p id="register-email-error" class="field-error" hidden></p></div>
+        <div class="field"><label for="register-password">Crie uma senha</label><div class="password-field"><input id="register-password" name="password" type="password" autocomplete="new-password" required aria-describedby="register-password-hint register-password-error" disabled><button id="register-password-toggle" type="button" aria-label="Mostrar senha de cadastro" aria-pressed="false" aria-controls="register-password" disabled>Mostrar</button></div><p id="register-password-hint" class="field-hint">Use de 12 a 128 caracteres. Espaços também contam.</p><p id="register-password-error" class="field-error" hidden></p></div>
+        <div class="field"><label for="register-confirm">Confirme sua senha</label><input id="register-confirm" name="confirmation" type="password" autocomplete="new-password" required aria-describedby="register-confirm-error" disabled><p id="register-confirm-error" class="field-error" hidden></p></div>
+        <button id="register-button" class="button button-primary full-width" type="submit" disabled>Cadastrar</button>
+        <p id="register-progress" class="visually-hidden" role="status" aria-live="polite"></p>
+      </form>
+      <div class="account-switch"><span>Já tem uma conta?</span><button id="back-login" type="button" class="text-button" disabled>Voltar para entrar</button></div>
+    </section>
+    <section id="profile-view" class="auth-panel profile-panel" aria-labelledby="profile-title" hidden>
+      <div class="identity-heading"><span class="avatar" id="avatar" aria-hidden="true"></span><h1 id="profile-title" tabindex="-1"></h1></div>
+      <p class="intro">Sua identidade foi confirmada. Estes são os dados da sua conta.</p>
+      <div id="profile-message" class="message" role="alert" aria-atomic="true" hidden></div>
+      <dl class="account-details">
+        <div><dt>E-mail</dt><dd id="profile-email"></dd></div>
+        <div><dt>Situação da conta</dt><dd class="account-status"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Ativa</dd></div>
+        <div><dt>Conta criada em</dt><dd id="profile-created"></dd></div>
+      </dl>
+      <div class="profile-actions"><button id="open-projects" type="button" class="button button-primary">Meus projetos</button><button id="refresh-button" type="button" class="button button-secondary">Atualizar dados</button><button id="logout-button" type="button" class="button button-secondary">Sair</button></div>
+      <p id="profile-progress" class="visually-hidden" role="status" aria-live="polite"></p>
+      <p class="session-note">Ao sair ou recarregar esta página, você precisará entrar novamente.</p>
+    </section>
+    <section id="projects-view" class="auth-panel projects-panel" aria-labelledby="projects-title" hidden>
+      <div class="projects-heading"><div><h1 id="projects-title" tabindex="-1">Meus projetos</h1><p class="intro">Organize seu trabalho. Os projetos ficam salvos e disponíveis para sua conta.</p></div><button id="projects-logout" type="button" class="button button-secondary">Sair</button></div>
+      <div id="projects-status" class="message" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+      <div class="projects-layout">
+        <div class="projects-content">
+          <div class="projects-list-heading"><h2>Seus projetos</h2><button id="projects-refresh" type="button" class="text-button">Atualizar projetos</button></div>
+          <div id="projects-list" aria-label="Lista de projetos"></div>
+          <nav class="projects-pagination" aria-label="Páginas de projetos"><button id="projects-previous" class="button button-secondary" type="button" disabled>Anterior</button><span id="projects-count" role="status"></span><button id="projects-next" class="button button-secondary" type="button" disabled>Próxima</button></nav>
+          <article id="project-detail" aria-labelledby="project-detail-title" hidden><h2 id="project-detail-title" tabindex="-1"></h2><p id="project-detail-date" class="project-date"></p><p id="project-detail-description"></p></article>
+        </div>
+        <div class="project-create"><h2>Criar projeto</h2><p class="intro">Dê um nome ao que você quer desenvolver.</p>
+          <form id="project-form" method="post">
+            <div class="field"><label for="project-name">Nome do projeto</label><input id="project-name" name="name" type="text" required aria-describedby="project-name-hint project-name-error" disabled><p id="project-name-hint" class="field-hint">Até 120 caracteres.</p><p id="project-name-error" class="field-error" hidden></p></div>
+            <div class="field"><label for="project-description">Descrição</label><textarea id="project-description" name="description" rows="4" aria-describedby="project-description-hint project-description-error" disabled></textarea><p id="project-description-hint" class="field-hint">Opcional. Até 2000 caracteres.</p><p id="project-description-error" class="field-error" hidden></p></div>
+            <button id="project-submit" class="button button-primary full-width" type="submit" disabled>Criar projeto</button>
+          </form>
+        </div>
+      </div>
+      <button id="projects-back" type="button" class="text-button projects-back">Voltar para minha conta</button>
+    </section>
+    <section id="access-check" class="access-check" aria-labelledby="access-title">
+      <h2 id="access-title">Confira seu acesso</h2>
+      <p class="access-description">Veja se sua sessão permite consultar os dados protegidos da sua conta.</p>
+      <div id="access-result" class="access-result" role="status" aria-live="polite" aria-atomic="true" data-state="idle"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M8 10V7a4 4 0 0 1 8 0v3M6 10h12v10H6z"/></svg><div><strong id="access-state">Acesso ainda não verificado</strong><p id="access-detail">Verifique antes de entrar, depois do login e após sair.</p></div></div>
+      <button id="access-button" type="button" class="button button-secondary full-width" disabled>Verificar acesso</button>
+    </section>
+    <noscript><p class="message">Ative o JavaScript no navegador para acessar sua conta.</p></noscript>
+  </main>
+  <footer class="site-footer">Projeto de Engenharia de Software · 2026</footer>
+</body>
+</html>

@@ -1,0 +1,109 @@
+const messages = {
+  credentials: "E-mail ou senha inválidos. Confira os dados e tente novamente.",
+  unauthorized: "Sua sessão terminou. Entre novamente para continuar.",
+  validation: "Confira os dados informados e tente novamente.",
+  unavailable: "O serviço está indisponível no momento. Tente novamente em instantes.",
+  network: "Não foi possível conectar ao serviço. Confira a conexão e tente novamente.",
+  timeout: "O serviço demorou para responder. Tente novamente.",
+  "invalid-response": "Não foi possível confirmar os dados recebidos. Tente novamente.",
+  cancelled: "A solicitação foi cancelada.",
+};
+
+export class ApiError extends Error {
+  constructor(kind) {
+    super(messages[kind]);
+    this.name = "ApiError";
+    this.kind = kind;
+  }
+}
+
+export function isTokenResponse(value) {
+  return value !== null && typeof value === "object"
+    && typeof value.access_token === "string" && value.access_token.trim().length > 0
+    && value.token_type === "bearer" && typeof value.expires_in === "number"
+    && Number.isFinite(value.expires_in) && value.expires_in > 0
+    && value.expires_in <= Number.MAX_SAFE_INTEGER / 1000;
+}
+
+function isIdentity(value) {
+  const uuid = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i;
+  return value !== null && typeof value === "object"
+    && typeof value.id === "string" && uuid.test(value.id)
+    && typeof value.email === "string" && value.email.trim().length > 0
+    && typeof value.display_name === "string" && value.display_name.trim().length > 0
+    && value.is_active === true && typeof value.created_at === "string"
+    && Number.isFinite(Date.parse(value.created_at));
+}
+
+export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000 }) {
+  const url = new URL(baseUrl);
+  if (!["http:", "https:"].includes(url.protocol) || url.username || url.password
+      || url.search || url.hash) {
+    throw new TypeError("Configure um endereço HTTP(S) válido para a API.");
+  }
+  const base = url.href.replace(/\/$/, "");
+
+  async function request(path, options, validate, signal) {
+    const controller = new AbortController();
+    let timedOut = false;
+    const cancel = () => controller.abort();
+    if (signal?.aborted) cancel();
+    signal?.addEventListener("abort", cancel, { once: true });
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, timeoutMs);
+    try {
+      if (controller.signal.aborted) throw new ApiError("cancelled");
+      const response = await fetchImpl(base + path, {
+        ...options, signal: controller.signal, credentials: "omit", cache: "no-store",
+        redirect: "error",
+      });
+      if (controller.signal.aborted) throw new ApiError(timedOut ? "timeout" : "cancelled");
+      if (!response.ok) {
+        const kind = response.status === 401
+          ? (path === "/auth/token" ? "credentials" : "unauthorized")
+          : response.status === 422 ? "validation" : "unavailable";
+        throw new ApiError(kind);
+      }
+      let data;
+      try {
+        data = await response.json();
+      } catch {
+        throw new ApiError("invalid-response");
+      }
+      if (controller.signal.aborted) throw new ApiError(timedOut ? "timeout" : "cancelled");
+      if (!validate(data)) throw new ApiError("invalid-response");
+      return data;
+    } catch (error) {
+      if (controller.signal.aborted) throw new ApiError(timedOut ? "timeout" : "cancelled");
+      if (error instanceof ApiError) throw error;
+      throw new ApiError("network");
+    } finally {
+      clearTimeout(timeout);
+      signal?.removeEventListener("abort", cancel);
+    }
+  }
+
+  return {
+    register(displayName, email, password, { signal } = {}) {
+      return request("/auth/register", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ display_name: displayName, email, password }),
+      }, (value) => value !== null && typeof value === "object"
+        && typeof value.message === "string" && value.message.length > 0, signal);
+    },
+    login(email, password, { signal } = {}) {
+      return request("/auth/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ username: email, password }),
+      }, isTokenResponse, signal);
+    },
+    getMe(token, { signal } = {}) {
+      return request("/auth/me", {
+        method: "GET", headers: token ? { Authorization: `Bearer ${token}` } : {},
+      }, isIdentity, signal);
+    },
+  };
+}

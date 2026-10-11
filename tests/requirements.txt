@@ -1,0 +1,4 @@
+# Development-only browser tests; no packages are shipped to the frontend.
+playwright==1.63.0
+pyee==13.0.1
+greenlet==3.5.6

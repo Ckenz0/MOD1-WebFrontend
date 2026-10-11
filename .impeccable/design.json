@@ -1,0 +1,366 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-10T16:41:53.157908+00:00",
+  "title": "Design System: MOD1 Frontend",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Primary",
+        "tonalRamp": [
+          "oklch(15% 0.08733 269.96)",
+          "oklch(25% 0.08733 269.96)",
+          "oklch(35% 0.08733 269.96)",
+          "oklch(45% 0.08733 269.96)",
+          "oklch(55% 0.08733 269.96)",
+          "oklch(65% 0.08733 269.96)",
+          "oklch(80% 0.08733 269.96)",
+          "oklch(95% 0.08733 269.96)"
+        ]
+      },
+      "primary-hover": {
+        "role": "primary",
+        "displayName": "Primary Hover",
+        "tonalRamp": [
+          "oklch(15% 0.10949 270.12)",
+          "oklch(25% 0.10949 270.12)",
+          "oklch(35% 0.10949 270.12)",
+          "oklch(45% 0.10949 270.12)",
+          "oklch(55% 0.10949 270.12)",
+          "oklch(65% 0.10949 270.12)",
+          "oklch(80% 0.10949 270.12)",
+          "oklch(95% 0.10949 270.12)"
+        ]
+      },
+      "on-primary": {
+        "role": "neutral",
+        "displayName": "On Primary",
+        "tonalRamp": [
+          "oklch(15% 0.00000 89.88)",
+          "oklch(25% 0.00000 89.88)",
+          "oklch(35% 0.00000 89.88)",
+          "oklch(45% 0.00000 89.88)",
+          "oklch(55% 0.00000 89.88)",
+          "oklch(65% 0.00000 89.88)",
+          "oklch(80% 0.00000 89.88)",
+          "oklch(95% 0.00000 89.88)"
+        ]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "Bg",
+        "tonalRamp": [
+          "oklch(15% 0.00413 271.37)",
+          "oklch(25% 0.00413 271.37)",
+          "oklch(35% 0.00413 271.37)",
+          "oklch(45% 0.00413 271.37)",
+          "oklch(55% 0.00413 271.37)",
+          "oklch(65% 0.00413 271.37)",
+          "oklch(80% 0.00413 271.37)",
+          "oklch(95% 0.00413 271.37)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Surface",
+        "tonalRamp": [
+          "oklch(15% 0.00000 89.88)",
+          "oklch(25% 0.00000 89.88)",
+          "oklch(35% 0.00000 89.88)",
+          "oklch(45% 0.00000 89.88)",
+          "oklch(55% 0.00000 89.88)",
+          "oklch(65% 0.00000 89.88)",
+          "oklch(80% 0.00000 89.88)",
+          "oklch(95% 0.00000 89.88)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(15% 0.01001 267.36)",
+          "oklch(25% 0.01001 267.36)",
+          "oklch(35% 0.01001 267.36)",
+          "oklch(45% 0.01001 267.36)",
+          "oklch(55% 0.01001 267.36)",
+          "oklch(65% 0.01001 267.36)",
+          "oklch(80% 0.01001 267.36)",
+          "oklch(95% 0.01001 267.36)"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Text",
+        "tonalRamp": [
+          "oklch(15% 0.02364 273.56)",
+          "oklch(25% 0.02364 273.56)",
+          "oklch(35% 0.02364 273.56)",
+          "oklch(45% 0.02364 273.56)",
+          "oklch(55% 0.02364 273.56)",
+          "oklch(65% 0.02364 273.56)",
+          "oklch(80% 0.02364 273.56)",
+          "oklch(95% 0.02364 273.56)"
+        ]
+      },
+      "text-muted": {
+        "role": "neutral",
+        "displayName": "Text Muted",
+        "tonalRamp": [
+          "oklch(15% 0.03159 269.30)",
+          "oklch(25% 0.03159 269.30)",
+          "oklch(35% 0.03159 269.30)",
+          "oklch(45% 0.03159 269.30)",
+          "oklch(55% 0.03159 269.30)",
+          "oklch(65% 0.03159 269.30)",
+          "oklch(80% 0.03159 269.30)",
+          "oklch(95% 0.03159 269.30)"
+        ]
+      },
+      "priority-critical": {
+        "role": "semantic",
+        "displayName": "Priority Critical",
+        "tonalRamp": [
+          "oklch(15% 0.21516 27.33)",
+          "oklch(25% 0.21516 27.33)",
+          "oklch(35% 0.21516 27.33)",
+          "oklch(45% 0.21516 27.33)",
+          "oklch(55% 0.21516 27.33)",
+          "oklch(65% 0.21516 27.33)",
+          "oklch(80% 0.21516 27.33)",
+          "oklch(95% 0.21516 27.33)"
+        ]
+      },
+      "success": {
+        "role": "semantic",
+        "displayName": "Success",
+        "tonalRamp": [
+          "oklch(15% 0.16991 149.21)",
+          "oklch(25% 0.16991 149.21)",
+          "oklch(35% 0.16991 149.21)",
+          "oklch(45% 0.16991 149.21)",
+          "oklch(55% 0.16991 149.21)",
+          "oklch(65% 0.16991 149.21)",
+          "oklch(80% 0.16991 149.21)",
+          "oklch(95% 0.16991 149.21)"
+        ]
+      },
+      "bg-dark": {
+        "role": "neutral",
+        "displayName": "Bg Dark",
+        "tonalRamp": [
+          "oklch(15% 0.02901 274.03)",
+          "oklch(25% 0.02901 274.03)",
+          "oklch(35% 0.02901 274.03)",
+          "oklch(45% 0.02901 274.03)",
+          "oklch(55% 0.02901 274.03)",
+          "oklch(65% 0.02901 274.03)",
+          "oklch(80% 0.02901 274.03)",
+          "oklch(95% 0.02901 274.03)"
+        ]
+      },
+      "surface-dark": {
+        "role": "neutral",
+        "displayName": "Surface Dark",
+        "tonalRamp": [
+          "oklch(15% 0.03539 273.76)",
+          "oklch(25% 0.03539 273.76)",
+          "oklch(35% 0.03539 273.76)",
+          "oklch(45% 0.03539 273.76)",
+          "oklch(55% 0.03539 273.76)",
+          "oklch(65% 0.03539 273.76)",
+          "oklch(80% 0.03539 273.76)",
+          "oklch(95% 0.03539 273.76)"
+        ]
+      },
+      "border-dark": {
+        "role": "neutral",
+        "displayName": "Border Dark",
+        "tonalRamp": [
+          "oklch(15% 0.04024 273.99)",
+          "oklch(25% 0.04024 273.99)",
+          "oklch(35% 0.04024 273.99)",
+          "oklch(45% 0.04024 273.99)",
+          "oklch(55% 0.04024 273.99)",
+          "oklch(65% 0.04024 273.99)",
+          "oklch(80% 0.04024 273.99)",
+          "oklch(95% 0.04024 273.99)"
+        ]
+      },
+      "text-dark": {
+        "role": "neutral",
+        "displayName": "Text Dark",
+        "tonalRamp": [
+          "oklch(15% 0.01097 274.89)",
+          "oklch(25% 0.01097 274.89)",
+          "oklch(35% 0.01097 274.89)",
+          "oklch(45% 0.01097 274.89)",
+          "oklch(55% 0.01097 274.89)",
+          "oklch(65% 0.01097 274.89)",
+          "oklch(80% 0.01097 274.89)",
+          "oklch(95% 0.01097 274.89)"
+        ]
+      },
+      "text-muted-dark": {
+        "role": "neutral",
+        "displayName": "Text Muted Dark",
+        "tonalRamp": [
+          "oklch(15% 0.02991 272.36)",
+          "oklch(25% 0.02991 272.36)",
+          "oklch(35% 0.02991 272.36)",
+          "oklch(45% 0.02991 272.36)",
+          "oklch(55% 0.02991 272.36)",
+          "oklch(65% 0.02991 272.36)",
+          "oklch(80% 0.02991 272.36)",
+          "oklch(95% 0.02991 272.36)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Login heading."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Authenticated greeting."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Instructions, inputs, and messages."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels and small interactive text."
+      },
+      "control": {
+        "displayName": "Control",
+        "purpose": "Main action buttons."
+      },
+      "value": {
+        "displayName": "Value",
+        "purpose": "Account values."
+      },
+      "supporting": {
+        "displayName": "Supporting",
+        "purpose": "Descriptions, notes, footer, and account-data labels."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "profile-enter",
+        "value": "180ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "Clip reveal from inset(0 0 5%) to inset(0); only prefers-reduced-motion: no-preference."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "compact",
+        "value": "600px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "description": "Navy action for entering or refreshing an account.",
+      "html": "<button class=\"ds-primary\" type=\"button\">Entrar</button>",
+      "css": ".ds-primary{min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:12px 18px;border:1px solid transparent;border-radius:var(--radius-control);font:500 var(--text-md)/1.4 var(--font-sans);cursor:pointer;background:var(--color-primary);color:var(--color-on-primary);}.ds-primary:hover:not(:disabled){background:var(--color-primary-hover);}.ds-primary:focus-visible{outline:2px solid var(--color-text);outline-offset:4px;}.ds-primary:disabled{opacity:.65;cursor:wait;}",
+      "refersTo": "button-primary"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "description": "Quieter outlined session action.",
+      "html": "<button class=\"ds-secondary\" type=\"button\">Sair</button>",
+      "css": ".ds-secondary{min-height:48px;display:inline-flex;align-items:center;justify-content:center;gap:12px;padding:12px 18px;border:1px solid transparent;border-radius:var(--radius-control);font:500 var(--text-md)/1.4 var(--font-sans);cursor:pointer;background:transparent;color:var(--color-text);border-color:var(--color-text-muted);}.ds-secondary:hover{background:var(--color-bg);}.ds-secondary:focus-visible{outline:2px solid var(--color-text);outline-offset:4px;}.ds-secondary:disabled{opacity:.65;cursor:wait;}",
+      "refersTo": "button-secondary"
+    },
+    {
+      "name": "Theme Button",
+      "kind": "button",
+      "description": "Outlined header theme control.",
+      "html": "<button class=\"ds-theme\" type=\"button\" aria-label=\"Ativar tema escuro\"><svg viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><path d=\"M20 14a8 8 0 0 1-10-10A8 8 0 1 0 20 14Z\"/></svg><span>Tema escuro</span></button>",
+      "css": ".ds-theme{padding:10px 12px;min-height:44px;display:flex;align-items:center;gap:var(--space-xs);color:var(--color-text-muted);background:transparent;border:1px solid var(--color-border);border-radius:var(--radius-control);font:500 var(--text-sm)/1.6 var(--font-sans);cursor:pointer;}.ds-theme svg{width:20px;height:20px;flex-shrink:0;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}.ds-theme:hover{color:var(--color-text);background:var(--color-surface);}.ds-theme:focus-visible{outline:2px solid var(--color-text);outline-offset:4px;}@media(max-width:600px){.ds-theme span{display:none;}}",
+      "refersTo": "theme-button"
+    },
+    {
+      "name": "Email Field",
+      "kind": "input",
+      "description": "Persistent label and outlined field.",
+      "html": "<label class=\"ds-label\" for=\"ds-email\">E-mail</label><input class=\"ds-input\" id=\"ds-email\" type=\"email\" autocomplete=\"username\" placeholder=\"voce@exemplo.com\">",
+      "css": ".ds-label{display:block;margin-bottom:var(--space-xs);color:var(--color-text);font:500 var(--text-sm)/1.6 var(--font-sans);}.ds-input{width:100%;min-width:0;height:48px;padding:12px var(--space-sm);color:var(--color-text);caret-color:var(--color-text);background:var(--color-surface);border:1px solid var(--color-text-muted);border-radius:var(--radius-control);font:400 var(--text-sm)/1.6 var(--font-sans);}.ds-input::placeholder{color:var(--color-text-muted);opacity:1;}.ds-input:hover{border-color:var(--color-text);}.ds-input:focus-visible{outline:2px solid var(--color-text);outline-offset:4px;}",
+      "refersTo": "input"
+    },
+    {
+      "name": "Authentication Panel",
+      "kind": "card",
+      "description": "Outlined surface shared by login and profile.",
+      "html": "<section class=\"ds-panel\" aria-labelledby=\"ds-panel-title\"><h1 id=\"ds-panel-title\">Entrar</h1><p>Acesse com a conta fornecida pelo responsavel do modulo.</p></section>",
+      "css": ".ds-panel{width:min(480px,100%);padding:var(--space-xl);border:1px solid var(--color-border);border-radius:var(--radius-panel);background:var(--color-surface);color:var(--color-text);font:400 var(--text-sm)/1.6 var(--font-sans);}.ds-panel h1{margin:0 0 var(--space-xs);font-size:var(--text-2xl);font-weight:600;line-height:1.2;letter-spacing:-.025em;overflow-wrap:anywhere;text-wrap:balance;}.ds-panel p{margin:0 0 var(--space-lg);color:var(--color-text-muted);}@media(max-width:600px){.ds-panel{padding:var(--space-md);}}",
+      "refersTo": "panel"
+    },
+    {
+      "name": "Error Message",
+      "kind": "custom",
+      "description": "Main-ink alert with a critical outline.",
+      "html": "<div class=\"ds-message\" role=\"alert\" aria-atomic=\"true\">E-mail ou senha invalidos.</div>",
+      "css": ".ds-message{margin:0 0 var(--space-md);padding:12px var(--space-sm);border:1px solid var(--color-priority-critical);border-radius:var(--radius-control);color:var(--color-text);font:400 var(--text-sm)/1.6 var(--font-sans);overflow-wrap:anywhere;}.ds-message[data-tone=\"notice\"]{border-color:var(--color-border);}",
+      "refersTo": "message"
+    },
+    {
+      "name": "Account Status",
+      "kind": "custom",
+      "description": "Green check icon with main-ink status text.",
+      "html": "<span class=\"ds-status\"><svg viewBox=\"0 0 24 24\" fill=\"none\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"m8 12 3 3 5-6\"/></svg>Ativa</span>",
+      "css": ".ds-status{display:flex;align-items:center;gap:var(--space-xs);color:var(--color-text);font:500 var(--text-md)/1.6 var(--font-sans);}.ds-status svg{width:20px;height:20px;flex-shrink:0;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;color:var(--color-success);}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Guide neutrals, navy actions, and precise outlines",
+    "overview": "The shared Module 6 guide provides the visual authority: cool neutral surfaces, navy actions, Inter typography, and precise outlines. Calm spacing and clear text hierarchy support brief authentication tasks.\n\nLight and dark themes change neutral surfaces, borders, and text while keeping the action palette stable. Depth comes from surface contrast and borders. The module is identified through text; its lock symbol is a functional identifier rather than an official logo.",
+    "keyCharacteristics": [
+      "Cool neutral surfaces with navy primary actions.",
+      "Inter at weights 400, 500, and 600.",
+      "Outlined controls, gently curved panels, and visible keyboard focus.",
+      "Theme-aware neutrals and text-supported status feedback."
+    ],
+    "rules": [
+      {
+        "name": "Action Color",
+        "body": "Use navy for primary actions. Reserve critical red for error outlines; never use red for action buttons.",
+        "section": "colors"
+      },
+      {
+        "name": "Stable Contrast",
+        "body": "Keep on-primary white in both themes; theme switches change neutral tokens, not navy-button foregrounds.",
+        "section": "colors"
+      },
+      {
+        "name": "Readable Floor",
+        "body": "Keep visible text at 12px or above and use Inter at weights 400, 500, and 600.",
+        "section": "typography"
+      },
+      {
+        "name": "Outlined Depth",
+        "body": "Use surface contrast and borders for depth; panels and controls do not use box shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do reference the existing CSS custom properties for reusable visual decisions.",
+      "Do preserve white on-primary text and icons in both themes.",
+      "Do preserve visible labels, keyboard focus, and text or icons alongside status colors.",
+      "Do use the established spacing scale, comfortable mobile gutters, and touch-sized controls.",
+      "Do honor reduced-motion preferences and keep motion brief and local to state changes."
+    ],
+    "donts": [
+      "Don't use red for action buttons or communicate status through color alone.",
+      "Don't add box shadows or decorative elevation to these outlined surfaces.",
+      "Don't shrink visible text below 12px or replace Inter with a system display face.",
+      "Don't treat the lock symbol as an official logo or invent additional brand assets.",
+      "Don't turn the authentication panel composition into a mandatory layout for unrelated surfaces."
+    ]
+  }
+}
