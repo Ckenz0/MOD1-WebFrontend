@@ -93,4 +93,3 @@ export function createBacklogApiClient({ baseUrl, fetchImpl = fetch, timeoutMs =
     },
   };
 }
-
