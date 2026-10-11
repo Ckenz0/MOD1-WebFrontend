@@ -112,6 +112,9 @@ submissão única, erro recuperável, teclado e descarte de respostas antigas ap
 logout/troca de sessão. Layout 390/1440 sem overflow horizontal.
 
 Resultado: **47 testes passaram**, sem skips quando `AUTH_BACKEND_PATH` e
-`PROJECTS_BACKEND_PATH` estão configurados. Backend de projetos: **68 passaram,
+`PROJECTS_BACKEND_PATH` estão configurados. Backend de projetos: **73 passaram,
 1 teste PostgreSQL local opt-in pendente**; lint, tipos e wheel/sdist passaram.
-Revisão independente final em andamento.
+Revisão independente final concluída. Os dois achados importantes sobre JWKS
+foram corrigidos com testes de regressão; uma auditoria adicional garantiu que
+wheel/sdist excluem configurações privadas. Após as correções e outro reinício,
+o mesmo projeto persistido no Neon retornou 200.
