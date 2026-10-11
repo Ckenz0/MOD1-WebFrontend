@@ -1,4 +1,4 @@
-import { BacklogApiError } from "./backlog-api.js";
+import { BacklogApiError, trimStoryTitle } from "./backlog-api.js";
 import { createFormValidation } from "./validation.js";
 
 const byId = id => document.getElementById(id);
@@ -12,7 +12,7 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
   let page = emptyPage();
   const form = byId("backlog-form"), updateForm = byId("story-update-form");
   const validation = createFormValidation("backlog-form", {
-    "story-title": input => { const length = Array.from(input.value.trim()).length;
+    "story-title": input => { const length = Array.from(trimStoryTitle(input.value)).length;
       return length >= 1 && length <= 120 ? "" : "Informe um título de até 120 caracteres."; },
     "story-description": input => Array.from(input.value).length <= 2000 ? "" : "Use até 2000 caracteres na descrição.",
     "story-criteria": input => Array.from(input.value).length <= 2000 ? "" : "Use até 2000 caracteres nos critérios de aceite.",
@@ -73,7 +73,7 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
     }
     byId("backlog-count").textContent = value.items.length ? `${value.offset + 1}–${value.offset + value.items.length} de ${value.total} histórias` : "";
   }
-  async function run(action, onSuccess, errorPrefix = () => "") {
+  async function run(action, onSuccess, errorPrefix = () => "", confirmedNotice = () => "") {
     const token = getToken(), projectId = project?.id;
     if (!token) { clear(); onUnauthorized(); return; }
     if (!projectId) return;
@@ -87,7 +87,7 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
       status(); await onSuccess(result, { token, projectId, signal, valid });
     } catch (error) {
       if (!valid() || error.kind === "cancelled") return;
-      if (error.kind === "unauthorized") { clear(); onUnauthorized(); return; }
+      if (error.kind === "unauthorized") { const notice = confirmedNotice(); clear(); onUnauthorized(notice); return; }
       status(errorPrefix() + (error instanceof BacklogApiError ? error.message : "Não foi possível carregar o backlog. Tente novamente."), "error");
     } finally {
       if (valid()) { controller = null; setBusy(false); }
@@ -109,7 +109,7 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
   form.addEventListener("submit", event => {
     event.preventDefault(); if (busy || !project) return;
     if (!validation.validate()) { status("Confira os campos destacados para criar a história.", "error"); return; }
-    const draft = { title: byId("story-title").value.trim(), description: byId("story-description").value,
+    const draft = { title: trimStoryTitle(byId("story-title").value), description: byId("story-description").value,
       acceptance_criteria: byId("story-criteria").value, priority: byId("story-priority").value };
     let created = false;
     run((token, id, signal) => api.create(token, id, draft, { signal }), async (story, ctx) => {
@@ -117,7 +117,8 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
       const list = await api.list(ctx.token, ctx.projectId, { limit: 20, offset: 0, signal: ctx.signal });
       if (!ctx.valid()) return;
       renderPage(list); status("História criada. Ela já está salva no projeto.");
-    }, () => created ? "História criada. Atualize a lista para encontrá-la. " : "");
+    }, () => created ? "História criada. Atualize a lista para encontrá-la. " : "",
+    () => created ? "História criada. " : "");
   });
   updateForm.addEventListener("submit", event => {
     event.preventDefault(); if (busy || !selected) return;
@@ -129,7 +130,8 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
       const list = await api.list(ctx.token, ctx.projectId, { limit: 20, offset: 0, signal: ctx.signal });
       if (!ctx.valid()) return;
       renderPage(list); status("Alterações salvas. O progresso da história foi atualizado.");
-    }, () => saved ? "Alterações salvas. Atualize a lista para conferir a ordem e o progresso. " : "");
+    }, () => saved ? "Alterações salvas. Atualize a lista para conferir a ordem e o progresso. " : "",
+    () => saved ? "Alterações salvas. " : "");
   });
   byId("backlog-refresh").addEventListener("click", () => { if (!busy) load(page.offset); });
   byId("backlog-previous").addEventListener("click", () => { if (!busy) load(Math.max(0, page.offset - 20)); });

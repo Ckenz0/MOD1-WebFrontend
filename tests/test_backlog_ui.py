@@ -1,4 +1,6 @@
 import json
+import os
+from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 from uuid import uuid4
 
@@ -16,6 +18,7 @@ class BacklogUiTests(BrowserCase):
         self.writes = []
         self.list_status = 200
         self.fail_after_write = False
+        self.after_write_status = 503
         self.offsets = []
         self.mock_auth()
         self.page.route('**/projects?*', lambda r: r.fulfill(json={'items': [PROJECT], 'total': 1, 'limit': 20, 'offset': 0}))
@@ -44,7 +47,7 @@ class BacklogUiTests(BrowserCase):
                 story.update(data)
             route.fulfill(status=201 if method == 'POST' else 200, json=story)
             if self.fail_after_write:
-                self.list_status = 503
+                self.list_status = self.after_write_status
         elif path.endswith('/stories'):
             offset = int(parse_qs(urlparse(request.url).query).get('offset', ['0'])[0])
             self.offsets.append(offset)
@@ -58,6 +61,13 @@ class BacklogUiTests(BrowserCase):
     def create(self, title='Entrega de teste'):
         self.page.get_by_label('Título da história', exact=True).fill(title)
         self.page.get_by_role('button', name='Criar história', exact=True).click()
+
+    def capture_evidence(self, filename):
+        if directory := os.environ.get('CAPTURE_BACKLOG_EVIDENCE'):
+            target = Path(directory)
+            target.mkdir(parents=True, exist_ok=True)
+            self.page.evaluate('window.scrollTo(0, 0)')
+            self.page.screenshot(path=str(target / filename), full_page=True)
 
     def test_empty_validation_and_unicode_boundaries(self):
         expect(self.page.locator('#backlog-list')).to_contain_text('Ainda não há histórias')
@@ -136,6 +146,7 @@ class BacklogUiTests(BrowserCase):
         self.list_status = 404
         self.page.get_by_role('button', name='Atualizar histórias', exact=True).click()
         expect(self.page.locator('#backlog-status')).to_contain_text('não está disponível')
+        self.capture_evidence('backlog-project-unavailable.png')
         self.list_status = 401
         self.page.get_by_role('button', name='Atualizar histórias', exact=True).click()
         expect(self.page.locator('#login-view')).to_be_visible()
@@ -162,3 +173,35 @@ class BacklogUiTests(BrowserCase):
         self.page.evaluate('''() => {const f=document.querySelector('#backlog-form'); f.requestSubmit();f.requestSubmit()}''')
         expect(self.page.locator('#backlog-status')).to_contain_text('História criada')
         self.assertEqual(len(self.writes), 1)
+
+    def test_confirmed_create_then_401_keeps_confirmation_at_login(self):
+        self.fail_after_write = True
+        self.after_write_status = 401
+        self.create()
+        expect(self.page.locator('#login-view')).to_be_visible()
+        expect(self.page.locator('#login-message')).to_contain_text('História criada')
+        expect(self.page.locator('#login-message')).to_contain_text('sessão terminou')
+        expect(self.page.locator('#backlog-list')).to_be_empty()
+        self.assertEqual([w[0] for w in self.writes], ['POST'])
+        self.capture_evidence('backlog-created-session-expired.png')
+
+    def test_unicode_padding_does_not_create_empty_or_unreadable_titles(self):
+        self.create(' \u0085\u001c ')
+        expect(self.page.locator('#story-title-error')).to_be_visible()
+        self.assertEqual(self.writes, [])
+        self.create('\ufeff\u0085 História Unicode \u001f\ufeff')
+        expect(self.page.locator('#backlog-list')).to_contain_text('História Unicode')
+        self.assertEqual(self.writes[0][1]['title'], 'História Unicode')
+
+    def test_confirmed_update_then_401_keeps_confirmation_at_login(self):
+        self.create()
+        expect(self.page.locator('#backlog-status')).to_contain_text('História criada')
+        self.fail_after_write = True
+        self.after_write_status = 401
+        self.page.get_by_label('Status da história', exact=True).select_option('done')
+        self.page.get_by_role('button', name='Salvar alterações', exact=True).click()
+        expect(self.page.locator('#login-view')).to_be_visible()
+        expect(self.page.locator('#login-message')).to_contain_text('Alterações salvas')
+        expect(self.page.locator('#backlog-list')).to_be_empty()
+        self.assertEqual([w[0] for w in self.writes], ['POST', 'PATCH'])
+        self.capture_evidence('backlog-updated-session-expired.png')

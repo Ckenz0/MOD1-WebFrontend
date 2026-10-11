@@ -12,6 +12,9 @@ esta mudança não cria tag ou release.
 - Prioridades alta/média/baixa e progresso a fazer/em andamento/concluído.
 - Paginação, validação dos campos, confirmação de gravação e recuperação de falhas.
 - Integração com três APIs, isolamento de contas e persistência após reinício.
+- Confirmação de criação/atualização preservada se a recarga encerrar a sessão.
+- Espaços Unicode no título alinhados ao backend, com leitura de histórias antigas.
+- Concordância das mensagens de validação e indisponibilidade corrigida.
 
 ### Added
 

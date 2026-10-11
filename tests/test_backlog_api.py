@@ -44,7 +44,7 @@ class BacklogApiTests(BrowserCase):
     def test_untrusted_story_and_page_responses(self):
         result = self.evaluate('''async s=>{
           const {createBacklogApiClient}=await import('/scripts/backlog-api.js'); const out=[];
-          for(const data of [{}, {...s,project_id:s.id}, {...s,priority:'urgent'}, {...s,status:'other'}, {...s,title:'😀'.repeat(121)}, {...s,description:5}, {...s,updated_at:'bad'}, {...s,acceptance_criteria:null}]) {
+          for(const data of [{}, {...s,project_id:s.id}, {...s,priority:'urgent'}, {...s,status:'other'}, {...s,title:'😀'.repeat(121)}, {...s,description:5}, {...s,updated_at:'bad'}, {...s,acceptance_criteria:null}, {...s,title:'\u0085'}, {...s,title:'\u001c'}]) {
             const a=createBacklogApiClient({baseUrl:location.origin,fetchImpl:async()=>new Response(JSON.stringify(data))});
             try{await a.get('token',s.project_id,s.id)}catch(e){out.push(e.kind)}
           }
@@ -53,7 +53,16 @@ class BacklogApiTests(BrowserCase):
             try{await a.list('token',s.project_id)}catch(e){out.push(e.kind)}
           } return out;
         }''', STORY)
-        self.assertEqual(result, ['invalid-response'] * 11)
+        self.assertEqual(result, ['invalid-response'] * 13)
+
+    def test_legacy_unicode_padding_keeps_existing_stories_readable(self):
+        result = self.evaluate('''async s=>{
+          const {createBacklogApiClient}=await import('/scripts/backlog-api.js');
+          const legacy={...s,title:'\ufeffHistória'};
+          const api=createBacklogApiClient({baseUrl:location.origin,fetchImpl:async()=>new Response(JSON.stringify({items:[legacy],total:1,limit:20,offset:0}))});
+          return (await api.list('token',s.project_id)).items[0].title;
+        }''', STORY)
+        self.assertEqual(result, '\ufeffHistória')
 
     def test_timeout_abort_after_json_and_invalid_configuration(self):
         result = self.evaluate('''async s=>{

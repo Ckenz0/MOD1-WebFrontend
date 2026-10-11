@@ -1,11 +1,11 @@
 const messages = {
   unauthorized: "Sua sessão terminou. Entre novamente para continuar.",
-  validation: "Confira o título e os campos do história e tente novamente.",
-  "not-found": "Este história não está disponível para sua conta. Volte para a lista.",
+  validation: "Confira o título e os campos da história e tente novamente.",
+  "not-found": "Esta história não está disponível para sua conta. Volte para a lista.",
   unavailable: "O serviço de backlog está indisponível. Tente novamente em instantes.",
   network: "Não foi possível conectar ao serviço de backlog. Confira a conexão e tente novamente.",
   timeout: "O serviço de backlog demorou para responder. Atualize a lista antes de tentar novamente.",
-  "invalid-response": "Não foi possível confirmar os dados do história. Tente novamente.",
+  "invalid-response": "Não foi possível confirmar os dados da história. Tente novamente.",
   cancelled: "A solicitação foi cancelada.",
 };
 
@@ -14,12 +14,14 @@ export class BacklogApiError extends Error {
 }
 
 const uuid = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i;
+// JS whitespace plus Python's NEL and information separators: same rules as StoryDraft.
+export const trimStoryTitle = value => value.replace(/^[\s\u0085\u001c-\u001f]+|[\s\u0085\u001c-\u001f]+$/gu, "");
 const isId = value => typeof value === "string" && uuid.test(value);
 const text = (value, max) => typeof value === "string" && Array.from(value).length <= max;
 function isStory(s, projectId, storyId) {
   return s !== null && typeof s === "object" && isId(s.id) && isId(s.created_by)
     && s.project_id === projectId && (!storyId || s.id === storyId)
-    && text(s.title, 120) && s.title.trim().length > 0 && s.title === s.title.trim()
+    && text(s.title, 120) && trimStoryTitle(s.title).length > 0
     && text(s.description, 2000) && text(s.acceptance_criteria, 2000)
     && ["high", "medium", "low"].includes(s.priority) && ["todo", "in_progress", "done"].includes(s.status)
     && typeof s.created_at === "string" && Number.isFinite(Date.parse(s.created_at))

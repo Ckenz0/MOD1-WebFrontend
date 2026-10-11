@@ -1,8 +1,8 @@
 # Validação do frontend 0.2.0 — 11/10/2026
 
 Windows, Python 3.12.15 e Playwright com Microsoft Edge. A suíte completa executou
-**59 testes aprovados, sem skips**, com os três caminhos de backend configurados.
-O backend do backlog executou 110 testes aprovados e um skip PostgreSQL local opt-in.
+**63 testes aprovados, sem skips**, com os três caminhos de backend configurados.
+O backend do backlog executou 118 testes aprovados e um skip PostgreSQL local opt-in.
 
 Os quatro componentes foram exportados somente com arquivos públicos para árvores
 novas; ambientes Python 3.12 foram instalados do zero e a suíte integrada foi
@@ -27,6 +27,9 @@ ao primeiro erro. HTML aparece como texto; quebras de linha são preservadas.
 Testes cobrem paginação, prioridade/status, reabertura, duplo envio, 401/404/503,
 respostas antigas após troca de projeto/logout e sucesso seguido de recarga falha.
 Essa falha confirma a gravação, sem reenviar automaticamente.
+Quando a recarga retorna 401, o login preserva a confirmação de criação ou
+atualização junto ao aviso de sessão encerrada. A normalização dos espaços Unicode
+concorda com o backend; histórias antigas com espaços adicionais continuam legíveis.
 
 Capturas geradas pela fixture com dados sintéticos, APIs reais temporárias e viewport
 desktop 1366×900 / celular 390×844. Não incluem tokens, credenciais ou contas reais.
@@ -34,6 +37,10 @@ desktop 1366×900 / celular 390×844. Não incluem tokens, credenciais ou contas
 ![Backlog no desktop, tema claro](screenshots/backlog-desktop-light.png)
 
 ![Backlog no celular, tema escuro](screenshots/backlog-mobile-dark.png)
+
+[Confirmação de criação preservada após a sessão expirar](screenshots/backlog-created-session-expired.png).
+Essa captura usa respostas controladas para reproduzir POST 201 seguido de GET 401;
+as duas capturas do backlog acima usam os três serviços reais temporários.
 
 ## Reproduzir e apresentar
 
