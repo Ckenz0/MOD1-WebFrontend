@@ -35,13 +35,15 @@ function isPage(p, projectId, limit, offset) {
     && p.items.length <= Math.max(0, p.total - offset);
 }
 
-export function createBacklogApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000 }) {
+export function createBacklogApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000, readiness = null }) {
   const url = new URL(baseUrl);
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
     throw new TypeError("Configure um endereço HTTP(S) válido para backlog.");
   }
   const base = url.href.replace(/\/$/, "");
   async function request(path, token, options, validate, signal) {
+    try { await readiness?.prepare({ signal }); }
+    catch (error) { throw new BacklogApiError(error.kind === "cancelled" ? "cancelled" : "unavailable"); }
     const controller = new AbortController();
     let timedOut = false;
     const cancel = () => controller.abort();
@@ -62,7 +64,9 @@ export function createBacklogApiClient({ baseUrl, fetchImpl = fetch, timeoutMs =
       if (!validate(value)) throw new BacklogApiError("invalid-response");
       return value;
     } catch (error) {
+      if (timedOut) readiness?.invalidate();
       if (controller.signal.aborted) throw new BacklogApiError(timedOut ? "timeout" : "cancelled");
+      if (["unavailable", "network", "timeout"].includes(error.kind) || !(error instanceof BacklogApiError)) readiness?.invalidate();
       if (error instanceof BacklogApiError) throw error;
       throw new BacklogApiError("network");
     } finally { clearTimeout(timer); signal?.removeEventListener("abort", cancel); }

@@ -1,0 +1,25 @@
+name: Frontend checks
+on:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          version: '0.12.24'
+          enable-cache: true
+          cache-dependency-glob: tests/requirements.txt
+      - name: Browser and deployment-config tests
+        run: |
+          uv venv --python 3.12 .venv
+          uv pip install --python .venv/bin/python -r tests/requirements.txt
+          .venv/bin/python -m playwright install --with-deps msedge
+          .venv/bin/python -m unittest discover -s tests -q

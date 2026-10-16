@@ -6,6 +6,12 @@ esta mudança não cria tag ou release.
 
 ## Unreleased
 
+### Deploy Azure
+
+- Publicação manual no Static Web Apps com configuração HTTPS gerada somente no artefato público.
+- Preparação limitada das APIs suspensas, cancelamento e preservação das gravações sem reenvio automático.
+- Guia de configuração Azure integrado aos serviços e Neon.
+
 ### Backlog (0.2.0)
 
 - Histórias por projeto com título, descrição e critérios de aceite.

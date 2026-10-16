@@ -28,13 +28,15 @@ function isPage(p) {
     && p.items.length <= p.limit && p.items.length <= p.total;
 }
 
-export function createProjectsApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000 }) {
+export function createProjectsApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000, readiness = null }) {
   const url = new URL(baseUrl);
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password || url.search || url.hash) {
     throw new TypeError("Configure um endereço HTTP(S) válido para projetos.");
   }
   const base = url.href.replace(/\/$/, "");
   async function request(path, token, options, validate, signal) {
+    try { await readiness?.prepare({ signal }); }
+    catch (error) { throw new ProjectsApiError(error.kind === "cancelled" ? "cancelled" : "unavailable"); }
     const controller = new AbortController();
     let timedOut = false;
     const cancel = () => controller.abort();
@@ -55,7 +57,9 @@ export function createProjectsApiClient({ baseUrl, fetchImpl = fetch, timeoutMs 
       if (!validate(value)) throw new ProjectsApiError("invalid-response");
       return value;
     } catch (error) {
+      if (timedOut) readiness?.invalidate();
       if (controller.signal.aborted) throw new ProjectsApiError(timedOut ? "timeout" : "cancelled");
+      if (["unavailable", "network", "timeout"].includes(error.kind) || !(error instanceof ProjectsApiError)) readiness?.invalidate();
       if (error instanceof ProjectsApiError) throw error;
       throw new ProjectsApiError("network");
     } finally { clearTimeout(timer); signal?.removeEventListener("abort", cancel); }

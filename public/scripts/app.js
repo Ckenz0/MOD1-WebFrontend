@@ -5,14 +5,24 @@ import { createProjectsApiClient } from "./projects-api.js";
 import { createProjectsController } from "./projects.js";
 import { createBacklogApiClient } from "./backlog-api.js";
 import { createBacklogController } from "./backlog.js";
+import { createServiceReadiness } from "./service-readiness.js";
 import { createFormValidation, emailError, loginPasswordError, nameError,
   newPasswordError, confirmationError } from "./validation.js";
 
 const byId = (id) => document.getElementById(id);
 const session = createSession();
+function preparation(...baseUrls) {
+  if (!baseUrls.every(value => new URL(value).protocol === "https:")) return null;
+  return createServiceReadiness({ baseUrls, onWaiting: () => {
+    for (const [view, target] of [["login-view", "login-progress"], ["register-view", "register-progress"],
+      ["profile-view", "profile-progress"], ["projects-view", "projects-status"], ["backlog-view", "backlog-status"]]) {
+      if (!byId(view).hidden) { byId(target).textContent = "Preparando acesso…"; byId(target).hidden = false; }
+    }
+  } });
+}
 let api;
 let apiConfigurationFailed = false;
-try { api = createApiClient({ baseUrl: API_BASE_URL }); }
+try { api = createApiClient({ baseUrl: API_BASE_URL, readiness: preparation(API_BASE_URL) }); }
 catch { apiConfigurationFailed = true; }
 let epoch = 0;
 let controller = null;
@@ -23,7 +33,8 @@ let projects;
 let backlog;
 let backlogConfigurationFailed = false;
 try {
-  backlog = createBacklogController({ api: createBacklogApiClient({ baseUrl: BACKLOG_API_BASE_URL }),
+  backlog = createBacklogController({ api: createBacklogApiClient({ baseUrl: BACKLOG_API_BASE_URL,
+    readiness: preparation(API_BASE_URL, PROJECTS_API_BASE_URL, BACKLOG_API_BASE_URL) }),
     getToken: () => session.getToken(),
     onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar."),
     onBack: () => projects.open(),
@@ -31,7 +42,8 @@ try {
 } catch { backlogConfigurationFailed = true; }
 let projectsConfigurationFailed = false;
 try {
-  projects = createProjectsController({ api: createProjectsApiClient({ baseUrl: PROJECTS_API_BASE_URL }),
+  projects = createProjectsController({ api: createProjectsApiClient({ baseUrl: PROJECTS_API_BASE_URL,
+    readiness: preparation(API_BASE_URL, PROJECTS_API_BASE_URL) }),
     getToken: () => session.getToken(),
     onUnauthorized: () => endSession("Sua sessão terminou. Entre novamente para continuar."),
     onBack: () => { byId("profile-view").hidden = false; byId("profile-title").focus(); },
