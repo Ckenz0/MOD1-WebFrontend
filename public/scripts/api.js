@@ -35,7 +35,7 @@ function isIdentity(value) {
     && Number.isFinite(Date.parse(value.created_at));
 }
 
-export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000 }) {
+export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000, readiness = null }) {
   const url = new URL(baseUrl);
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password
       || url.search || url.hash) {
@@ -44,6 +44,8 @@ export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000 
   const base = url.href.replace(/\/$/, "");
 
   async function request(path, options, validate, signal) {
+    try { await readiness?.prepare({ signal }); }
+    catch (error) { throw new ApiError(error.kind === "cancelled" ? "cancelled" : "unavailable"); }
     const controller = new AbortController();
     let timedOut = false;
     const cancel = () => controller.abort();
@@ -76,7 +78,9 @@ export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000 
       if (!validate(data)) throw new ApiError("invalid-response");
       return data;
     } catch (error) {
+      if (timedOut) readiness?.invalidate();
       if (controller.signal.aborted) throw new ApiError(timedOut ? "timeout" : "cancelled");
+      if (["unavailable", "network", "timeout"].includes(error.kind) || !(error instanceof ApiError)) readiness?.invalidate();
       if (error instanceof ApiError) throw error;
       throw new ApiError("network");
     } finally {

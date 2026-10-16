@@ -1,0 +1,50 @@
+name: Publish frontend to Azure
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: azure-demo-frontend
+  cancel-in-progress: false
+jobs:
+  deploy:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: demo
+    env:
+      AUTH_API_URL: ${{ vars.AUTH_API_URL }}
+      PROJECTS_API_URL: ${{ vars.PROJECTS_API_URL }}
+      BACKLOG_API_URL: ${{ vars.BACKLOG_API_URL }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@94527f2e458b27549849d47d273a16bec83a01e9 # v7
+        with:
+          version: '0.12.24'
+          enable-cache: true
+          cache-dependency-glob: tests/requirements.txt
+      - name: Test and prepare only public files
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv venv --python 3.12 .venv
+          uv pip install --python .venv/bin/python -r tests/requirements.txt
+          .venv/bin/python -m playwright install --with-deps msedge
+          .venv/bin/python -m unittest discover -s tests -q
+          mkdir -p .local/site
+          cp -R public/. .local/site/
+          .venv/bin/python scripts/render_config.py --output .local/site/config.js
+          printf 'Code: %s\nFrontend version: %s\n' "$GITHUB_SHA" "$(cat VERSION)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Upload static artifact
+        uses: Azure/static-web-apps-deploy@1a947af9992250f3bc2e68ad0754c0b0c11566c9 # v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: upload
+          app_location: .local/site
+          api_location: ''
+          output_location: ''
+          skip_app_build: true
+          skip_api_build: true
+          production_branch: main

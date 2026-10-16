@@ -10,6 +10,8 @@ esta interface demonstra o recorte local e permite reaproveitar clientes/tokens 
 
 ## Executar
 
+Para publicação no Azure Static Web Apps e retomada das APIs suspensas, siga o [guia de deploy](docs/deploy-azure.md). A configuração pública de produção é gerada no artefato, preservando os endereços locais no código fonte.
+
 Prepare cada backend pelo README correspondente:
 
 | API | Repositório | Porta |
