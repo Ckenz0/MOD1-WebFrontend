@@ -1,7 +1,7 @@
 # Frontend
 
 MVP integrado: criar conta, entrar, organizar projetos e acompanhar histórias
-priorizadas até a conclusão. Versão candidata SemVer `0.2.0` em [VERSION](VERSION);
+priorizadas até a conclusão. Versão candidata SemVer `0.3.0` em [VERSION](VERSION);
 alterações em [CHANGELOG.md](CHANGELOG.md).
 
 HTML/CSS/JavaScript modular, sem dependências de produto ou build. Identidade visual
@@ -53,7 +53,25 @@ preservando dados e acesso por conta. [Resultados e capturas](docs/verification.
 JWT fica somente em memória; recarregar a página exige login. Só o tema pode persistir.
 Logout não revoga JWT no servidor. Cadastro permite login imediato, sem confirmação
 de posse do e-mail ou recuperação de senha. Projetos têm proprietário único; não há
-equipes/RBAC. Backlog não inclui tarefas, sprints, estimativas, exclusão ou edição do texto.
+equipes/RBAC. Backlog permite refinar título, descrição e critérios; não inclui
+tarefas, sprints, estimativas ou exclusão de histórias.
+
+## Gerenciamento básico — candidato 0.3.0
+
+- Na conta, **Alterar senha** solicita a senha atual, a nova e a confirmação.
+  A interface mostra a política configurada pela Identidade e encerra a sessão
+  local após salvar. JWT já emitido nos consumidores ainda vale até expirar.
+- Em Projetos, registre o objetivo, use **Editar projeto** para refinar nome,
+  descrição e objetivo, ou busque pelo nome. A edição pode ser cancelada.
+- No Backlog, refine título, descrição e critérios de aceite; busque por título,
+  descrição ou ID e combine filtros de status/prioridade. Descarte restaura o
+  último valor salvo. Falhas de rede preservam o rascunho para nova tentativa.
+
+Usar em conjunto com Identidade 0.2.0, Projetos 0.3.0 e Backlog 0.2.0.
+Em banco de Projetos anterior, executar a migração administrativa explícita
+conforme o README desse backend. Nenhuma tela executa migração ou concede acesso.
+Status/etiquetas de projetos, equipes/RBAC, recuperação por e-mail, MFA e IA
+continuam pendentes; a prioridade atual do backlog não é MoSCoW.
 
 Falha de rede não equivale a acesso negado. Se POST/PATCH tiver sucesso e a recarga
 falhar, a tela confirma a gravação e orienta atualizar a lista. Timeout não confirma

@@ -62,6 +62,20 @@
       <div class="profile-actions"><button id="open-projects" type="button" class="button button-primary">Meus projetos</button><button id="refresh-button" type="button" class="button button-secondary">Atualizar dados</button><button id="logout-button" type="button" class="button button-secondary">Sair</button></div>
       <p id="profile-progress" class="visually-hidden" role="status" aria-live="polite"></p>
       <p class="session-note">Ao sair ou recarregar esta página, você precisará entrar novamente.</p>
+      <div class="account-security">
+        <button id="open-password-change" type="button" class="text-button">Alterar senha</button>
+        <section id="password-change" aria-labelledby="password-change-title" hidden>
+          <h2 id="password-change-title" tabindex="-1">Alterar minha senha</h2>
+          <p class="intro">Confirme sua senha atual. Após salvar, entre novamente com a nova senha.</p>
+          <div id="password-change-message" class="message" role="alert" aria-atomic="true" hidden></div>
+          <form id="password-change-form" method="post">
+            <div class="field"><label for="current-password">Senha atual</label><input id="current-password" type="password" autocomplete="current-password" required aria-describedby="current-password-error"><p id="current-password-error" class="field-error" hidden></p></div>
+            <div class="field"><label for="new-password">Nova senha</label><input id="new-password" type="password" autocomplete="new-password" required aria-describedby="password-policy-hint new-password-error"><p id="password-policy-hint" class="field-hint">Use de 12 a 128 caracteres. Espaços também contam.</p><p id="new-password-error" class="field-error" hidden></p></div>
+            <div class="field"><label for="confirm-new-password">Confirme a nova senha</label><input id="confirm-new-password" type="password" autocomplete="new-password" required aria-describedby="confirm-new-password-error"><p id="confirm-new-password-error" class="field-error" hidden></p></div>
+            <div class="form-actions"><button id="password-change-save" type="submit" class="button button-primary">Salvar nova senha</button><button id="password-change-cancel" type="button" class="button button-secondary">Cancelar alteração de senha</button></div>
+          </form>
+        </section>
+      </div>
     </section>
     <section id="projects-view" class="auth-panel projects-panel" aria-labelledby="projects-title" hidden>
       <div class="projects-heading"><div><h1 id="projects-title" tabindex="-1">Meus projetos</h1><p class="intro">Organize seu trabalho. Os projetos ficam salvos e disponíveis para sua conta.</p></div><button id="projects-logout" type="button" class="button button-secondary">Sair</button></div>
@@ -69,14 +83,28 @@
       <div class="projects-layout">
         <div class="projects-content">
           <div class="projects-list-heading"><h2>Seus projetos</h2><button id="projects-refresh" type="button" class="text-button">Atualizar projetos</button></div>
+          <form id="project-search-form" class="search-form" role="search"><div class="field"><label for="project-search">Buscar projetos pelo nome</label><input id="project-search" type="search" maxlength="120" placeholder="Nome do projeto"></div><button type="submit" class="button button-secondary">Buscar projetos</button></form>
           <div id="projects-list" aria-label="Lista de projetos"></div>
           <nav class="projects-pagination" aria-label="Páginas de projetos"><button id="projects-previous" class="button button-secondary" type="button" disabled>Anterior</button><span id="projects-count" role="status"></span><button id="projects-next" class="button button-secondary" type="button" disabled>Próxima</button></nav>
-          <article id="project-detail" aria-labelledby="project-detail-title" hidden><h2 id="project-detail-title" tabindex="-1"></h2><p id="project-detail-date" class="project-date"></p><p id="project-detail-description"></p><button id="project-backlog" type="button" class="button button-primary">Backlog</button></article>
+          <article id="project-detail" aria-labelledby="project-detail-title" hidden>
+            <h2 id="project-detail-title" tabindex="-1"></h2><p id="project-detail-date" class="project-date"></p>
+            <h3>Descrição</h3><p id="project-detail-description" class="story-text"></p>
+            <h3>Objetivo</h3><p id="project-detail-objective" class="story-text"></p>
+            <div class="form-actions"><button id="project-backlog" type="button" class="button button-primary">Backlog</button><button id="project-edit" type="button" class="button button-secondary">Editar projeto</button></div>
+            <form id="project-edit-form" method="post" hidden>
+              <h3>Editar projeto</h3>
+              <div class="field"><label for="project-edit-name">Nome do projeto para edição</label><input id="project-edit-name" type="text" required aria-describedby="project-edit-name-error"><p id="project-edit-name-error" class="field-error" hidden></p></div>
+              <div class="field"><label for="project-edit-description">Descrição do projeto para edição</label><textarea id="project-edit-description" rows="4" aria-describedby="project-edit-description-error"></textarea><p id="project-edit-description-error" class="field-error" hidden></p></div>
+              <div class="field"><label for="project-edit-objective">Objetivo do projeto para edição</label><textarea id="project-edit-objective" rows="3" aria-describedby="project-edit-objective-error"></textarea><p id="project-edit-objective-error" class="field-error" hidden></p></div>
+              <div class="form-actions"><button id="project-edit-save" type="submit" class="button button-primary">Salvar projeto</button><button id="project-edit-cancel" type="button" class="button button-secondary">Cancelar edição do projeto</button></div>
+            </form>
+          </article>
         </div>
         <div class="project-create"><h2>Criar projeto</h2><p class="intro">Dê um nome ao que você quer desenvolver.</p>
           <form id="project-form" method="post">
             <div class="field"><label for="project-name">Nome do projeto</label><input id="project-name" name="name" type="text" required aria-describedby="project-name-hint project-name-error" disabled><p id="project-name-hint" class="field-hint">Até 120 caracteres.</p><p id="project-name-error" class="field-error" hidden></p></div>
             <div class="field"><label for="project-description">Descrição</label><textarea id="project-description" name="description" rows="4" aria-describedby="project-description-hint project-description-error" disabled></textarea><p id="project-description-hint" class="field-hint">Opcional. Até 2000 caracteres.</p><p id="project-description-error" class="field-error" hidden></p></div>
+            <div class="field"><label for="project-objective">Objetivo do projeto</label><textarea id="project-objective" name="objective" rows="3" aria-describedby="project-objective-hint project-objective-error"></textarea><p id="project-objective-hint" class="field-hint">Qual resultado você quer alcançar? Opcional, até 2000 caracteres.</p><p id="project-objective-error" class="field-error" hidden></p></div>
             <button id="project-submit" class="button button-primary full-width" type="submit" disabled>Criar projeto</button>
           </form>
         </div>
@@ -89,6 +117,12 @@
       <div class="projects-layout">
         <div class="projects-content">
           <div class="projects-list-heading"><h2>Histórias do projeto</h2><button id="backlog-refresh" type="button" class="text-button">Atualizar histórias</button></div>
+          <form id="backlog-search-form" class="backlog-filters" role="search">
+            <div class="field"><label for="backlog-search">Buscar histórias</label><input id="backlog-search" type="search" maxlength="200" placeholder="Título, descrição ou ID"></div>
+            <div class="filter-fields"><div class="field"><label for="backlog-filter-status">Filtrar por status</label><select id="backlog-filter-status"><option value="">Todos os status</option><option value="todo">A fazer</option><option value="in_progress">Em andamento</option><option value="done">Concluído</option></select></div>
+            <div class="field"><label for="backlog-filter-priority">Filtrar por prioridade</label><select id="backlog-filter-priority"><option value="">Todas as prioridades</option><option value="high">Alta</option><option value="medium">Média</option><option value="low">Baixa</option></select></div></div>
+            <button type="submit" class="button button-secondary">Aplicar filtros</button>
+          </form>
           <p class="field-hint backlog-order">Alta, média e baixa prioridade. As mais antigas aparecem primeiro em cada prioridade.</p>
           <div id="backlog-list" aria-label="Lista de histórias"></div>
           <nav class="projects-pagination" aria-label="Páginas de histórias"><button id="backlog-previous" class="button button-secondary" type="button" disabled>Anterior</button><span id="backlog-count" role="status"></span><button id="backlog-next" class="button button-secondary" type="button" disabled>Próxima</button></nav>
@@ -96,10 +130,14 @@
             <h2 id="story-detail-title" tabindex="-1"></h2><p id="story-detail-date" class="project-date"></p>
             <h3>Descrição</h3><p id="story-detail-description" class="story-text"></p>
             <h3>Critérios de aceite</h3><p id="story-detail-criteria" class="story-text"></p>
-            <form id="story-update-form" method="post"><div class="story-update-fields">
+            <form id="story-update-form" method="post">
+              <div class="field"><label for="story-update-title">Editar título da história</label><input id="story-update-title" type="text" required aria-describedby="story-update-title-error"><p id="story-update-title-error" class="field-error" hidden></p></div>
+              <div class="field"><label for="story-update-description">Editar descrição da história</label><textarea id="story-update-description" rows="3" aria-describedby="story-update-description-error"></textarea><p id="story-update-description-error" class="field-error" hidden></p></div>
+              <div class="field"><label for="story-update-criteria">Editar critérios de aceite</label><textarea id="story-update-criteria" rows="3" aria-describedby="story-update-criteria-error"></textarea><p id="story-update-criteria-error" class="field-error" hidden></p></div>
+              <div class="story-update-fields">
               <div class="field"><label for="story-update-priority">Prioridade da história</label><select id="story-update-priority" name="priority"><option value="high">Alta</option><option value="medium">Média</option><option value="low">Baixa</option></select></div>
               <div class="field"><label for="story-update-status">Status da história</label><select id="story-update-status" name="status"><option value="todo">A fazer</option><option value="in_progress">Em andamento</option><option value="done">Concluído</option></select></div>
-            </div><button id="story-save" type="submit" class="button button-primary">Salvar alterações</button></form>
+            </div><div class="form-actions"><button id="story-save" type="submit" class="button button-primary">Salvar alterações</button><button id="story-edit-cancel" type="button" class="button button-secondary">Descartar alterações da história</button></div></form>
           </article>
         </div>
         <div class="project-create"><h2>Criar história</h2><p class="intro">Descreva uma necessidade do usuário e como verificar a entrega.</p>

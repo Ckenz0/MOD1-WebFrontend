@@ -31,6 +31,9 @@ let busy = false;
 let authenticating = false;
 let projects;
 let backlog;
+let passwordPolicy = { min_length: 12, max_length: 128 };
+let policyLoaded = false;
+let policyRequest = null;
 let backlogConfigurationFailed = false;
 try {
   backlog = createBacklogController({ api: createBacklogApiClient({ baseUrl: BACKLOG_API_BASE_URL,
@@ -45,7 +48,7 @@ try {
   projects = createProjectsController({ api: createProjectsApiClient({ baseUrl: PROJECTS_API_BASE_URL,
     readiness: preparation(API_BASE_URL, PROJECTS_API_BASE_URL) }),
     getToken: () => session.getToken(),
-    onUnauthorized: () => endSession("Sua sessão terminou. Entre novamente para continuar."),
+    onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar."),
     onBack: () => { byId("profile-view").hidden = false; byId("profile-title").focus(); },
     onOpenBacklog: project => {
       if (!checkExpiry()) return;
@@ -62,8 +65,36 @@ const loginValidation = createFormValidation("login-form", {
 });
 const registerValidation = createFormValidation("register-form", {
   "register-name": nameError, "register-email": emailError,
-  "register-password": newPasswordError, "register-confirm": confirmationError,
+  "register-password": input => newPasswordError(input, passwordPolicy), "register-confirm": confirmationError,
 });
+const passwordValidation = createFormValidation("password-change-form", {
+  "current-password": loginPasswordError,
+  "new-password": input => newPasswordError(input, passwordPolicy),
+  "confirm-new-password": input => input.value === byId("new-password").value && input.value
+    ? "" : "As senhas precisam ser iguais, incluindo os espaços.",
+});
+passwordValidation.enable();
+
+function loadPasswordPolicy() {
+  if (policyLoaded || apiConfigurationFailed) return Promise.resolve();
+  if (policyRequest) return policyRequest;
+  policyRequest = api.passwordPolicy().then(value => {
+    passwordPolicy = value; policyLoaded = true;
+    const hint = `Use de ${value.min_length} a ${value.max_length} caracteres. Espaços também contam.`;
+    byId("register-password-hint").textContent = hint;
+    byId("password-policy-hint").textContent = hint;
+  }).catch(() => { /* Keep the default policy; the server remains authoritative. */ })
+    .finally(() => { policyRequest = null; });
+  return policyRequest;
+}
+
+function clearPasswordChange() {
+  byId("password-change-form").reset(); passwordValidation.clear();
+  byId("password-change").hidden = true;
+  byId("open-password-change").hidden = false;
+  byId("password-change-message").textContent = "";
+  byId("password-change-message").hidden = true;
+}
 
 const themePreference = matchMedia("(prefers-color-scheme: dark)");
 let explicitTheme = false;
@@ -105,6 +136,10 @@ function setBusy(value, view) {
   byId("register-form").setAttribute("aria-busy", String(value && view === "register"));
   byId("register-progress").textContent = value && view === "register" ? "Preparando sua conta." : "";
   byId("access-button").textContent = value && view === "access" ? "Verificando…" : "Verificar acesso";
+  byId("open-password-change").disabled = value;
+  for (const element of byId("password-change-form").elements) element.disabled = value;
+  byId("password-change-form").setAttribute("aria-busy", String(value && view === "password-change"));
+  byId("password-change-save").textContent = value && view === "password-change" ? "Salvando…" : "Salvar nova senha";
 }
 
 function accessResult(state, title, detail) {
@@ -140,6 +175,7 @@ byId("open-register").addEventListener("click", () => {
   byId("login-view").hidden = true;
   byId("register-view").hidden = false;
   byId("register-title").focus();
+  loadPasswordPolicy();
 });
 byId("back-login").addEventListener("click", () => { if (!busy) showLogin(); });
 byId("register-password-toggle").addEventListener("click", () => {
@@ -187,6 +223,7 @@ function endSession(text = "", tone = "notice") {
   message("login", text, tone);
   byId("register-view").hidden = true;
   clearRegistrationSecrets();
+  clearPasswordChange();
   accessResult("idle", "Acesso ainda não verificado", "Sua sessão foi encerrada. Verifique novamente para conferir o bloqueio.");
   byId("login-title").focus();
 }
@@ -207,6 +244,7 @@ function renderIdentity(user) {
   backlog?.close();
   projects?.close();
   identity = user;
+  clearPasswordChange();
   byId("profile-title").textContent = `Olá, ${user.display_name}`;
   byId("profile-email").textContent = user.email;
   byId("profile-created").textContent = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date(user.created_at));
@@ -278,6 +316,39 @@ byId("refresh-button").addEventListener("click", async () => {
     if (current === epoch) { controller = null; setBusy(false, "profile"); }
   }
 });
+byId("open-password-change").addEventListener("click", () => {
+  if (busy || !identity || !checkExpiry()) return;
+  byId("password-change").hidden = false;
+  byId("open-password-change").hidden = true;
+  byId("password-change-title").focus(); loadPasswordPolicy();
+});
+byId("password-change-cancel").addEventListener("click", () => {
+  if (!busy) { clearPasswordChange(); byId("open-password-change").focus(); }
+});
+byId("password-change-form").addEventListener("submit", async event => {
+  event.preventDefault();
+  if (busy || !identity || !checkExpiry()) return;
+  const note = byId("password-change-message");
+  if (!passwordValidation.validate()) {
+    note.textContent = "Confira os campos destacados para alterar a senha."; note.hidden = false; return;
+  }
+  const current = ++epoch, token = session.getToken();
+  controller?.abort(); controller = new AbortController();
+  note.hidden = true; setBusy(true, "password-change");
+  try {
+    await api.changePassword(token, byId("current-password").value, byId("new-password").value, { signal: controller.signal });
+    if (current !== epoch) return;
+    endSession("Senha alterada. Entre novamente com a nova senha.");
+  } catch (error) {
+    if (current !== epoch || error.kind === "cancelled") return;
+    if (error.kind === "unauthorized") { endSession(error.message); return; }
+    if (!checkExpiry()) return;
+    note.textContent = error instanceof ApiError ? error.message : "Não foi possível alterar a senha. Tente novamente.";
+    note.hidden = false;
+  } finally {
+    if (current === epoch) { controller = null; setBusy(false, "password-change"); }
+  }
+});
 byId("logout-button").addEventListener("click", () => endSession("Você saiu da sua conta."));
 byId("projects-logout").addEventListener("click", () => endSession("Você saiu da sua conta."));
 byId("backlog-logout").addEventListener("click", () => endSession("Você saiu da sua conta."));
@@ -288,6 +359,7 @@ byId("open-projects").addEventListener("click", () => {
     return;
   }
   byId("profile-view").hidden = true;
+  clearPasswordChange();
   projects.open();
 });
 

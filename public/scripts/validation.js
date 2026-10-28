@@ -63,9 +63,9 @@ export function nameError(input) {
   return length >= 1 && length <= 120 ? "" : "Informe um nome de até 120 caracteres.";
 }
 
-export function newPasswordError(input) {
+export function newPasswordError(input, { min_length = 12, max_length = 128 } = {}) {
   const length = count(input.value);
-  return length >= 12 && length <= 128 ? "" : "Use uma senha com 12 a 128 caracteres.";
+  return length >= min_length && length <= max_length ? "" : `Use uma senha com ${min_length} a ${max_length} caracteres.`;
 }
 
 export function confirmationError(input) {

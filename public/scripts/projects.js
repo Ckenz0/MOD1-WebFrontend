@@ -9,13 +9,22 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
   let controller = null;
   let busy = false;
   let selectedProject = null;
+  let query = "";
   let page = { items: [], total: 0, limit: 20, offset: 0 };
   const form = byId("project-form");
+  const editForm = byId("project-edit-form");
+  const searchForm = byId("project-search-form");
+  const longText = input => Array.from(input.value).length <= 2000 ? "" : "Use até 2000 caracteres.";
   const validation = createFormValidation("project-form", {
     "project-name": nameError,
     "project-description": (input) => Array.from(input.value).length <= 2000 ? "" : "Use uma descrição de até 2000 caracteres.",
+    "project-objective": longText,
+  });
+  const editValidation = createFormValidation("project-edit-form", {
+    "project-edit-name": nameError, "project-edit-description": longText, "project-edit-objective": longText,
   });
   validation.enable();
+  editValidation.enable();
 
   function status(text = "", tone = "notice") {
     const node = byId("projects-status");
@@ -27,6 +36,11 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
     busy = value;
     form.setAttribute("aria-busy", String(value));
     for (const element of form.elements) element.disabled = value;
+    for (const f of [editForm, searchForm]) {
+      f.setAttribute("aria-busy", String(value));
+      for (const element of f.elements) element.disabled = value;
+    }
+    byId("project-edit").disabled = value;
     byId("project-submit").textContent = value ? "Aguarde…" : "Criar projeto";
     byId("projects-refresh").disabled = value;
     byId("projects-previous").disabled = value || page.offset === 0;
@@ -37,12 +51,16 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
   function hideDetail() {
     selectedProject = null;
     byId("project-detail").hidden = true;
-    for (const id of ["project-detail-title", "project-detail-description", "project-detail-date"]) byId(id).textContent = "";
+    editForm.hidden = true; editForm.reset(); editValidation.clear();
+    for (const id of ["project-detail-title", "project-detail-description", "project-detail-date", "project-detail-objective"]) byId(id).textContent = "";
   }
   function renderDetail(project) {
     selectedProject = project;
     byId("project-detail-title").textContent = project.name;
     byId("project-detail-description").textContent = project.description || "Sem descrição.";
+    byId("project-detail-objective").textContent = project.objective || "Sem objetivo registrado.";
+    editForm.hidden = true; editForm.reset(); editValidation.clear();
+    byId("project-edit").hidden = false;
     byId("project-detail-date").textContent = `Criado em ${date(project.created_at)}`;
     byId("project-detail").hidden = false;
     byId("project-detail-title").focus();
@@ -54,7 +72,8 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
     if (value.items.length === 0) {
       const empty = document.createElement("p");
       empty.className = "projects-empty";
-      empty.textContent = value.total === 0 ? "Você ainda não tem projetos. Crie o primeiro para organizar seu trabalho."
+      empty.textContent = value.total === 0 && query ? "Nenhum projeto encontrado. Tente outro nome ou limpe a busca."
+        : value.total === 0 ? "Você ainda não tem projetos. Crie o primeiro para organizar seu trabalho."
         : "Não há projetos nesta página. Volte para a página anterior.";
       list.append(empty);
     } else {
@@ -79,7 +98,7 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
     }
     byId("projects-count").textContent = value.total === 0 ? "" : `${value.offset + 1}–${value.offset + value.items.length} de ${value.total} projetos`;
   }
-  async function run(action, onSuccess, errorPrefix = () => "") {
+  async function run(action, onSuccess, errorPrefix = () => "", confirmedNotice = () => "") {
     const token = getToken();
     if (!token) { clear(); onUnauthorized(); return; }
     const current = ++generation;
@@ -94,15 +113,16 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
       await onSuccess(result, { token, signal, valid });
     } catch (error) {
       if (!valid() || error.kind === "cancelled") return;
-      if (error.kind === "unauthorized") { clear(); onUnauthorized(); return; }
+      if (error.kind === "unauthorized") { const notice = confirmedNotice(); clear(); onUnauthorized(notice); return; }
       status(errorPrefix() + (error instanceof ProjectsApiError ? error.message : "Não foi possível carregar os projetos. Tente novamente."), "error");
     } finally {
       if (valid()) { controller = null; setBusy(false); }
     }
   }
   async function load(offset = 0) {
-    hideDetail();
-    return run((token, signal) => api.list(token, { offset, limit: 20, signal }), renderPage);
+    return run((token, signal) => api.list(token, { offset, limit: 20, q: query, signal }), value => {
+      hideDetail(); renderPage(value);
+    });
   }
   function close() {
     generation += 1; controller?.abort(); controller = null;
@@ -110,6 +130,7 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
   }
   function clear() {
     close(); page = { items: [], total: 0, limit: 20, offset: 0 };
+    query = ""; searchForm.reset();
     form.reset(); validation.clear(); byId("projects-list").replaceChildren();
     byId("projects-count").textContent = ""; hideDetail(); status(); setBusy(false);
   }
@@ -117,14 +138,47 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
     event.preventDefault();
     if (busy) return;
     if (!validation.validate()) { status("Confira os campos destacados para criar o projeto.", "error"); return; }
-    const draft = { name: byId("project-name").value.trim(), description: byId("project-description").value };
+    const draft = { name: byId("project-name").value.trim(), description: byId("project-description").value,
+      ...(byId("project-objective").value ? { objective: byId("project-objective").value } : {}) };
     let created = false;
     run((token, signal) => api.create(token, draft, { signal }), async (project, { token, signal, valid }) => {
       created = true; form.reset(); validation.clear(); renderDetail(project);
+      query = ""; searchForm.reset();
       const list = await api.list(token, { limit: 20, offset: 0, signal });
       if (!valid()) return;
       renderPage(list); status("Projeto criado. Ele já está salvo na sua conta.");
-    }, () => created ? "Projeto criado. Atualize a lista para encontrá-lo. " : "");
+    }, () => created ? "Projeto criado. Atualize a lista para encontrá-lo. " : "",
+    () => created ? "Projeto criado. " : "");
+  });
+  byId("project-edit").addEventListener("click", () => {
+    if (busy || !selectedProject) return;
+    byId("project-edit-name").value = selectedProject.name;
+    byId("project-edit-description").value = selectedProject.description;
+    byId("project-edit-objective").value = selectedProject.objective || "";
+    editValidation.clear(); editForm.hidden = false; byId("project-edit").hidden = true;
+    byId("project-edit-name").focus();
+  });
+  byId("project-edit-cancel").addEventListener("click", () => {
+    if (!busy && selectedProject) renderDetail(selectedProject);
+  });
+  editForm.addEventListener("submit", event => {
+    event.preventDefault(); if (busy || !selectedProject) return;
+    if (!editValidation.validate()) { status("Confira os campos destacados para salvar o projeto.", "error"); return; }
+    const projectId = selectedProject.id;
+    const change = { name: byId("project-edit-name").value.trim(),
+      description: byId("project-edit-description").value, objective: byId("project-edit-objective").value };
+    let saved = false;
+    run((token, signal) => api.update(token, projectId, change, { signal }), async (project, ctx) => {
+      saved = true; renderDetail(project);
+      const list = await api.list(ctx.token, { limit: 20, offset: 0, q: query, signal: ctx.signal });
+      if (!ctx.valid()) return;
+      renderPage(list); status("Projeto atualizado. As alterações já estão salvas.");
+    }, () => saved ? "Projeto atualizado. Atualize a lista para conferir. " : "",
+    () => saved ? "Projeto atualizado. " : "");
+  });
+  searchForm.addEventListener("submit", event => {
+    event.preventDefault(); if (busy) return;
+    query = byId("project-search").value.trim(); load(0);
   });
   byId("projects-refresh").addEventListener("click", () => { if (!busy) load(page.offset); });
   byId("projects-previous").addEventListener("click", () => { if (!busy) load(Math.max(0, page.offset - 20)); });

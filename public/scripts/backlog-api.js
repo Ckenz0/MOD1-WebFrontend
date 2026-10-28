@@ -81,11 +81,15 @@ export function createBacklogApiClient({ baseUrl, fetchImpl = fetch, timeoutMs =
       return request(collection(projectId), token, { method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, description, acceptance_criteria, priority }) }, s => isStory(s, projectId), signal);
     },
-    list(token, projectId, { limit = 20, offset = 0, signal } = {}) {
+    list(token, projectId, { limit = 20, offset = 0, q = "", status, priority, signal } = {}) {
       if (!validIds(projectId)) return rejected();
       if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100 || !Number.isSafeInteger(offset) || offset < 0)
         return Promise.reject(new BacklogApiError("validation"));
-      return request(`${collection(projectId)}?${new URLSearchParams({ limit, offset })}`, token,
+      const params = new URLSearchParams({ limit, offset });
+      if (q.trim()) params.set("q", q.trim());
+      if (status) params.set("status", status);
+      if (priority) params.set("priority", priority);
+      return request(`${collection(projectId)}?${params}`, token,
         { method: "GET" }, p => isPage(p, projectId, limit, offset), signal);
     },
     get(token, projectId, storyId, { signal } = {}) {

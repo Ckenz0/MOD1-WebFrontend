@@ -1,10 +1,20 @@
 # Changelog
 
-Versão candidata: `0.2.0`, definida em `VERSION`. O frontend possui versão SemVer
+Versão candidata: `0.3.0`, definida em `VERSION`. O frontend possui versão SemVer
 independente dos serviços. A versão será publicada após revisão e integração;
 esta mudança não cria tag ou release.
 
 ## Unreleased
+
+### Gerenciamento básico (0.3.0)
+
+- Troca autenticada de senha, política configurável exibida e saída local após sucesso.
+- Objetivo e edição de projetos; busca por nome com paginação filtrada.
+- Refinamento de título/descrição/critérios de histórias, busca e filtros combinados.
+- Cancelamento, validação, proteção contra duplo envio e preservação de rascunhos.
+- Confirmação de gravação quando recarga falha; respostas antigas descartadas após logout.
+- Regressões de navegador e fluxo completo com as três APIs reais e dados temporários.
+- Evolução MINOR sem alteração da identidade visual ou dependências do produto.
 
 ### Deploy Azure
 

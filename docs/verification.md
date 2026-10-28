@@ -58,3 +58,36 @@ a versão específica do código publicada para a apresentação P6.
 PostgreSQL destrutivo local não executou (sem banco loopback configurado; daemon
 Docker indisponível). O smoke Neon é separado. Docker/deploy/CI/CD permanecem
 fora da validação; equipes/RBAC e demais funções do módulo completo continuam futuras.
+# Gerenciamento básico integrado — candidato 0.3.0 — 28/10/2026
+
+- Baseline: 73 testes, com seis integrações opt-in puladas antes de configurar APIs.
+- TDD do lote: seis testes novos falharam por ausência dos clientes/controles;
+  os cenários passaram após implementar os contratos e formulários.
+- **Suíte final: 85 testes aprovados, nenhum skip**, em 156,50 s, com
+  `AUTH_BACKEND_PATH`, `PROJECTS_BACKEND_PATH` e `BACKLOG_BACKEND_PATH`
+  apontando aos worktrees locais novos.
+- O navegador usa as três APIs reais com SQLite, chaves e contas sintéticos:
+  cria/edita/busca projeto com objetivo, refina textos/critérios de história,
+  filtra por texto/status/prioridade, reinicia Backlog e reencontra dados;
+  troca a senha, recebe saída local, senha antiga é recusada e nova autentica.
+- Casos negativos incluem validação da política configurada, senha atual errada,
+  conteúdo literal, falha de PATCH com rascunho preservado e logout com resposta
+  de senha atrasada sem restaurar sessão, além das regressões anteriores.
+- Revisão independente encontrou dois defeitos recuperáveis e os três cenários
+  reproduzidos em RED passaram após correção: PATCH confirmado → recarga 401
+  mantém aviso de sucesso; GET 503 ao atualizar preserva rascunhos de projeto/história.
+- Seis capturas conferidas: Backlog, edição de projeto e troca de senha em desktop
+  claro 1366×900 e celular escuro 390×844. Sem overflow horizontal; sistema visual
+  navy/Inter preservado. DESIGN.md e seu sidecar não foram alterados.
+- Detector executado uma vez: avisos de RGB/fontes correspondem aos tokens e à
+  fonte Inter explicitamente fixados pelo sistema existente, sem mudança de paleta.
+
+Verificação independente de persistência PostgreSQL dos backends: Identidade 156,
+Projetos 114 e Backlog 149 aprovados sem skips. A busca Unicode depende de locale
+compatível no PostgreSQL; Backlog foi validado com ICU/und. O navegador usa SQLite
+temporário: sua evidência não substitui o teste PostgreSQL.
+
+Sem publicação, push, merge, tags, grants remotos ou autoria/coautoria de IA.
+Trocar senha encerra a sessão local; revogar JWT nos consumidores, MFA, equipes/RBAC
+e recuperação por e-mail permanecem fora deste lote. Migração de Projetos e permissões
+do banco devem ser executadas explicitamente pelo operador antes de publicar.

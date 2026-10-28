@@ -19,6 +19,7 @@ function isProject(p) {
     && typeof p.owner_id === "string" && uuid.test(p.owner_id)
     && typeof p.name === "string" && p.name.trim().length > 0 && Array.from(p.name).length <= 120
     && typeof p.description === "string" && Array.from(p.description).length <= 2000
+    && (p.objective === undefined || (typeof p.objective === "string" && Array.from(p.objective).length <= 2000))
     && typeof p.created_at === "string" && Number.isFinite(Date.parse(p.created_at));
 }
 function isPage(p) {
@@ -65,12 +66,19 @@ export function createProjectsApiClient({ baseUrl, fetchImpl = fetch, timeoutMs 
     } finally { clearTimeout(timer); signal?.removeEventListener("abort", cancel); }
   }
   return {
-    create(token, { name, description = "" }, { signal } = {}) {
+    create(token, { name, description = "", objective }, { signal } = {}) {
       return request("/projects", token, { method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description }) }, isProject, signal);
+        body: JSON.stringify({ name, description, ...(objective !== undefined ? { objective } : {}) }) }, isProject, signal);
     },
-    list(token, { limit = 20, offset = 0, signal } = {}) {
-      return request(`/projects?${new URLSearchParams({ limit, offset })}`, token, { method: "GET" }, isPage, signal);
+    list(token, { limit = 20, offset = 0, q = "", signal } = {}) {
+      const params = new URLSearchParams({ limit, offset });
+      if (q.trim()) params.set("q", q.trim());
+      return request(`/projects?${params}`, token, { method: "GET" }, isPage, signal);
+    },
+    update(token, projectId, change, { signal } = {}) {
+      if (typeof projectId !== "string" || !uuid.test(projectId)) return Promise.reject(new ProjectsApiError("not-found"));
+      return request(`/projects/${projectId}`, token, { method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(change) }, p => isProject(p) && p.id === projectId, signal);
     },
     get(token, projectId, { signal } = {}) {
       if (typeof projectId !== "string" || !uuid.test(projectId)) return Promise.reject(new ProjectsApiError("not-found"));

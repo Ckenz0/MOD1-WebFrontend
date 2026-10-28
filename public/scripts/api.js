@@ -7,6 +7,7 @@ const messages = {
   timeout: "O serviço demorou para responder. Tente novamente.",
   "invalid-response": "Não foi possível confirmar os dados recebidos. Tente novamente.",
   cancelled: "A solicitação foi cancelada.",
+  "password-rejected": "Não foi possível alterar a senha. Confira a senha atual e escolha uma nova senha diferente.",
 };
 
 export class ApiError extends Error {
@@ -65,9 +66,11 @@ export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000,
       if (!response.ok) {
         const kind = response.status === 401
           ? (path === "/auth/token" ? "credentials" : "unauthorized")
+          : response.status === 400 && path === "/auth/password" ? "password-rejected"
           : response.status === 422 ? "validation" : "unavailable";
         throw new ApiError(kind);
       }
+      if (path === "/auth/password" && response.status === 204) return null;
       let data;
       try {
         data = await response.json();
@@ -90,6 +93,16 @@ export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000,
   }
 
   return {
+    passwordPolicy({ signal } = {}) {
+      return request("/auth/password-policy", { method: "GET" }, value => value !== null
+        && typeof value === "object" && Number.isInteger(value.min_length)
+        && value.min_length >= 12 && value.min_length <= 128 && value.max_length === 128, signal);
+    },
+    changePassword(token, currentPassword, newPassword, { signal } = {}) {
+      return request("/auth/password", { method: "POST", headers: {
+        "Content-Type": "application/json", Authorization: `Bearer ${token}`,
+      }, body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }) }, () => false, signal);
+    },
     register(displayName, email, password, { signal } = {}) {
       return request("/auth/register", {
         method: "POST", headers: { "Content-Type": "application/json" },
