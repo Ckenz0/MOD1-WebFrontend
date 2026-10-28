@@ -6,6 +6,8 @@ import { createProjectsController } from "./projects.js";
 import { createBacklogApiClient } from "./backlog-api.js";
 import { createBacklogController } from "./backlog.js";
 import { createServiceReadiness } from "./service-readiness.js";
+import { createProfessionalProfile } from "./professional-profile.js";
+import { createInvitationsController } from "./collaboration.js";
 import { createFormValidation, emailError, loginPasswordError, nameError,
   newPasswordError, confirmationError } from "./validation.js";
 
@@ -30,6 +32,7 @@ let identity = null;
 let busy = false;
 let authenticating = false;
 let projects;
+let projectsApi;
 let backlog;
 let passwordPolicy = { min_length: 12, max_length: 128 };
 let policyLoaded = false;
@@ -45,9 +48,11 @@ try {
 } catch { backlogConfigurationFailed = true; }
 let projectsConfigurationFailed = false;
 try {
-  projects = createProjectsController({ api: createProjectsApiClient({ baseUrl: PROJECTS_API_BASE_URL,
-    readiness: preparation(API_BASE_URL, PROJECTS_API_BASE_URL) }),
+  projectsApi = createProjectsApiClient({ baseUrl: PROJECTS_API_BASE_URL,
+    readiness: preparation(API_BASE_URL, PROJECTS_API_BASE_URL) });
+  projects = createProjectsController({ api: projectsApi,
     getToken: () => session.getToken(),
+    getUserId: () => identity?.id,
     onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar."),
     onBack: () => { byId("profile-view").hidden = false; byId("profile-title").focus(); },
     onOpenBacklog: project => {
@@ -60,6 +65,10 @@ try {
     },
   });
 } catch { projectsConfigurationFailed = true; }
+const professionalProfile = createProfessionalProfile({ api, getToken: () => session.getToken(),
+  getUserId: () => identity?.id, onUnauthorized: () => endSession("Sua sessão terminou. Entre novamente para continuar.") });
+const invitations = createInvitationsController({ api: projectsApi, getToken: () => session.getToken(),
+  onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar.") });
 const loginValidation = createFormValidation("login-form", {
   email: emailError, password: loginPasswordError,
 });
@@ -201,6 +210,7 @@ byId("password-toggle").addEventListener("click", () => {
 });
 
 function endSession(text = "", tone = "notice") {
+  professionalProfile.clear(); invitations.clear();
   backlog?.clear();
   projects?.clear();
   epoch += 1;
@@ -211,6 +221,7 @@ function endSession(text = "", tone = "notice") {
   authenticating = false;
   byId("profile-title").textContent = "";
   byId("profile-email").textContent = "";
+  byId("profile-user-id").textContent = "";
   byId("profile-created").textContent = "";
   byId("avatar").textContent = "";
   byId("password").value = "";
@@ -241,12 +252,14 @@ window.addEventListener("pageshow", checkExpiry);
 setInterval(checkExpiry, 1000);
 
 function renderIdentity(user) {
+  professionalProfile.clear(); invitations.clear();
   backlog?.close();
   projects?.close();
   identity = user;
   clearPasswordChange();
   byId("profile-title").textContent = `Olá, ${user.display_name}`;
   byId("profile-email").textContent = user.email;
+  byId("profile-user-id").textContent = user.id;
   byId("profile-created").textContent = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date(user.created_at));
   byId("avatar").textContent = user.display_name.trim().split(/\s+/).slice(0, 2).map((part) => Array.from(part)[0]).join("").toLocaleUpperCase("pt-BR");
   byId("login-view").hidden = true;
@@ -359,6 +372,7 @@ byId("open-projects").addEventListener("click", () => {
     return;
   }
   byId("profile-view").hidden = true;
+  professionalProfile.clear(); invitations.clear();
   clearPasswordChange();
   projects.open();
 });

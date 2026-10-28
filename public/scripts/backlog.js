@@ -11,6 +11,7 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
   let generation = 0, controller = null, busy = false, project = null, selected = null;
   let page = emptyPage();
   let filters = {};
+  let permissions = new Set();
   const form = byId("backlog-form"), updateForm = byId("story-update-form");
   const searchForm = byId("backlog-search-form");
   const titleError = input => { const length = Array.from(trimStoryTitle(input.value)).length;
@@ -36,6 +37,15 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
       f.setAttribute("aria-busy", String(value));
       for (const element of f.elements) element.disabled = value;
     }
+    const create = permissions.has("backlog:create"), update = permissions.has("backlog:update");
+    const changeStatus = permissions.has("backlog:update_status");
+    byId("story-create-panel").hidden = !create;
+    for (const element of form.elements) element.disabled = value || !create;
+    for (const element of updateForm.elements) element.disabled = value || !update;
+    byId("story-update-status").disabled = value || !changeStatus;
+    byId("story-save").disabled = value || !(update || changeStatus);
+    byId("story-edit-cancel").disabled = value || !(update || changeStatus);
+    updateForm.hidden = !(update || changeStatus);
     byId("story-submit").textContent = value ? "Aguarde…" : "Criar história";
     byId("story-save").textContent = value ? "Aguarde…" : "Salvar alterações";
     byId("backlog-refresh").disabled = value;
@@ -103,6 +113,7 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
     } catch (error) {
       if (!valid() || error.kind === "cancelled") return;
       if (error.kind === "unauthorized") { const notice = confirmedNotice(); clear(); onUnauthorized(notice); return; }
+      if (error.kind === "forbidden" || error.kind === "not-found") permissions = new Set(["backlog:read"]);
       status(errorPrefix() + (error instanceof BacklogApiError ? error.message : "Não foi possível carregar o backlog. Tente novamente."), "error");
     } finally {
       if (valid()) { controller = null; setBusy(false); }
@@ -119,12 +130,13 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
   }
   function clear() {
     close(); project = null; page = emptyPage(); form.reset(); validation.clear(); hideDetail(); status();
+    permissions = new Set();
     filters = {}; searchForm.reset();
     byId("backlog-list").replaceChildren(); byId("backlog-count").textContent = ""; byId("backlog-project-name").textContent = "";
     setBusy(false);
   }
   form.addEventListener("submit", event => {
-    event.preventDefault(); if (busy || !project) return;
+    event.preventDefault(); if (busy || !project || !permissions.has("backlog:create")) return;
     if (!validation.validate()) { status("Confira os campos destacados para criar a história.", "error"); return; }
     const draft = { title: trimStoryTitle(byId("story-title").value), description: byId("story-description").value,
       acceptance_criteria: byId("story-criteria").value, priority: byId("story-priority").value };
@@ -140,10 +152,13 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
   });
   updateForm.addEventListener("submit", event => {
     event.preventDefault(); if (busy || !selected) return;
-    if (!updateValidation.validate()) { status("Confira os campos destacados para salvar a história.", "error"); return; }
+    const canUpdate = permissions.has("backlog:update"), canStatus = permissions.has("backlog:update_status");
+    if (!canUpdate && !canStatus) return;
+    if (canUpdate && !updateValidation.validate()) { status("Confira os campos destacados para salvar a história.", "error"); return; }
     const storyId = selected.id;
-    const change = { priority: byId("story-update-priority").value, status: byId("story-update-status").value };
-    for (const [field, input] of [["title", "story-update-title"], ["description", "story-update-description"], ["acceptance_criteria", "story-update-criteria"]]) {
+    const change = { status: byId("story-update-status").value };
+    if (canUpdate) change.priority = byId("story-update-priority").value;
+    for (const [field, input] of canUpdate ? [["title", "story-update-title"], ["description", "story-update-description"], ["acceptance_criteria", "story-update-criteria"]] : []) {
       const value = field === "title" ? trimStoryTitle(byId(input).value) : byId(input).value;
       if (value !== selected[field]) change[field] = value;
     }
@@ -169,6 +184,7 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
   setBusy(false);
   return { async open(value) {
     clear(); project = { id: value.id, name: value.name };
+    permissions = new Set(value.permissions || []);
     byId("backlog-project-name").textContent = project.name;
     byId("backlog-view").hidden = false; byId("backlog-title").focus(); await load(0);
   }, close, clear };

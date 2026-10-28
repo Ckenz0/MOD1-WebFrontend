@@ -36,6 +36,22 @@ function isIdentity(value) {
     && Number.isFinite(Date.parse(value.created_at));
 }
 
+function isProfile(value, userId) {
+  if (!value || typeof value !== "object" || value.user_id !== userId
+      || typeof value.summary !== "string" || Array.from(value.summary).length > 2000
+      || !["not_informed", "junior", "mid", "senior", "lead"].includes(value.seniority)
+      || !Number.isInteger(value.weekly_availability_hours) || value.weekly_availability_hours < 0
+      || value.weekly_availability_hours > 168 || !Array.isArray(value.skills) || value.skills.length > 30) return false;
+  const names = new Set();
+  return value.skills.every(skill => {
+    if (!skill || typeof skill.name !== "string" || !skill.name.trim() || Array.from(skill.name).length > 80
+        || !Number.isInteger(skill.level) || skill.level < 1 || skill.level > 5) return false;
+    const name = skill.name.normalize("NFC").trim().toLowerCase();
+    if (names.has(name)) return false;
+    names.add(name); return true;
+  });
+}
+
 export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000, readiness = null }) {
   const url = new URL(baseUrl);
   if (!["http:", "https:"].includes(url.protocol) || url.username || url.password
@@ -93,6 +109,15 @@ export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000,
   }
 
   return {
+    getProfile(token, userId, { signal } = {}) {
+      return request("/auth/profile", { method: "GET", headers: { Authorization: `Bearer ${token}` } },
+        value => isProfile(value, userId), signal);
+    },
+    updateProfile(token, userId, change, { signal } = {}) {
+      return request("/auth/profile", { method: "PATCH", headers: {
+        Authorization: `Bearer ${token}`, "Content-Type": "application/json",
+      }, body: JSON.stringify(change) }, value => isProfile(value, userId), signal);
+    },
     passwordPolicy({ signal } = {}) {
       return request("/auth/password-policy", { method: "GET" }, value => value !== null
         && typeof value === "object" && Number.isInteger(value.min_length)

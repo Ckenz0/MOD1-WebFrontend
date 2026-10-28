@@ -7,6 +7,7 @@ const messages = {
   timeout: "O serviço de backlog demorou para responder. Atualize a lista antes de tentar novamente.",
   "invalid-response": "Não foi possível confirmar os dados da história. Tente novamente.",
   cancelled: "A solicitação foi cancelada.",
+  forbidden: "Você não tem permissão para esta ação no backlog. Volte ao projeto para conferir seus acessos.",
 };
 
 export class BacklogApiError extends Error {
@@ -57,7 +58,7 @@ export function createBacklogApiClient({ baseUrl, fetchImpl = fetch, timeoutMs =
         signal: controller.signal, credentials: "omit", cache: "no-store", redirect: "error" });
       if (controller.signal.aborted) throw new BacklogApiError(timedOut ? "timeout" : "cancelled");
       if (!response.ok) throw new BacklogApiError(response.status === 401 ? "unauthorized"
-        : response.status === 404 ? "not-found" : response.status === 422 ? "validation" : "unavailable");
+        : response.status === 403 ? "forbidden" : response.status === 404 ? "not-found" : response.status === 422 ? "validation" : "unavailable");
       let value;
       try { value = await response.json(); } catch { throw new BacklogApiError("invalid-response"); }
       if (controller.signal.aborted) throw new BacklogApiError(timedOut ? "timeout" : "cancelled");

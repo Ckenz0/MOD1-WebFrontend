@@ -56,12 +56,37 @@
       <div id="profile-message" class="message" role="alert" aria-atomic="true" hidden></div>
       <dl class="account-details">
         <div><dt>E-mail</dt><dd id="profile-email"></dd></div>
+        <div><dt>ID da sua conta</dt><dd id="profile-user-id" class="account-id"></dd></div>
         <div><dt>Situação da conta</dt><dd class="account-status"><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8 12 3 3 5-6"/></svg>Ativa</dd></div>
         <div><dt>Conta criada em</dt><dd id="profile-created"></dd></div>
       </dl>
       <div class="profile-actions"><button id="open-projects" type="button" class="button button-primary">Meus projetos</button><button id="refresh-button" type="button" class="button button-secondary">Atualizar dados</button><button id="logout-button" type="button" class="button button-secondary">Sair</button></div>
       <p id="profile-progress" class="visually-hidden" role="status" aria-live="polite"></p>
       <p class="session-note">Ao sair ou recarregar esta página, você precisará entrar novamente.</p>
+      <section class="collaboration-section" aria-labelledby="invitation-title">
+        <h2 id="invitation-title">Entrar em um projeto</h2>
+        <p class="intro">Compartilhe seu ID de conta com o gestor e cole o código de convite recebido. O código só funciona para a conta indicada.</p>
+        <div id="invitation-status" class="message" role="status" aria-live="polite" hidden></div>
+        <form id="invitation-action-form" method="post"><div class="field"><label for="invitation-code">Código do convite</label><input id="invitation-code" type="text" autocomplete="off" spellcheck="false" autocapitalize="none"></div>
+          <div class="form-actions"><button id="invitation-accept" type="submit" class="button button-primary">Aceitar convite</button><button id="invitation-decline" type="button" class="button button-secondary">Recusar convite</button></div>
+        </form>
+      </section>
+      <section class="collaboration-section">
+        <button id="open-professional-profile" type="button" class="text-button">Editar perfil profissional</button>
+        <div id="professional-profile" hidden>
+          <h2 id="professional-profile-title" tabindex="-1">Meu perfil profissional</h2>
+          <p class="intro">Registre seu contexto, competências e disponibilidade. Essas informações ficam visíveis somente para você.</p>
+          <div id="professional-profile-status" class="message" role="status" aria-live="polite" hidden></div>
+          <form id="professional-profile-form" method="post" novalidate>
+            <div class="field"><label for="profile-summary">Resumo profissional</label><textarea id="profile-summary" rows="4" aria-describedby="profile-summary-hint"></textarea><p id="profile-summary-hint" class="field-hint">Até 2000 caracteres.</p></div>
+            <div class="field"><label for="profile-seniority">Senioridade</label><select id="profile-seniority"><option value="not_informed">Prefiro não informar</option><option value="junior">Júnior</option><option value="mid">Pleno</option><option value="senior">Sênior</option><option value="lead">Liderança técnica</option></select></div>
+            <div class="field"><label for="profile-availability">Disponibilidade semanal em horas</label><input id="profile-availability" type="number" min="0" max="168" step="1" value="0" aria-describedby="profile-availability-hint"><p id="profile-availability-hint" class="field-hint">Informe horas inteiras, de 0 a 168. Não representa uma alocação confirmada.</p></div>
+            <h3>Competências</h3><p class="field-hint">Até 30 competências. O domínio vai de 1 (básico) a 5 (especialista).</p>
+            <div id="profile-skills"></div><button id="profile-add-skill" type="button" class="text-button">Adicionar competência</button>
+            <div class="form-actions"><button id="profile-save" type="submit" class="button button-primary">Salvar perfil</button><button id="profile-cancel" type="button" class="button button-secondary">Cancelar edição do perfil</button></div>
+          </form>
+        </div>
+      </section>
       <div class="account-security">
         <button id="open-password-change" type="button" class="text-button">Alterar senha</button>
         <section id="password-change" aria-labelledby="password-change-title" hidden>
@@ -90,7 +115,8 @@
             <h2 id="project-detail-title" tabindex="-1"></h2><p id="project-detail-date" class="project-date"></p>
             <h3>Descrição</h3><p id="project-detail-description" class="story-text"></p>
             <h3>Objetivo</h3><p id="project-detail-objective" class="story-text"></p>
-            <div class="form-actions"><button id="project-backlog" type="button" class="button button-primary">Backlog</button><button id="project-edit" type="button" class="button button-secondary">Editar projeto</button></div>
+            <p id="project-access-note" class="field-hint"></p>
+            <div class="form-actions"><button id="project-backlog" type="button" class="button button-primary">Backlog</button><button id="project-edit" type="button" class="button button-secondary">Editar projeto</button><button id="project-members" type="button" class="button button-secondary">Membros e papéis</button></div>
             <form id="project-edit-form" method="post" hidden>
               <h3>Editar projeto</h3>
               <div class="field"><label for="project-edit-name">Nome do projeto para edição</label><input id="project-edit-name" type="text" required aria-describedby="project-edit-name-error"><p id="project-edit-name-error" class="field-error" hidden></p></div>
@@ -98,6 +124,36 @@
               <div class="field"><label for="project-edit-objective">Objetivo do projeto para edição</label><textarea id="project-edit-objective" rows="3" aria-describedby="project-edit-objective-error"></textarea><p id="project-edit-objective-error" class="field-error" hidden></p></div>
               <div class="form-actions"><button id="project-edit-save" type="submit" class="button button-primary">Salvar projeto</button><button id="project-edit-cancel" type="button" class="button button-secondary">Cancelar edição do projeto</button></div>
             </form>
+            <section id="members-panel" class="collaboration-section" aria-labelledby="members-title" hidden>
+              <h3 id="members-title" tabindex="-1">Membros e papéis</h3>
+              <p class="field-hint">Papéis e expiração valem somente neste projeto. O proprietário permanece protegido.</p>
+              <div id="members-status" class="message" role="status" aria-live="polite" hidden></div>
+              <button id="members-refresh" type="button" class="text-button">Atualizar acessos</button>
+              <ul id="members-list" class="members-list"></ul>
+              <nav class="projects-pagination" aria-label="Páginas de membros"><button id="members-previous" type="button" class="button button-secondary">Anterior</button><span id="members-count" role="status"></span><button id="members-next" type="button" class="button button-secondary">Próxima</button></nav>
+              <form id="project-invite-form" method="post" novalidate>
+                <h3>Convidar uma pessoa</h3>
+                <div class="field"><label for="invite-user-id">ID da conta convidada</label><input id="invite-user-id" type="text" spellcheck="false" autocomplete="off" aria-describedby="invite-user-hint"><p id="invite-user-hint" class="field-hint">A pessoa encontra esse ID na própria conta.</p></div>
+                <fieldset class="role-options"><legend>Papéis no projeto</legend>
+                  <label><input id="invite-role-product_owner" type="checkbox">Product Owner</label>
+                  <label><input id="invite-role-project_manager" type="checkbox">PM/Scrum Master</label>
+                  <label><input id="invite-role-developer" type="checkbox" checked>Desenvolvedor</label>
+                </fieldset>
+                <div class="field"><label for="invite-member-expiry">Expiração do acesso convidado</label><input id="invite-member-expiry" type="datetime-local" aria-describedby="invite-expiry-hint"><p id="invite-expiry-hint" class="field-hint">Opcional. Data no seu fuso horário; o código em si vale por sete dias.</p></div>
+                <button id="invite-submit" type="submit" class="button button-primary">Gerar código de convite</button>
+              </form>
+              <div id="generated-invite" hidden><div class="field"><label for="generated-invite-code">Código para compartilhar</label><textarea id="generated-invite-code" rows="3" readonly spellcheck="false"></textarea></div><p id="generated-invite-expiry" class="field-hint"></p></div>
+              <form id="member-edit-form" method="post" hidden novalidate>
+                <h3 id="member-edit-title" tabindex="-1">Editar acessos</h3><p id="member-edit-user" class="account-id"></p>
+                <fieldset class="role-options"><legend>Papéis atribuídos</legend>
+                  <label><input id="member-role-product_owner" type="checkbox">Product Owner</label>
+                  <label><input id="member-role-project_manager" type="checkbox">PM/Scrum Master</label>
+                  <label><input id="member-role-developer" type="checkbox">Desenvolvedor</label>
+                </fieldset><p class="field-hint">Sem papéis, a pessoa perde o acesso ao projeto.</p>
+                <div class="field"><label for="member-expiry">Expiração do acesso</label><input id="member-expiry" type="datetime-local"><p class="field-hint">Deixe vazio para remover a data de expiração.</p></div>
+                <div class="form-actions"><button id="member-save" type="submit" class="button button-primary">Salvar acessos</button><button id="member-edit-cancel" type="button" class="button button-secondary">Cancelar edição de acessos</button><button id="member-remove" type="button" class="button button-secondary">Remover integrante</button></div>
+              </form><button id="members-close" type="button" class="text-button">Fechar membros</button>
+            </section>
           </article>
         </div>
         <div class="project-create"><h2>Criar projeto</h2><p class="intro">Dê um nome ao que você quer desenvolver.</p>
@@ -140,7 +196,7 @@
             </div><div class="form-actions"><button id="story-save" type="submit" class="button button-primary">Salvar alterações</button><button id="story-edit-cancel" type="button" class="button button-secondary">Descartar alterações da história</button></div></form>
           </article>
         </div>
-        <div class="project-create"><h2>Criar história</h2><p class="intro">Descreva uma necessidade do usuário e como verificar a entrega.</p>
+        <div id="story-create-panel" class="project-create"><h2>Criar história</h2><p class="intro">Descreva uma necessidade do usuário e como verificar a entrega.</p>
           <form id="backlog-form" method="post">
             <div class="field"><label for="story-title">Título da história</label><input id="story-title" name="title" type="text" required aria-describedby="story-title-hint story-title-error"><p id="story-title-hint" class="field-hint">Até 120 caracteres.</p><p id="story-title-error" class="field-error" hidden></p></div>
             <div class="field"><label for="story-description">Descrição da história</label><textarea id="story-description" name="description" rows="3" aria-describedby="story-description-hint story-description-error"></textarea><p id="story-description-hint" class="field-hint">Opcional. Até 2000 caracteres.</p><p id="story-description-error" class="field-error" hidden></p></div>

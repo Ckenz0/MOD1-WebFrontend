@@ -1,5 +1,22 @@
 # Validação do frontend 0.2.0 — 11/10/2026
 
+## Colaboração/perfil 0.4.0 — 28/10/2026, somente local
+
+- Suíte completa: **96 testes aprovados, nenhum skip**, em 131,831 s, com as três
+  APIs reais e SQLite/RSA temporários. Nenhuma credencial ou banco remoto.
+- Teste ampliado de duas contas passou separadamente em 13,943 s: código de convite,
+  perfil, acesso Desenvolvedor/status, promoção a PO na UI/API, remoção e código usado negado.
+- Backends completos com PostgreSQL descartável: Identidade 200, Projetos 137,
+  Backlog 194 aprovados sem skips. ICU und preserva os testes de busca Unicode.
+- Seis capturas locais em `.impeccable/review/`: perfil, backlog Desenvolvedor e
+  membros; desktop claro 1366×900 e celular escuro 390×844, sem overflow horizontal.
+  Revisão visual própria preservou Inter, tokens e identidade do módulo 6.
+- Detector Impeccable manteve avisos históricos de paleta/Inter definidos pelo guia;
+  não representam troca de marca ou dependência nova.
+- Revisão independente deste lote indisponível por limite dos auxiliares;
+  revisão própria e testes concluídos. Evidências históricas abaixo não a substituem.
+- Tudo local: sem publicação, deploy, tag, push ou alteração de main.
+
 Windows, Python 3.12.15 e Playwright com Microsoft Edge. A suíte completa executou
 **63 testes aprovados, sem skips**, com os três caminhos de backend configurados.
 O backend do backlog executou 118 testes aprovados e um skip PostgreSQL local opt-in.

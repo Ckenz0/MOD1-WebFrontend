@@ -1,15 +1,23 @@
 import { ProjectsApiError } from "./projects-api.js";
 import { createFormValidation, nameError } from "./validation.js";
+import { permissionsFor } from "./permissions.js";
+import { createMembersController } from "./collaboration.js";
 
 const byId = (id) => document.getElementById(id);
 const date = (value) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date(value));
 
-export function createProjectsController({ api, getToken, onUnauthorized, onBack, onOpenBacklog }) {
+export function createProjectsController({ api, getToken, getUserId = () => null, onUnauthorized, onBack, onOpenBacklog }) {
   let generation = 0;
   let controller = null;
   let busy = false;
   let selectedProject = null;
   let query = "";
+  const members = createMembersController({ api, getToken, onUnauthorized, onSelfChange: async target => {
+    if (target !== getUserId()) return false;
+    const token = getToken(); await load(0);
+    if (token === getToken() && !byId("projects-view").hidden) status("Seus acessos foram atualizados. A lista agora reflete suas permissões.");
+    return true;
+  } });
   let page = { items: [], total: 0, limit: 20, offset: 0 };
   const form = byId("project-form");
   const editForm = byId("project-edit-form");
@@ -41,6 +49,7 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
       for (const element of f.elements) element.disabled = value;
     }
     byId("project-edit").disabled = value;
+    byId("project-members").disabled = value;
     byId("project-submit").textContent = value ? "Aguarde…" : "Criar projeto";
     byId("projects-refresh").disabled = value;
     byId("projects-previous").disabled = value || page.offset === 0;
@@ -49,18 +58,26 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
     for (const button of byId("projects-list").querySelectorAll("button")) button.disabled = value;
   }
   function hideDetail() {
+    members.clear();
     selectedProject = null;
     byId("project-detail").hidden = true;
     editForm.hidden = true; editForm.reset(); editValidation.clear();
     for (const id of ["project-detail-title", "project-detail-description", "project-detail-date", "project-detail-objective"]) byId(id).textContent = "";
   }
   function renderDetail(project) {
-    selectedProject = project;
+    members.clear();
+    selectedProject = { ...project, permissions: permissionsFor(project, getUserId()) };
     byId("project-detail-title").textContent = project.name;
     byId("project-detail-description").textContent = project.description || "Sem descrição.";
     byId("project-detail-objective").textContent = project.objective || "Sem objetivo registrado.";
     editForm.hidden = true; editForm.reset(); editValidation.clear();
-    byId("project-edit").hidden = false;
+    byId("project-edit").hidden = !selectedProject.permissions.includes("project:update");
+    byId("project-members").hidden = !selectedProject.permissions.includes("project:members:read");
+    byId("project-backlog").hidden = !selectedProject.permissions.includes("backlog:read");
+    byId("project-access-note").textContent = project.owner_id === getUserId()
+      ? "Você é o proprietário deste projeto."
+      : selectedProject.permissions.includes("project:update") ? "Você pode consultar e editar este projeto."
+      : "Você tem acesso de consulta. As ações disponíveis seguem seus papéis no projeto.";
     byId("project-detail-date").textContent = `Criado em ${date(project.created_at)}`;
     byId("project-detail").hidden = false;
     byId("project-detail-title").focus();
@@ -125,6 +142,7 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
     });
   }
   function close() {
+    members.clear();
     generation += 1; controller?.abort(); controller = null;
     setBusy(false); byId("projects-view").hidden = true;
   }
@@ -151,7 +169,7 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
     () => created ? "Projeto criado. " : "");
   });
   byId("project-edit").addEventListener("click", () => {
-    if (busy || !selectedProject) return;
+    if (busy || !selectedProject?.permissions.includes("project:update")) return;
     byId("project-edit-name").value = selectedProject.name;
     byId("project-edit-description").value = selectedProject.description;
     byId("project-edit-objective").value = selectedProject.objective || "";
@@ -162,7 +180,7 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
     if (!busy && selectedProject) renderDetail(selectedProject);
   });
   editForm.addEventListener("submit", event => {
-    event.preventDefault(); if (busy || !selectedProject) return;
+    event.preventDefault(); if (busy || !selectedProject?.permissions.includes("project:update")) return;
     if (!editValidation.validate()) { status("Confira os campos destacados para salvar o projeto.", "error"); return; }
     const projectId = selectedProject.id;
     const change = { name: byId("project-edit-name").value.trim(),
@@ -186,6 +204,9 @@ export function createProjectsController({ api, getToken, onUnauthorized, onBack
   byId("projects-back").addEventListener("click", () => { close(); onBack(); });
   byId("project-backlog").addEventListener("click", () => {
     if (!busy && selectedProject && onOpenBacklog) onOpenBacklog(selectedProject);
+  });
+  byId("project-members").addEventListener("click", () => {
+    if (!busy && selectedProject?.permissions.includes("project:members:read")) members.open(selectedProject);
   });
   setBusy(false);
   return {

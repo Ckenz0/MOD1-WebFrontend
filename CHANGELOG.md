@@ -1,6 +1,15 @@
 # Changelog
 
-Versão candidata: `0.3.0`, definida em `VERSION`. O frontend possui versão SemVer
+## Colaboração e perfil (0.4.0) — candidato local, 2026-10-28
+
+- Perfil privado com resumo, senioridade, competências/domínio e disponibilidade.
+- Convite por código: gerar para UUID/papéis, aceitar/recusar na conta sem URL ou armazenamento persistente.
+- Painel de membros, múltiplos papéis, expiração do vínculo e remoção com confirmação; dono protegido.
+- Ações coerentes com permissões: Desenvolvedor altera somente status; PO/PM refinam/criam.
+- 403 mantém sessão; logout/troca de contexto descarta respostas antigas e códigos.
+- Testes com duas contas e três APIs, incluindo promoção a PO e remoção; desktop/celular nos dois temas.
+
+Versão candidata: `0.4.0`, definida em `VERSION`. O frontend possui versão SemVer
 independente dos serviços. A versão será publicada após revisão e integração;
 esta mudança não cria tag ou release.
 

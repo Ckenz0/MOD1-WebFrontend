@@ -1,7 +1,23 @@
 # Frontend
 
+## Colaboração e perfil — candidato 0.4.0
+
+Na conta, edite resumo, senioridade, competências/domínio e disponibilidade.
+Compartilhe seu ID para receber um convite; cole o código e aceite ou recuse.
+Em **Membros e papéis**, gestores convidam e editam os papéis fixos e a expiração
+do vínculo, ou removem integrantes. O proprietário permanece protegido.
+Desenvolvedor pode consultar o backlog e alterar somente status; PO/PM também
+refinam/criam. O servidor autoriza cada operação; 403 não encerra a sessão.
+Códigos e JWT ficam somente em memória e são limpos ao sair.
+
+Usar conjuntamente Identidade 0.3.0, Projetos 0.4.0 e Backlog 0.3.0.
+Preparar explicitamente tabelas/grants conforme os guias dos backends. Não há
+equipes independentes, papéis personalizados, envio de e-mail ou cancelamento
+administrativo de convite pendente. O convite vale até sete dias, limitado
+também pela expiração do vínculo. Tudo segue local para revisão.
+
 MVP integrado: criar conta, entrar, organizar projetos e acompanhar histórias
-priorizadas até a conclusão. Versão candidata SemVer `0.3.0` em [VERSION](VERSION);
+priorizadas até a conclusão. Versão candidata SemVer `0.4.0` em [VERSION](VERSION);
 alterações em [CHANGELOG.md](CHANGELOG.md).
 
 HTML/CSS/JavaScript modular, sem dependências de produto ou build. Identidade visual
@@ -44,7 +60,7 @@ Para hospedagem, use HTTPS e CORS correspondente à origem publicada.
 5. Abra uma história, altere a prioridade e avance de **A fazer** para **Em andamento**
    e **Concluído**. A lista reflete a prioridade e o progresso salvos.
 6. Reinicie o backlog, atualize as histórias e confira persistência. Outra conta
-   não pode acessar o projeto nem suas histórias.
+   sem convite não pode acessar o projeto nem suas histórias.
 7. Teste teclado, temas e celular; saia e confira novamente o acesso.
 
 O valor é tornar necessidades, critérios de entrega, prioridades e progresso visíveis,
@@ -52,8 +68,8 @@ preservando dados e acesso por conta. [Resultados e capturas](docs/verification.
 
 JWT fica somente em memória; recarregar a página exige login. Só o tema pode persistir.
 Logout não revoga JWT no servidor. Cadastro permite login imediato, sem confirmação
-de posse do e-mail ou recuperação de senha. Projetos têm proprietário único; não há
-equipes/RBAC. Backlog permite refinar título, descrição e critérios; não inclui
+de posse do e-mail ou recuperação de senha. Projetos têm proprietário protegido e membros com RBAC fixo; não há
+equipes independentes ou papéis personalizados. Backlog permite refinar título, descrição e critérios; não inclui
 tarefas, sprints, estimativas ou exclusão de histórias.
 
 ## Gerenciamento básico — candidato 0.3.0
@@ -67,10 +83,11 @@ tarefas, sprints, estimativas ou exclusão de histórias.
   descrição ou ID e combine filtros de status/prioridade. Descarte restaura o
   último valor salvo. Falhas de rede preservam o rascunho para nova tentativa.
 
-Usar em conjunto com Identidade 0.2.0, Projetos 0.3.0 e Backlog 0.2.0.
+A base 0.3.0 usava Identidade 0.2.0, Projetos 0.3.0 e Backlog 0.2.0;
+o candidato atual requer as versões de colaboração informadas acima.
 Em banco de Projetos anterior, executar a migração administrativa explícita
 conforme o README desse backend. Nenhuma tela executa migração ou concede acesso.
-Status/etiquetas de projetos, equipes/RBAC, recuperação por e-mail, MFA e IA
+Status/etiquetas de projetos, equipes independentes, papéis personalizados, recuperação por e-mail, MFA e IA
 continuam pendentes; a prioridade atual do backlog não é MoSCoW.
 
 Falha de rede não equivale a acesso negado. Se POST/PATCH tiver sucesso e a recarga
