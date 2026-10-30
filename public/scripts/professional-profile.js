@@ -13,7 +13,9 @@ export function createProfessionalProfile({ api, getToken, getUserId, onUnauthor
   }
   function setBusy(value) {
     busy = value; form.setAttribute("aria-busy", String(value));
-    for (const element of form.elements) element.disabled = value;
+    for (const element of form.elements) element.disabled = value || (!saved && element.id !== "profile-cancel");
+    byId("profile-retry").hidden = value || saved !== null;
+    byId("profile-retry").disabled = value;
     byId("open-professional-profile").disabled = value;
     byId("profile-save").textContent = value ? "Aguarde…" : "Salvar perfil";
   }
@@ -78,8 +80,11 @@ export function createProfessionalProfile({ api, getToken, getUserId, onUnauthor
     byId("professional-profile-title").focus();
     run((token, id, signal) => api.getProfile(token, id, { signal }), render);
   });
+  byId("profile-retry").addEventListener("click", () => {
+    if (!busy && !saved) run((token, id, signal) => api.getProfile(token, id, { signal }), render);
+  });
   byId("profile-add-skill").addEventListener("click", () => {
-    if (!busy) { addSkill(); byId("profile-skills").lastElementChild?.querySelector("input").focus(); }
+    if (!busy && saved) { addSkill(); byId("profile-skills").lastElementChild?.querySelector("input").focus(); }
   });
   byId("profile-cancel").addEventListener("click", () => { if (!busy) { clear(); byId("open-professional-profile").focus(); } });
   form.addEventListener("submit", event => {

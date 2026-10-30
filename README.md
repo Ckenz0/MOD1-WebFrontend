@@ -10,6 +10,10 @@ Desenvolvedor pode consultar o backlog e alterar somente status; PO/PM também
 refinam/criam. O servidor autoriza cada operação; 403 não encerra a sessão.
 Códigos e JWT ficam somente em memória e são limpos ao sair.
 
+Atualizar acessos/histórias consulta as permissões atuais e remove controles
+revogados. Se o perfil não carregar, a edição permanece desativada e o botão
+**Tentar carregar perfil novamente** permite recuperar os dados antes de editar.
+
 Usar conjuntamente Identidade 0.3.0, Projetos 0.4.0 e Backlog 0.3.0.
 Preparar explicitamente tabelas/grants conforme os guias dos backends. Não há
 equipes independentes, papéis personalizados, envio de e-mail ou cancelamento

@@ -1,5 +1,5 @@
 import { ProjectsApiError } from "./projects-api.js";
-import { PERMISSIONS, PERMISSION_NAMES, ROLE_NAMES } from "./permissions.js";
+import { PERMISSIONS, PERMISSION_NAMES, ROLE_NAMES, permissionsFor } from "./permissions.js";
 
 const byId = id => document.getElementById(id);
 const roleKeys = ["product_owner", "project_manager", "developer"];
@@ -57,7 +57,7 @@ export function createInvitationsController({ api, getToken, onUnauthorized }) {
   return { clear };
 }
 
-export function createMembersController({ api, getToken, onUnauthorized, onSelfChange }) {
+export function createMembersController({ api, getToken, getUserId, onUnauthorized, onSelfChange, onAccessChange }) {
   let generation = 0, controller = null, busy = false, project = null, selected = null;
   let page = { items: [], total: 0, limit: 20, offset: 0 }, manage = false;
   let catalog = [];
@@ -125,12 +125,24 @@ export function createMembersController({ api, getToken, onUnauthorized, onSelfC
     } catch (error) {
       if (!valid() || error.kind === "cancelled") return;
       if (error.kind === "unauthorized") { const notice = confirmed(); clear(); onUnauthorized(notice); return; }
-      if (error.kind === "forbidden") { manage = false; inviteForm.hidden = true; editForm.hidden = true; render(page); }
+      if (error.kind === "forbidden" || error.kind === "not-found") {
+        manage = false; selected = null; inviteForm.hidden = true; editForm.hidden = true; editForm.reset();
+        byId("generated-invite-code").value = ""; byId("generated-invite").hidden = true;
+        page = { items: [], total: 0, limit: 20, offset: 0 }; render(page); onAccessChange?.([]);
+      }
       message("members-status", confirmed() + (error instanceof ProjectsApiError ? error.message : "Não foi possível carregar os acessos. Tente novamente."), true);
     } finally { if (current === generation) { controller = null; setBusy(false); } }
   }
   function load(offset = 0) {
-    return run((token, id, signal) => Promise.all([api.roles(token, id, { signal }), api.members(token, id, { offset, signal })]), ([roles, members]) => {
+    return run((token, id, signal) => Promise.all([api.get(token, id, { signal }), api.roles(token, id, { signal }),
+      api.members(token, id, { offset, signal })]), ([currentProject, roles, members]) => {
+      project = { ...currentProject, permissions: permissionsFor(currentProject, getUserId()) };
+      manage = project.permissions.includes("project:members:manage"); inviteForm.hidden = !manage;
+      if (!manage) {
+        selected = null; editForm.hidden = true; editForm.reset();
+        byId("generated-invite-code").value = ""; byId("generated-invite").hidden = true;
+      }
+      onAccessChange?.(project.permissions);
       catalog = roles.items; render(members);
     });
   }
@@ -178,7 +190,7 @@ export function createMembersController({ api, getToken, onUnauthorized, onSelfC
   byId("members-previous").addEventListener("click", () => { if (!busy) load(Math.max(0, page.offset - 20)); });
   byId("members-next").addEventListener("click", () => { if (!busy) load(page.offset + 20); });
   return { clear, open(value) {
-    clear(); project = value; manage = value.permissions.includes("project:members:manage");
+    clear(); project = value;
     inviteForm.hidden = !manage; byId("members-panel").hidden = false; byId("members-title").focus();
     fillRoles("invite-role", ["developer"]); return load(0);
   } };

@@ -12,7 +12,14 @@ export function createProjectsController({ api, getToken, getUserId = () => null
   let busy = false;
   let selectedProject = null;
   let query = "";
-  const members = createMembersController({ api, getToken, onUnauthorized, onSelfChange: async target => {
+  const members = createMembersController({ api, getToken, getUserId, onUnauthorized, onAccessChange: permissions => {
+    if (!selectedProject) return;
+    selectedProject = { ...selectedProject, permissions };
+    byId("project-edit").hidden = !permissions.includes("project:update");
+    byId("project-members").hidden = !permissions.includes("project:members:read");
+    byId("project-backlog").hidden = !permissions.includes("backlog:read");
+    if (!permissions.includes("project:update")) editForm.hidden = true;
+  }, onSelfChange: async target => {
     if (target !== getUserId()) return false;
     const token = getToken(); await load(0);
     if (token === getToken() && !byId("projects-view").hidden) status("Seus acessos foram atualizados. A lista agora reflete suas permissões.");

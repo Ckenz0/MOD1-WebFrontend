@@ -41,6 +41,8 @@ let backlogConfigurationFailed = false;
 try {
   backlog = createBacklogController({ api: createBacklogApiClient({ baseUrl: BACKLOG_API_BASE_URL,
     readiness: preparation(API_BASE_URL, PROJECTS_API_BASE_URL, BACKLOG_API_BASE_URL) }),
+    getProject: (token, id, options) => projectsApi.get(token, id, options),
+    getUserId: () => identity?.id,
     getToken: () => session.getToken(),
     onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar."),
     onBack: () => projects.open(),

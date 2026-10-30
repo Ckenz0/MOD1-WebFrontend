@@ -1,5 +1,6 @@
 import { BacklogApiError, trimStoryTitle } from "./backlog-api.js";
 import { createFormValidation } from "./validation.js";
+import { permissionsFor } from "./permissions.js";
 
 const byId = id => document.getElementById(id);
 const priorities = { high: "Alta", medium: "Média", low: "Baixa" };
@@ -7,7 +8,7 @@ const statuses = { todo: "A fazer", in_progress: "Em andamento", done: "Concluí
 const date = value => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 const emptyPage = () => ({ items: [], total: 0, limit: 20, offset: 0 });
 
-export function createBacklogController({ api, getToken, onUnauthorized, onBack }) {
+export function createBacklogController({ api, getProject, getUserId, getToken, onUnauthorized, onBack }) {
   let generation = 0, controller = null, busy = false, project = null, selected = null;
   let page = emptyPage();
   let filters = {};
@@ -120,7 +121,9 @@ export function createBacklogController({ api, getToken, onUnauthorized, onBack 
     }
   }
   function load(offset = 0) {
-    return run((token, id, signal) => api.list(token, id, { offset, limit: 20, ...filters, signal }), value => {
+    return run((token, id, signal) => Promise.all([getProject(token, id, { signal }),
+      api.list(token, id, { offset, limit: 20, ...filters, signal })]), ([currentProject, value]) => {
+      permissions = new Set(permissionsFor(currentProject, getUserId()));
       hideDetail(); renderPage(value);
     });
   }

@@ -204,3 +204,57 @@ class CollaborationUiTests(BrowserCase):
         expect(self.page.get_by_role('button', name='Editar projeto', exact=True)).to_be_hidden()
         expect(self.page.get_by_role('button', name='Membros e papéis', exact=True)).to_be_hidden()
         expect(self.page.get_by_role('button', name='Backlog', exact=True)).to_be_hidden()
+
+    def test_profile_load_failure_disables_editing_and_offers_retry(self):
+        self.page.route('**/auth/profile', lambda r: r.abort())
+        self.page.get_by_role('button', name='Editar perfil profissional', exact=True).click()
+        expect(self.page.locator('#professional-profile-status')).to_contain_text('conectar')
+        expect(self.page.locator('#profile-save')).to_be_disabled()
+        expect(self.page.locator('#profile-summary')).to_be_disabled()
+        self.page.route('**/auth/profile', self.profile_response)
+        self.page.get_by_role('button', name='Tentar carregar perfil novamente', exact=True).click()
+        expect(self.page.locator('#profile-save')).to_be_enabled()
+        self.page.get_by_label('Resumo profissional', exact=True).fill('Perfil recuperado')
+        self.page.get_by_role('button', name='Salvar perfil', exact=True).click()
+        expect(self.page.locator('#professional-profile-status')).to_contain_text('Perfil atualizado')
+        self.assertEqual(self.writes[-1][1]['summary'], 'Perfil recuperado')
+
+    def test_refresh_and_reopen_members_apply_current_permissions(self):
+        self.project = {**PROJECT, 'owner_id': OTHER,
+                        'permissions': [p for p in ALL if p != 'project:delete']}
+        self.open_project()
+        self.page.get_by_role('button', name='Membros e papéis', exact=True).click()
+        expect(self.page.locator('#invite-user-id')).to_be_enabled()
+        self.project['permissions'] = DEV
+        self.page.get_by_role('button', name='Atualizar acessos', exact=True).click()
+        expect(self.page.locator('#project-invite-form')).to_be_hidden()
+        expect(self.page.get_by_role('button', name='Editar projeto', exact=True)).to_be_hidden()
+        self.assertEqual(self.page.get_by_role('button', name='Editar acessos de ' + OTHER, exact=True).count(), 0)
+        self.page.get_by_role('button', name='Fechar membros', exact=True).click()
+        self.page.get_by_role('button', name='Membros e papéis', exact=True).click()
+        expect(self.page.locator('#members-list')).to_contain_text(OTHER)
+        expect(self.page.locator('#project-invite-form')).to_be_hidden()
+
+    def test_refresh_backlog_applies_remote_role_downgrade(self):
+        self.project = {**PROJECT, 'owner_id': OTHER,
+                        'permissions': [p for p in ALL if p != 'project:delete']}
+        self.open_project()
+        self.page.get_by_role('button', name='Backlog', exact=True).click()
+        expect(self.page.locator('#story-title')).to_be_enabled()
+        self.project['permissions'] = DEV
+        self.page.get_by_role('button', name='Atualizar histórias', exact=True).click()
+        expect(self.page.locator('#story-create-panel')).to_be_hidden()
+        self.page.get_by_role('button', name=STORY['title'], exact=True).click()
+        expect(self.page.locator('#story-update-title')).to_be_disabled()
+        expect(self.page.locator('#story-update-status')).to_be_enabled()
+
+    def test_unavailable_members_refresh_clears_previous_management_controls(self):
+        self.open_project()
+        self.page.get_by_role('button', name='Membros e papéis', exact=True).click()
+        expect(self.page.locator('#invite-user-id')).to_be_enabled()
+        self.page.route('**/projects/' + PROJECT['id'], lambda r: r.fulfill(status=404))
+        self.page.get_by_role('button', name='Atualizar acessos', exact=True).click()
+        expect(self.page.locator('#project-invite-form')).to_be_hidden()
+        expect(self.page.locator('#project-edit')).to_be_hidden()
+        expect(self.page.locator('#project-backlog')).to_be_hidden()
+        expect(self.page.locator('#members-list')).to_have_text('')

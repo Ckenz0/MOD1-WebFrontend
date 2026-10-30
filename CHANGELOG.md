@@ -2,6 +2,9 @@
 
 ## Colaboração e perfil (0.4.0) — candidato local, 2026-10-28
 
+- Atualização/reabertura de membros e atualização do backlog consultam as permissões atuais; perda de acesso remove controles anteriores.
+- Falha inicial do perfil mantém campos e Salvar desativados e oferece retentativa de carregamento.
+- Regressões para rebaixamento de papel, remoção/404, retentativa do perfil e descarte de respostas antigas com consulta de permissões.
 - Perfil privado com resumo, senioridade, competências/domínio e disponibilidade.
 - Convite por código: gerar para UUID/papéis, aceitar/recusar na conta sem URL ou armazenamento persistente.
 - Painel de membros, múltiplos papéis, expiração do vínculo e remoção com confirmação; dono protegido.
