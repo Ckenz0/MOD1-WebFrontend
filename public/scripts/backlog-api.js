@@ -7,6 +7,7 @@ const messages = {
   timeout: "O serviço de backlog demorou para responder. Atualize a lista antes de tentar novamente.",
   "invalid-response": "Não foi possível confirmar os dados da história. Tente novamente.",
   cancelled: "A solicitação foi cancelada.",
+  forbidden: "Você não tem permissão para esta ação no backlog. Volte ao projeto para conferir seus acessos.",
 };
 
 export class BacklogApiError extends Error {
@@ -57,7 +58,7 @@ export function createBacklogApiClient({ baseUrl, fetchImpl = fetch, timeoutMs =
         signal: controller.signal, credentials: "omit", cache: "no-store", redirect: "error" });
       if (controller.signal.aborted) throw new BacklogApiError(timedOut ? "timeout" : "cancelled");
       if (!response.ok) throw new BacklogApiError(response.status === 401 ? "unauthorized"
-        : response.status === 404 ? "not-found" : response.status === 422 ? "validation" : "unavailable");
+        : response.status === 403 ? "forbidden" : response.status === 404 ? "not-found" : response.status === 422 ? "validation" : "unavailable");
       let value;
       try { value = await response.json(); } catch { throw new BacklogApiError("invalid-response"); }
       if (controller.signal.aborted) throw new BacklogApiError(timedOut ? "timeout" : "cancelled");
@@ -81,11 +82,15 @@ export function createBacklogApiClient({ baseUrl, fetchImpl = fetch, timeoutMs =
       return request(collection(projectId), token, { method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, description, acceptance_criteria, priority }) }, s => isStory(s, projectId), signal);
     },
-    list(token, projectId, { limit = 20, offset = 0, signal } = {}) {
+    list(token, projectId, { limit = 20, offset = 0, q = "", status, priority, signal } = {}) {
       if (!validIds(projectId)) return rejected();
       if (!Number.isSafeInteger(limit) || limit < 1 || limit > 100 || !Number.isSafeInteger(offset) || offset < 0)
         return Promise.reject(new BacklogApiError("validation"));
-      return request(`${collection(projectId)}?${new URLSearchParams({ limit, offset })}`, token,
+      const params = new URLSearchParams({ limit, offset });
+      if (q.trim()) params.set("q", q.trim());
+      if (status) params.set("status", status);
+      if (priority) params.set("priority", priority);
+      return request(`${collection(projectId)}?${params}`, token,
         { method: "GET" }, p => isPage(p, projectId, limit, offset), signal);
     },
     get(token, projectId, storyId, { signal } = {}) {

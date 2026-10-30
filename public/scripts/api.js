@@ -7,6 +7,7 @@ const messages = {
   timeout: "O serviço demorou para responder. Tente novamente.",
   "invalid-response": "Não foi possível confirmar os dados recebidos. Tente novamente.",
   cancelled: "A solicitação foi cancelada.",
+  "password-rejected": "Não foi possível alterar a senha. Confira a senha atual e escolha uma nova senha diferente.",
 };
 
 export class ApiError extends Error {
@@ -33,6 +34,22 @@ function isIdentity(value) {
     && typeof value.display_name === "string" && value.display_name.trim().length > 0
     && value.is_active === true && typeof value.created_at === "string"
     && Number.isFinite(Date.parse(value.created_at));
+}
+
+function isProfile(value, userId) {
+  if (!value || typeof value !== "object" || value.user_id !== userId
+      || typeof value.summary !== "string" || Array.from(value.summary).length > 2000
+      || !["not_informed", "junior", "mid", "senior", "lead"].includes(value.seniority)
+      || !Number.isInteger(value.weekly_availability_hours) || value.weekly_availability_hours < 0
+      || value.weekly_availability_hours > 168 || !Array.isArray(value.skills) || value.skills.length > 30) return false;
+  const names = new Set();
+  return value.skills.every(skill => {
+    if (!skill || typeof skill.name !== "string" || !skill.name.trim() || Array.from(skill.name).length > 80
+        || !Number.isInteger(skill.level) || skill.level < 1 || skill.level > 5) return false;
+    const name = skill.name.normalize("NFC").trim().toLowerCase();
+    if (names.has(name)) return false;
+    names.add(name); return true;
+  });
 }
 
 export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000, readiness = null }) {
@@ -65,9 +82,11 @@ export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000,
       if (!response.ok) {
         const kind = response.status === 401
           ? (path === "/auth/token" ? "credentials" : "unauthorized")
+          : response.status === 400 && path === "/auth/password" ? "password-rejected"
           : response.status === 422 ? "validation" : "unavailable";
         throw new ApiError(kind);
       }
+      if (path === "/auth/password" && response.status === 204) return null;
       let data;
       try {
         data = await response.json();
@@ -90,6 +109,25 @@ export function createApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000,
   }
 
   return {
+    getProfile(token, userId, { signal } = {}) {
+      return request("/auth/profile", { method: "GET", headers: { Authorization: `Bearer ${token}` } },
+        value => isProfile(value, userId), signal);
+    },
+    updateProfile(token, userId, change, { signal } = {}) {
+      return request("/auth/profile", { method: "PATCH", headers: {
+        Authorization: `Bearer ${token}`, "Content-Type": "application/json",
+      }, body: JSON.stringify(change) }, value => isProfile(value, userId), signal);
+    },
+    passwordPolicy({ signal } = {}) {
+      return request("/auth/password-policy", { method: "GET" }, value => value !== null
+        && typeof value === "object" && Number.isInteger(value.min_length)
+        && value.min_length >= 12 && value.min_length <= 128 && value.max_length === 128, signal);
+    },
+    changePassword(token, currentPassword, newPassword, { signal } = {}) {
+      return request("/auth/password", { method: "POST", headers: {
+        "Content-Type": "application/json", Authorization: `Bearer ${token}`,
+      }, body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }) }, () => false, signal);
+    },
     register(displayName, email, password, { signal } = {}) {
       return request("/auth/register", {
         method: "POST", headers: { "Content-Type": "application/json" },

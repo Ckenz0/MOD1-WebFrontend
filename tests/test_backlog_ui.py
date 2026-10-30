@@ -157,7 +157,8 @@ class BacklogUiTests(BrowserCase):
           const {createBacklogController}=await import('/scripts/backlog.js');
           let resolveOld; let token='token';
           const api={list:(_,id)=>id===p.id?new Promise(r=>resolveOld=r):Promise.resolve({items:[],total:0,limit:20,offset:0})};
-          const c=createBacklogController({api,getToken:()=>token,onUnauthorized:()=>{},onBack:()=>{}});
+          const c=createBacklogController({api,getProject:async(_,id)=>({...p,id}),getUserId:()=>p.owner_id,
+            getToken:()=>token,onUnauthorized:()=>{},onBack:()=>{}});
           const old=c.open(p); await c.open({id:'44444444-4444-4444-8444-444444444444',name:'Outro projeto'});
           resolveOld({items:[s],total:1,limit:20,offset:0}); await old;
           let resolveLogout;

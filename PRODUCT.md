@@ -1,5 +1,13 @@
 # MOD1 Frontend
 
+## Colaboração 0.4.0
+
+Perfil profissional próprio e privado; convites por código associados ao UUID;
+papéis fixos PO, PM/Scrum Master e Desenvolvedor por projeto, múltiplos papéis,
+expiração do vínculo, consulta e remoção de membros. Backend é a autoridade;
+interface representa permissões e preserva sessão em 403. Convites não usam
+e-mail/URL/storage. Senhas, JWT e códigos nunca entram nos arquivos públicos.
+
 ## Purpose
 Frontend de demonstração do serviço de autenticação do módulo 1. Alunos e
 professor criam uma conta, entram e verificam a identidade autenticada e o acesso protegido.
@@ -20,7 +28,13 @@ Projetos do módulo de Brian: criar, listar e consultar os próprios projetos us
 a sessão atual, com formulário validado e uma API separada em configuração pública.
 Backlog do módulo de Igor: criar e consultar histórias do projeto, registrar critérios
 de aceite, priorizar e alterar o progresso, com dados persistidos no serviço de backlog.
-O MVP não inclui tarefas, sprints, estimativas, edição do texto ou exclusão de histórias.
+O gerenciamento básico permite trocar senha com senha atual e política publicada
+pela Identidade; editar nome/descrição/objetivo de projetos e buscar por nome;
+refinar título/descrição/critérios de histórias e buscar/filtrar por status/prioridade.
+Falhas transitórias preservam rascunhos; sair limpa dados e respostas antigas são
+descartadas. Após trocar senha, a sessão local encerra; JWT já emitido não é revogado
+imediatamente nos consumidores. O MVP não inclui tarefas, sprints, estimativas,
+exclusão de histórias, MoSCoW, equipes independentes, papéis personalizados ou recomendações de IA.
 
 ## Brand commitments
 Seguir Guia_Visual_Modulo6.pdf v1.0: tokens compartilhados, ações azul-marinho,
