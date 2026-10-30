@@ -1,5 +1,20 @@
 # Validação do frontend 0.2.0 — 11/10/2026
 
+## Conferência para PR — 30/10/2026
+
+- Suíte completa: **100 testes aprovados, nenhum skip**, em 224.293 s, com
+  as três APIs reais e SQLite/RSA temporários.
+- Quatro regressões para falha/recarregamento do perfil, mudança remota de papel
+  em membros e backlog e perda completa de acesso aos membros (404).
+- Falha inicial do perfil mantém edição/Salvar desativados e oferece retentativa;
+  atualização/reabertura consulta permissões atuais e remove controles revogados.
+- Novos testes reproduziram as falhas antes das correções; a fixture de resposta
+  atrasada do Backlog foi adaptada à consulta de permissões e voltou a passar.
+- Revisão independente do frontend concluída; achados importantes corrigidos e
+  diff final aprovado. Evidências anteriores abaixo referem-se aos estados históricos.
+- Backends revalidados com PostgreSQL descartável: Identidade 200, Projetos 137,
+  Backlog 194 aprovados sem skips. Checks API/container dos três PRs passaram.
+
 ## Colaboração/perfil 0.4.0 — 28/10/2026, somente local
 
 - Suíte completa: **96 testes aprovados, nenhum skip**, em 131,831 s, com as três
