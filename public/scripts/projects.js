@@ -1,4 +1,4 @@
-import { ProjectsApiError } from "./projects-api.js";
+import { ProjectsApiError } from "./api-errors.js";
 import { createFormValidation, nameError } from "./validation.js";
 import { permissionsFor } from "./permissions.js";
 import { createMembersController } from "./collaboration.js";
@@ -6,13 +6,14 @@ import { createMembersController } from "./collaboration.js";
 const byId = (id) => document.getElementById(id);
 const date = (value) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date(value));
 
-export function createProjectsController({ api, getToken, getUserId = () => null, onUnauthorized, onBack, onOpenBacklog }) {
+export function createProjectsController({ api, getToken, getSessionKey = getToken, getUserId = () => null, onUnauthorized, onBack, onOpenBacklog, onOpenWorkspace }) {
   let generation = 0;
   let controller = null;
   let busy = false;
   let selectedProject = null;
   let query = "";
-  const members = createMembersController({ api, getToken, getUserId, onUnauthorized, onAccessChange: permissions => {
+  let filters = {};
+  const members = createMembersController({ api, getToken, getSessionKey, getUserId, onUnauthorized, onAccessChange: permissions => {
     if (!selectedProject) return;
     selectedProject = { ...selectedProject, permissions };
     byId("project-edit").hidden = !permissions.includes("project:update");
@@ -21,8 +22,8 @@ export function createProjectsController({ api, getToken, getUserId = () => null
     if (!permissions.includes("project:update")) editForm.hidden = true;
   }, onSelfChange: async target => {
     if (target !== getUserId()) return false;
-    const token = getToken(); await load(0);
-    if (token === getToken() && !byId("projects-view").hidden) status("Seus acessos foram atualizados. A lista agora reflete suas permissões.");
+    const sessionKey = getSessionKey(); await load(0);
+    if (sessionKey === getSessionKey() && !byId("projects-view").hidden) status("Seus acessos foram atualizados. A lista agora reflete suas permissões.");
     return true;
   } });
   let page = { items: [], total: 0, limit: 20, offset: 0 };
@@ -123,12 +124,12 @@ export function createProjectsController({ api, getToken, getUserId = () => null
     byId("projects-count").textContent = value.total === 0 ? "" : `${value.offset + 1}–${value.offset + value.items.length} de ${value.total} projetos`;
   }
   async function run(action, onSuccess, errorPrefix = () => "", confirmedNotice = () => "") {
-    const token = getToken();
+    const token = getToken(), sessionKey = getSessionKey();
     if (!token) { clear(); onUnauthorized(); return; }
     const current = ++generation;
     controller?.abort(); controller = new AbortController();
     const { signal } = controller;
-    const valid = () => current === generation && token === getToken() && !byId("projects-view").hidden;
+    const valid = () => current === generation && sessionKey === getSessionKey() && !byId("projects-view").hidden;
     status("Carregando projetos…"); setBusy(true);
     try {
       const result = await action(token, signal);
@@ -144,7 +145,7 @@ export function createProjectsController({ api, getToken, getUserId = () => null
     }
   }
   async function load(offset = 0) {
-    return run((token, signal) => api.list(token, { offset, limit: 20, q: query, signal }), value => {
+    return run((token, signal) => api.list(token, { offset, limit: 20, q: query, ...filters, signal }), value => {
       hideDetail(); renderPage(value);
     });
   }
@@ -155,7 +156,7 @@ export function createProjectsController({ api, getToken, getUserId = () => null
   }
   function clear() {
     close(); page = { items: [], total: 0, limit: 20, offset: 0 };
-    query = ""; searchForm.reset();
+    query = ""; filters = {}; searchForm.reset();
     form.reset(); validation.clear(); byId("projects-list").replaceChildren();
     byId("projects-count").textContent = ""; hideDetail(); status(); setBusy(false);
   }
@@ -195,7 +196,7 @@ export function createProjectsController({ api, getToken, getUserId = () => null
     let saved = false;
     run((token, signal) => api.update(token, projectId, change, { signal }), async (project, ctx) => {
       saved = true; renderDetail(project);
-      const list = await api.list(ctx.token, { limit: 20, offset: 0, q: query, signal: ctx.signal });
+      const list = await api.list(ctx.token, { limit: 20, offset: 0, q: query, ...filters, signal: ctx.signal });
       if (!ctx.valid()) return;
       renderPage(list); status("Projeto atualizado. As alterações já estão salvas.");
     }, () => saved ? "Projeto atualizado. Atualize a lista para conferir. " : "",
@@ -203,7 +204,9 @@ export function createProjectsController({ api, getToken, getUserId = () => null
   });
   searchForm.addEventListener("submit", event => {
     event.preventDefault(); if (busy) return;
-    query = byId("project-search").value.trim(); load(0);
+    query = byId("project-search").value.trim();
+    filters = { status: byId("project-filter-status").value, tag: byId("project-filter-tag").value,
+      archived: byId("project-filter-archived").checked }; load(0);
   });
   byId("projects-refresh").addEventListener("click", () => { if (!busy) load(page.offset); });
   byId("projects-previous").addEventListener("click", () => { if (!busy) load(Math.max(0, page.offset - 20)); });
@@ -212,6 +215,11 @@ export function createProjectsController({ api, getToken, getUserId = () => null
   byId("project-backlog").addEventListener("click", () => {
     if (!busy && selectedProject && onOpenBacklog) onOpenBacklog(selectedProject);
   });
+  const advanced = document.createElement("button"); advanced.type = "button";
+  advanced.className = "button button-secondary"; advanced.textContent = "Gerenciar projeto e planejamento";
+  advanced.hidden = !onOpenWorkspace;
+  advanced.addEventListener("click", () => { if (!busy && selectedProject) onOpenWorkspace?.(selectedProject); });
+  byId("project-backlog").parentElement.append(advanced);
   byId("project-members").addEventListener("click", () => {
     if (!busy && selectedProject?.permissions.includes("project:members:read")) members.open(selectedProject);
   });

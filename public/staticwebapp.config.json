@@ -3,6 +3,10 @@
     {
       "route": "/config.js",
       "headers": { "Cache-Control": "no-store" }
+    },
+    {
+      "route": "/release.json",
+      "headers": { "Cache-Control": "no-store" }
     }
   ],
   "globalHeaders": {

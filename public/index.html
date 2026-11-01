@@ -9,6 +9,8 @@
   <link rel="preload" href="assets/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="styles/tokens.css">
   <link rel="stylesheet" href="styles/app.css">
+  <link rel="stylesheet" href="styles/workspace.css">
+  <link rel="stylesheet" href="styles/premium.css">
   <script type="module" src="scripts/app.js"></script>
 </head>
 <body>
@@ -23,6 +25,16 @@
     </button>
   </header>
   <main id="main" tabindex="-1">
+    <aside class="access-introduction" aria-labelledby="access-introduction-title">
+      <h2 id="access-introduction-title">Seu trabalho,<br>bem conectado.</h2>
+      <p>Da sua conta à próxima entrega. Um espaço para organizar pessoas, projetos e o que vem a seguir.</p>
+      <dl class="product-path">
+        <div><dt>Acessos</dt><dd>Sua identidade e suas sessões sob controle.</dd></div>
+        <div><dt>Projetos</dt><dd>Equipes, contexto e responsabilidades no mesmo lugar.</dd></div>
+        <div><dt>Backlog</dt><dd>Necessidades claras. Prioridades bem definidas.</dd></div>
+      </dl>
+      <p class="access-introduction-note">Módulo 1 · Engenharia de Software</p>
+    </aside>
     <section id="login-view" class="auth-panel" aria-labelledby="login-title">
       <h1 id="login-title" tabindex="-1">Entrar</h1>
       <p class="intro">Entre com sua conta para confirmar sua identidade e acessar seus dados.</p>
@@ -34,6 +46,7 @@
         <button id="login-button" class="button button-primary full-width" type="submit" disabled><span id="login-label">Entrar</span><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button>
         <p id="login-progress" class="visually-hidden" role="status" aria-live="polite"></p>
       </form>
+      <button id="open-recovery" type="button" class="text-button">Esqueci minha senha</button>
       <div class="account-switch"><span>Ainda não tem uma conta?</span><button id="open-register" type="button" class="text-button" disabled>Criar conta</button></div>
     </section>
     <section id="register-view" class="auth-panel" aria-labelledby="register-title" hidden>
@@ -51,6 +64,7 @@
       <div class="account-switch"><span>Já tem uma conta?</span><button id="back-login" type="button" class="text-button" disabled>Voltar para entrar</button></div>
     </section>
     <section id="profile-view" class="auth-panel profile-panel" aria-labelledby="profile-title" hidden>
+      <div class="profile-summary">
       <div class="identity-heading"><span class="avatar" id="avatar" aria-hidden="true"></span><h1 id="profile-title" tabindex="-1"></h1></div>
       <p class="intro">Sua identidade foi confirmada. Estes são os dados da sua conta.</p>
       <div id="profile-message" class="message" role="alert" aria-atomic="true" hidden></div>
@@ -61,8 +75,14 @@
         <div><dt>Conta criada em</dt><dd id="profile-created"></dd></div>
       </dl>
       <div class="profile-actions"><button id="open-projects" type="button" class="button button-primary">Meus projetos</button><button id="refresh-button" type="button" class="button button-secondary">Atualizar dados</button><button id="logout-button" type="button" class="button button-secondary">Sair</button></div>
+      </div>
+      <aside class="profile-navigation" aria-labelledby="profile-navigation-title">
+      <h2 id="profile-navigation-title">Seu espaço de trabalho</h2>
+      <p class="intro">Cuide dos seus acessos e encontre sua equipe.</p>
+      <nav class="profile-actions" aria-label="Conta e organização"><button id="open-security" type="button" class="button button-secondary">Segurança e sessões</button><button id="open-teams" type="button" class="button button-secondary">Equipes e alocação</button><button id="open-notifications" type="button" class="button button-secondary">Notificações</button><button id="open-admin" type="button" class="button button-secondary" hidden>Administração</button></nav>
       <p id="profile-progress" class="visually-hidden" role="status" aria-live="polite"></p>
       <p class="session-note">Ao sair ou recarregar esta página, você precisará entrar novamente.</p>
+      </aside>
       <section class="collaboration-section" aria-labelledby="invitation-title">
         <h2 id="invitation-title">Entrar em um projeto</h2>
         <p class="intro">Compartilhe seu ID de conta com o gestor e cole o código de convite recebido. O código só funciona para a conta indicada.</p>
@@ -71,11 +91,14 @@
           <div class="form-actions"><button id="invitation-accept" type="submit" class="button button-primary">Aceitar convite</button><button id="invitation-decline" type="button" class="button button-secondary">Recusar convite</button></div>
         </form>
       </section>
+      <section class="profile-preferences" aria-labelledby="profile-preferences-title">
+      <h2 id="profile-preferences-title">Perfil e preferências</h2>
+      <p class="intro">Mantenha suas competências, disponibilidade e credenciais atualizadas.</p>
       <section class="collaboration-section">
         <button id="open-professional-profile" type="button" class="text-button">Editar perfil profissional</button>
         <div id="professional-profile" hidden>
           <h2 id="professional-profile-title" tabindex="-1">Meu perfil profissional</h2>
-          <p class="intro">Registre seu contexto, competências e disponibilidade. Essas informações ficam visíveis somente para você.</p>
+          <p class="intro">Registre suas competências e disponibilidade. Você decide se compartilha seu perfil para recomendações de equipes.</p>
           <div id="professional-profile-status" class="message" role="status" aria-live="polite" hidden></div>
           <button id="profile-retry" type="button" class="button button-secondary" hidden>Tentar carregar perfil novamente</button>
           <form id="professional-profile-form" method="post" novalidate>
@@ -83,6 +106,7 @@
             <div class="field"><label for="profile-seniority">Senioridade</label><select id="profile-seniority"><option value="not_informed">Prefiro não informar</option><option value="junior">Júnior</option><option value="mid">Pleno</option><option value="senior">Sênior</option><option value="lead">Liderança técnica</option></select></div>
             <div class="field"><label for="profile-availability">Disponibilidade semanal em horas</label><input id="profile-availability" type="number" min="0" max="168" step="1" value="0" aria-describedby="profile-availability-hint"><p id="profile-availability-hint" class="field-hint">Informe horas inteiras, de 0 a 168. Não representa uma alocação confirmada.</p></div>
             <h3>Competências</h3><p class="field-hint">Até 30 competências. O domínio vai de 1 (básico) a 5 (especialista).</p>
+            <div class="field"><label><input id="profile-share" type="checkbox"> Compartilhar perfil profissional para recomendações</label><p class="field-hint">Disponibiliza resumo, competências e disponibilidade aos gestores. E-mail e credenciais permanecem privados.</p></div>
             <div id="profile-skills"></div><button id="profile-add-skill" type="button" class="text-button">Adicionar competência</button>
             <div class="form-actions"><button id="profile-save" type="submit" class="button button-primary">Salvar perfil</button><button id="profile-cancel" type="button" class="button button-secondary">Cancelar edição do perfil</button></div>
           </form>
@@ -102,6 +126,7 @@
           </form>
         </section>
       </div>
+      </section>
     </section>
     <section id="projects-view" class="auth-panel projects-panel" aria-labelledby="projects-title" hidden>
       <div class="projects-heading"><div><h1 id="projects-title" tabindex="-1">Meus projetos</h1><p class="intro">Organize seu trabalho. Os projetos ficam salvos e disponíveis para sua conta.</p></div><button id="projects-logout" type="button" class="button button-secondary">Sair</button></div>
@@ -109,7 +134,7 @@
       <div class="projects-layout">
         <div class="projects-content">
           <div class="projects-list-heading"><h2>Seus projetos</h2><button id="projects-refresh" type="button" class="text-button">Atualizar projetos</button></div>
-          <form id="project-search-form" class="search-form" role="search"><div class="field"><label for="project-search">Buscar projetos pelo nome</label><input id="project-search" type="search" maxlength="120" placeholder="Nome do projeto"></div><button type="submit" class="button button-secondary">Buscar projetos</button></form>
+          <form id="project-search-form" class="search-form" role="search"><div class="field"><label for="project-search">Buscar projetos pelo nome</label><input id="project-search" type="search" maxlength="120" placeholder="Nome do projeto"></div><div class="field"><label for="project-filter-status">Situação do projeto</label><select id="project-filter-status"><option value="">Todas</option><option value="planned">Planejado</option><option value="active">Ativo</option><option value="suspended">Suspenso</option><option value="completed">Concluído</option></select></div><div class="field"><label for="project-filter-tag">Filtrar por etiqueta</label><input id="project-filter-tag" type="text" maxlength="60"></div><label><input id="project-filter-archived" type="checkbox"> Mostrar arquivados</label><button type="submit" class="button button-secondary">Buscar projetos</button></form>
           <div id="projects-list" aria-label="Lista de projetos"></div>
           <nav class="projects-pagination" aria-label="Páginas de projetos"><button id="projects-previous" class="button button-secondary" type="button" disabled>Anterior</button><span id="projects-count" role="status"></span><button id="projects-next" class="button button-secondary" type="button" disabled>Próxima</button></nav>
           <article id="project-detail" aria-labelledby="project-detail-title" hidden>

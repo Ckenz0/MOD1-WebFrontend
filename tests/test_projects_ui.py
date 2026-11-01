@@ -148,3 +148,13 @@ class ProjectsUiTests(BrowserCase):
         self.page.locator('#projects-list button').click()
         self.assertTrue(self.evaluate('document.documentElement.scrollWidth<=innerWidth'))
         expect(self.page.locator('#project-detail')).to_be_visible()
+
+    def test_mobile_project_filters_leave_the_first_project_in_view(self):
+        self.page.set_viewport_size({'width': 390, 'height': 900})
+        self.items = [{**PROJECT, 'name': 'Projeto disponível'}]
+        self.open_projects()
+        project = self.page.get_by_role('button', name='Projeto disponível', exact=True)
+        expect(project).to_be_visible()
+        box = project.bounding_box()
+        self.assertLessEqual(box['y'] + box['height'], 900,
+                             'Mobile filters must leave the first project visible without scrolling')

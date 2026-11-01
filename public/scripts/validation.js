@@ -1,5 +1,7 @@
+import { emailValueError, loginPasswordValueError, nameValueError, newPasswordValueError, confirmationValueError } from "./validation-rules.js";
+
 const byId = (id) => document.getElementById(id);
-const count = (value) => Array.from(value).length;
+
 
 export function createFormValidation(formId, rules) {
   const touched = new Set();
@@ -46,29 +48,9 @@ export function createFormValidation(formId, rules) {
   };
 }
 
-export function emailError(input) {
-  if (!input.value.trim()) return "Informe seu e-mail.";
-  const domain = input.value.trim().split("@").at(-1) || "";
-  if (input.validity.typeMismatch || !domain.includes(".") || domain.endsWith(".")
-      || count(input.value.trim()) > 320) return "Informe um e-mail válido, como voce@exemplo.com.";
-  return "";
-}
-
-export function loginPasswordError(input) {
-  return input.value ? "" : "Informe sua senha.";
-}
-
-export function nameError(input) {
-  const length = count(input.value.trim());
-  return length >= 1 && length <= 120 ? "" : "Informe um nome de até 120 caracteres.";
-}
-
-export function newPasswordError(input, { min_length = 12, max_length = 128 } = {}) {
-  const length = count(input.value);
-  return length >= min_length && length <= max_length ? "" : `Use uma senha com ${min_length} a ${max_length} caracteres.`;
-}
-
-export function confirmationError(input) {
-  if (!input.value) return "Confirme sua senha.";
-  return input.value === byId("register-password").value ? "" : "As senhas precisam ser iguais, incluindo os espaços.";
-}
+// Existing field-based exports remain adapters for the presentation layer.
+export const emailError = input => emailValueError(input.value, input.validity.typeMismatch);
+export const loginPasswordError = input => loginPasswordValueError(input.value);
+export const nameError = input => nameValueError(input.value);
+export const newPasswordError = (input, policy) => newPasswordValueError(input.value, policy);
+export const confirmationError = input => confirmationValueError(input.value, byId("register-password").value);

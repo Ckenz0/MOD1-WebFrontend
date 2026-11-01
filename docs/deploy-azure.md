@@ -21,6 +21,22 @@ Durante a espera aparece “Preparando acesso…”. Cancelar ou sair impede o e
 
 ## Validar e atualizar
 
+O deploy gera `/release.json` com a versão lida de `VERSION` e o SHA do código,
+sem segredos, para conferir a versão efetivamente servida. Esse arquivo e
+`config.js` usam `Cache-Control: no-store`; o config local versionado é preservado.
+
 Abra a URL pública de outra máquina e percorra cadastro → login → projetos → backlog. Confira teclado, mensagens de espera, duas contas isoladas, persistência e retomada após suspensão. Os testes de CI sem caminhos de backend têm skips explícitos de integração; isso não comprova integração com Neon/Azure. Para rodar o fluxo completo com APIs sintéticas locais, siga os caminhos de backend no README.
+
+Na preparação da versão 0.5.0, o artefato foi conferido em diretório temporário:
+somente os 37 arquivos de `public/`, com `config.js` gerado para as três origens
+HTTPS e `staticwebapp.config.json` com `Cache-Control: no-store` para essa
+configuração. A inspeção não encontrou caminhos privados, arquivos de ambiente,
+chaves privadas, DSNs PostgreSQL, JWTs ou padrão de chave Resend. Essa conferência
+local do artefato não comprova upload ou deploy. `README`, `docs`, testes,
+credenciais, `.local/` e instruções de agentes não pertencem ao site publicado.
+
+As URLs e os contratos para os colegas estão em
+[integracao-outros-modulos.md](integracao-outros-modulos.md). Preserve a origem
+atual ao ampliar CORS e só adicione a origem exata de outro grupo após recebê-la.
 
 Cada publicação registra SHA e versão do frontend no resumo do workflow. Para rollback, publique novamente um commit revisado anterior pelo fluxo controlado; não edite arquivos diretamente no serviço. O Free tem limites de uso, e os recursos das APIs/registro/segredos/logs têm custos separados.

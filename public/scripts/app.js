@@ -1,6 +1,11 @@
+import { AccountError, createAccountApplication } from "./account-application.js";
 import { API_BASE_URL, PROJECTS_API_BASE_URL, BACKLOG_API_BASE_URL } from "../config.js";
 import { ApiError, createApiClient } from "./api.js";
 import { createSession } from "./session.js";
+import { withSessionRenewal } from "./session-application.js";
+import { createPlatformClient } from "./platform-api.js";
+import { createWorkspaceController } from "./workspace-controller.js";
+import { createPublicAuthController } from "./public-auth-controller.js";
 import { createProjectsApiClient } from "./projects-api.js";
 import { createProjectsController } from "./projects.js";
 import { createBacklogApiClient } from "./backlog-api.js";
@@ -26,11 +31,17 @@ let api;
 let apiConfigurationFailed = false;
 try { api = createApiClient({ baseUrl: API_BASE_URL, readiness: preparation(API_BASE_URL) }); }
 catch { apiConfigurationFailed = true; }
+const account = createAccountApplication({ api, session });
+const protectedApi = api && withSessionRenewal(api, { account, session });
+const getSessionKey = () => session.getSessionId() || session.getRequestToken();
+const clients = {};
+for (const [key, baseUrl] of Object.entries({ identity: API_BASE_URL, projects: PROJECTS_API_BASE_URL, backlog: BACKLOG_API_BASE_URL })) {
+  try { clients[key] = createPlatformClient({ baseUrl }); } catch { /* Unconfigured service surfaces a safe error on use. */ }
+}
 let epoch = 0;
 let controller = null;
 let identity = null;
 let busy = false;
-let authenticating = false;
 let projects;
 let projectsApi;
 let backlog;
@@ -39,21 +50,23 @@ let policyLoaded = false;
 let policyRequest = null;
 let backlogConfigurationFailed = false;
 try {
-  backlog = createBacklogController({ api: createBacklogApiClient({ baseUrl: BACKLOG_API_BASE_URL,
-    readiness: preparation(API_BASE_URL, PROJECTS_API_BASE_URL, BACKLOG_API_BASE_URL) }),
+  backlog = createBacklogController({ api: withSessionRenewal(createBacklogApiClient({ baseUrl: BACKLOG_API_BASE_URL,
+    readiness: preparation(API_BASE_URL, PROJECTS_API_BASE_URL, BACKLOG_API_BASE_URL) }), { account, session }),
     getProject: (token, id, options) => projectsApi.get(token, id, options),
     getUserId: () => identity?.id,
-    getToken: () => session.getToken(),
+    getToken: () => session.getRequestToken(), getSessionKey,
+    onOpenWorkspace: project => workspace.openProject(project, "board"),
     onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar."),
     onBack: () => projects.open(),
   });
 } catch { backlogConfigurationFailed = true; }
 let projectsConfigurationFailed = false;
 try {
-  projectsApi = createProjectsApiClient({ baseUrl: PROJECTS_API_BASE_URL,
-    readiness: preparation(API_BASE_URL, PROJECTS_API_BASE_URL) });
+  projectsApi = withSessionRenewal(createProjectsApiClient({ baseUrl: PROJECTS_API_BASE_URL,
+    readiness: preparation(API_BASE_URL, PROJECTS_API_BASE_URL) }), { account, session });
   projects = createProjectsController({ api: projectsApi,
-    getToken: () => session.getToken(),
+    getToken: () => session.getRequestToken(), getSessionKey,
+    onOpenWorkspace: project => workspace.openProject(project),
     getUserId: () => identity?.id,
     onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar."),
     onBack: () => { byId("profile-view").hidden = false; byId("profile-title").focus(); },
@@ -67,10 +80,23 @@ try {
     },
   });
 } catch { projectsConfigurationFailed = true; }
-const professionalProfile = createProfessionalProfile({ api, getToken: () => session.getToken(),
+const professionalProfile = createProfessionalProfile({ api: protectedApi, getToken: () => session.getRequestToken(), getSessionKey,
   getUserId: () => identity?.id, onUnauthorized: () => endSession("Sua sessão terminou. Entre novamente para continuar.") });
-const invitations = createInvitationsController({ api: projectsApi, getToken: () => session.getToken(),
+const invitations = createInvitationsController({ api: projectsApi, getToken: () => session.getRequestToken(), getSessionKey,
   onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar.") });
+function hideMainViews() {
+  professionalProfile.clear(); invitations.clear(); projects?.close(); backlog?.close();
+  for (const id of ["login-view", "register-view", "profile-view"]) byId(id).hidden = true;
+}
+const workspace = createWorkspaceController({ clients, account, session, getIdentity: () => identity,
+  onEnter: hideMainViews, onBack: () => { byId("profile-view").hidden = false; byId("profile-title").focus(); },
+  onUnauthorized: () => endSession("Sua sessão terminou. Entre novamente para continuar.") });
+const publicAuth = createPublicAuthController({ client: clients.identity, account, onEnter: () => { workspace.clear(); hideMainViews(); },
+  onBack: () => endSession(), onIdentity: renderIdentity });
+byId("open-recovery").addEventListener("click", () => { if (!busy) publicAuth.openRecovery(); });
+for (const [id, open] of [["open-security", () => workspace.openSecurity()], ["open-teams", () => workspace.openTeams()], ["open-notifications", () => workspace.openNotifications()], ["open-admin", () => workspace.openAdmin()]]) {
+  byId(id).addEventListener("click", () => { if (identity && checkExpiry() && !busy) open(); });
+}
 const loginValidation = createFormValidation("login-form", {
   email: emailError, password: loginPasswordError,
 });
@@ -212,15 +238,15 @@ byId("password-toggle").addEventListener("click", () => {
 });
 
 function endSession(text = "", tone = "notice") {
+  workspace.clear(); publicAuth.clear();
   professionalProfile.clear(); invitations.clear();
   backlog?.clear();
   projects?.clear();
   epoch += 1;
   controller?.abort();
   controller = null;
-  session.clear();
+  account.logout();
   identity = null;
-  authenticating = false;
   byId("profile-title").textContent = "";
   byId("profile-email").textContent = "";
   byId("profile-user-id").textContent = "";
@@ -242,7 +268,7 @@ function endSession(text = "", tone = "notice") {
 }
 
 function checkExpiry() {
-  if ((identity || authenticating) && !session.isActive()) {
+  if ((identity || account.isAuthenticating()) && !session.isSessionAlive()) {
     endSession("Sua sessão terminou. Entre novamente para continuar.");
     return false;
   }
@@ -254,10 +280,12 @@ window.addEventListener("pageshow", checkExpiry);
 setInterval(checkExpiry, 1000);
 
 function renderIdentity(user) {
+  publicAuth.clear(); workspace.clear();
   professionalProfile.clear(); invitations.clear();
   backlog?.close();
   projects?.close();
   identity = user;
+  byId("open-admin").hidden = user.is_admin !== true;
   clearPasswordChange();
   byId("profile-title").textContent = `Olá, ${user.display_name}`;
   byId("profile-email").textContent = user.email;
@@ -288,13 +316,9 @@ byId("login-form").addEventListener("submit", async (event) => {
   message("login");
   setBusy(true, "login");
   try {
-    const response = await api.login(byId("email").value, byId("password").value, { signal });
-    if (current !== epoch) return;
-    session.start(response);
-    authenticating = true;
-    const user = await api.getMe(session.getToken(), { signal });
+    const user = await account.login(byId("email").value, byId("password").value, { signal });
+    if (current === epoch && user.mfa_required === true) { byId("password").value = ""; passwordHidden(); publicAuth.openMfa(); return; }
     if (current !== epoch || !checkExpiry()) return;
-    authenticating = false;
     renderIdentity(user);
     byId("password").value = "";
     passwordHidden();
@@ -302,9 +326,8 @@ byId("login-form").addEventListener("submit", async (event) => {
     byId("profile-title").focus();
   } catch (error) {
     if (current !== epoch) return;
-    session.clear();
-    authenticating = false;
-    if (error.kind !== "cancelled") message("login", error instanceof ApiError ? error.message : "Não foi possível entrar. Tente novamente.");
+    account.logout();
+    if (error.kind !== "cancelled") message("login", (error instanceof ApiError || error instanceof AccountError) ? error.message : "Não foi possível entrar. Tente novamente.");
   } finally {
     if (current === epoch) { controller = null; setBusy(false, "login"); }
   }
@@ -317,7 +340,7 @@ byId("refresh-button").addEventListener("click", async () => {
   message("profile");
   setBusy(true, "profile");
   try {
-    const user = await api.getMe(session.getToken(), { signal: controller.signal });
+    const user = await account.currentUser({ signal: controller.signal });
     if (current !== epoch || !checkExpiry()) return;
     renderIdentity(user);
     byId("profile-progress").textContent = "Dados atualizados.";
@@ -326,7 +349,7 @@ byId("refresh-button").addEventListener("click", async () => {
     if (error.kind === "unauthorized") return endSession(error.message);
     if (!checkExpiry()) return;
     byId("profile-progress").textContent = "";
-    if (error.kind !== "cancelled") message("profile", error instanceof ApiError ? error.message : "Não foi possível atualizar os dados. Tente novamente.");
+    if (error.kind !== "cancelled") message("profile", (error instanceof ApiError || error instanceof AccountError) ? error.message : "Não foi possível atualizar os dados. Tente novamente.");
   } finally {
     if (current === epoch) { controller = null; setBusy(false, "profile"); }
   }
@@ -347,18 +370,18 @@ byId("password-change-form").addEventListener("submit", async event => {
   if (!passwordValidation.validate()) {
     note.textContent = "Confira os campos destacados para alterar a senha."; note.hidden = false; return;
   }
-  const current = ++epoch, token = session.getToken();
+  const current = ++epoch;
   controller?.abort(); controller = new AbortController();
   note.hidden = true; setBusy(true, "password-change");
   try {
-    await api.changePassword(token, byId("current-password").value, byId("new-password").value, { signal: controller.signal });
+    await account.changePassword(byId("current-password").value, byId("new-password").value, { signal: controller.signal });
     if (current !== epoch) return;
     endSession("Senha alterada. Entre novamente com a nova senha.");
   } catch (error) {
     if (current !== epoch || error.kind === "cancelled") return;
     if (error.kind === "unauthorized") { endSession(error.message); return; }
     if (!checkExpiry()) return;
-    note.textContent = error instanceof ApiError ? error.message : "Não foi possível alterar a senha. Tente novamente.";
+    note.textContent = (error instanceof ApiError || error instanceof AccountError) ? error.message : "Não foi possível alterar a senha. Tente novamente.";
     note.hidden = false;
   } finally {
     if (current === epoch) { controller = null; setBusy(false, "password-change"); }
@@ -396,7 +419,7 @@ byId("register-form").addEventListener("submit", async (event) => {
   message("register");
   setBusy(true, "register");
   try {
-    await api.register(byId("register-name").value, email, byId("register-password").value, { signal: controller.signal });
+    await account.register(byId("register-name").value, email, byId("register-password").value, { signal: controller.signal });
     if (current !== epoch) return;
     byId("email").value = email;
     loginValidation.clear();
@@ -405,7 +428,7 @@ byId("register-form").addEventListener("submit", async (event) => {
     message("login", "Cadastro recebido. Se o e-mail estava disponível, sua conta já está pronta. Entre para continuar.", "notice");
   } catch (error) {
     if (current !== epoch) return;
-    if (error.kind !== "cancelled") message("register", error instanceof ApiError ? error.message : "Não foi possível cadastrar. Tente novamente.");
+    if (error.kind !== "cancelled") message("register", (error instanceof ApiError || error instanceof AccountError) ? error.message : "Não foi possível cadastrar. Tente novamente.");
   } finally {
     if (current === epoch) { controller = null; setBusy(false, "register"); }
   }
@@ -423,7 +446,7 @@ byId("access-button").addEventListener("click", async () => {
   setBusy(true, "access");
   accessResult("checking", "Verificando seu acesso…", "Aguardando a confirmação do serviço.");
   try {
-    await api.getMe(session.getToken(), { signal: controller.signal });
+    await account.currentUser({ signal: controller.signal });
     if (current !== epoch || !checkExpiry()) return;
     accessResult("allowed", "Acesso permitido", "Sua sessão foi confirmada. Você pode consultar os dados protegidos.");
   } catch (error) {
@@ -432,12 +455,25 @@ byId("access-button").addEventListener("click", async () => {
       if (identity) endSession("Sua sessão não permite continuar. Entre novamente.");
       accessResult("blocked", "Acesso bloqueado", "Você precisa entrar com uma conta válida para consultar seus dados.");
     } else {
-      accessResult("unavailable", "Não foi possível verificar", error instanceof ApiError ? error.message : "Tente novamente em instantes.");
+      accessResult("unavailable", "Não foi possível verificar", (error instanceof ApiError || error instanceof AccountError) ? error.message : "Tente novamente em instantes.");
     }
   } finally {
     if (current === epoch) { controller = null; setBusy(false, "access"); }
   }
 });
+
+let lastActivity = 0, activityPending = false;
+async function foregroundActivity(event) {
+  if (!event.isTrusted || !identity || document.hidden || activityPending || Date.now() - lastActivity < 60000 || !checkExpiry()) return;
+  activityPending = true; lastActivity = Date.now();
+  try { await account.recordActivity(); }
+  catch (error) { if (error.kind === "unauthorized") endSession("Sua sessão terminou. Entre novamente para continuar."); }
+  finally { activityPending = false; }
+}
+document.addEventListener("pointerdown", foregroundActivity, { passive: true });
+document.addEventListener("keydown", foregroundActivity, { passive: true });
+window.addEventListener("hashchange", () => publicAuth.consumeLink());
+publicAuth.consumeLink();
 
 // Credentials stay inert until all handlers have initialized successfully.
 loginValidation.enable();

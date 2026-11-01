@@ -42,10 +42,12 @@ class ProjectsRealApiTests(BrowserCase):
             DATABASE_SCHEMA='mod1_identity', JWT_PRIVATE_KEY_PATH=str(root/'key.pem'),
             JWT_ISSUER='mod1-auth-local', JWT_AUDIENCE='engenharia-software-api',
             CORS_ORIGINS=json.dumps([self.base_url]))
+        self.auth_env.update(self.additional_auth_settings())
         self.projects_env = dict(os.environ,
             DATABASE_URL=f"sqlite:///{(root/'projects.db').as_posix()}", DATABASE_SCHEMA='projects',
             JWT_ISSUER='mod1-auth-local', JWT_AUDIENCE='engenharia-software-api',
-            JWKS_URL=self.auth_url+'/.well-known/jwks.json', CORS_ORIGINS=json.dumps([self.base_url]))
+            JWKS_URL=self.auth_url+'/.well-known/jwks.json', AUTH_API_BASE_URL=self.auth_url,
+            AUTH_SESSION_CHECK_ENABLED='true', CORS_ORIGINS=json.dumps([self.base_url]))
         self.auth_process = self.projects_process = None
         self.addCleanup(lambda: self.stop(self.auth_process))
         self.addCleanup(lambda: self.stop(self.projects_process))
@@ -60,6 +62,9 @@ class ProjectsRealApiTests(BrowserCase):
                                            'projects_service.app:create_app', self.projects_port)
         self.server.api_url = self.auth_url
         self.server.projects_api_url = self.projects_url
+
+    def additional_auth_settings(self):
+        return {}
 
     def admin(self, python, cwd, env, script):
         result = subprocess.run([python, '-c', script], cwd=cwd, env=env, capture_output=True,
@@ -92,7 +97,7 @@ class ProjectsRealApiTests(BrowserCase):
                     with urlopen(f'http://127.0.0.1:{port}/health/ready', timeout=0.5) as response:
                         if response.status == 200:
                             return process
-                except (URLError, TimeoutError):
+                except (URLError, TimeoutError, ConnectionError):
                     time.sleep(0.1)
             self.fail('Synthetic service readiness timed out')
         except BaseException:
