@@ -1,6 +1,29 @@
 # Frontend
 
-## Colaboração e perfil — candidato 0.4.0
+O frontend segue arquitetura multicamadas com apresentação, casos de uso,
+domínio e clientes HTTP separados. Componentes e fluxos reais estão em
+[Arquitetura](docs/architecture.md).
+
+## Recursos da versão 0.5.0
+
+Sessões persistentes no backend, renovação, bloqueio por tentativas, recuperação,
+confirmação de e-mail, MFA e administração global. Na conta, abra **Segurança e
+sessões**, **Equipes e alocação** ou **Notificações**. Administradores também têm
+**Administração**, inclusive caixa postal de desenvolvimento quando habilitada.
+
+No projeto, **Gerenciar projeto e planejamento** reúne contexto/orçamento/datas,
+ciclo de vida, equipes, papéis personalizados, concessões por papel e histórico.
+O quadro oferece histórias/épicos/tarefas, campos orientados, MoSCoW, esforço,
+responsáveis, bloqueios, dependências e ordenação por arraste ou teclado.
+
+Veja [guia dos fluxos](docs/local-user-stories.md),
+[situação das US](docs/backlog-status.md) e [validação](docs/verification.md).
+IA real e o contrato externo de revisão ainda precisam de validação;
+simulação é identificada. O transporte Resend recebeu teste real de envio e
+recebimento, limitado à conta do titular pelo remetente de teste atual. Isso
+não comprova recuperação/confirmação ponta a ponta por e-mail externo.
+
+## Colaboração e perfil
 
 Na conta, edite resumo, senioridade, competências/domínio e disponibilidade.
 Compartilhe seu ID para receber um convite; cole o código e aceite ou recuse.
@@ -14,23 +37,36 @@ Atualizar acessos/histórias consulta as permissões atuais e remove controles
 revogados. Se o perfil não carregar, a edição permanece desativada e o botão
 **Tentar carregar perfil novamente** permite recuperar os dados antes de editar.
 
-Usar conjuntamente Identidade 0.3.0, Projetos 0.4.0 e Backlog 0.3.0.
-Preparar explicitamente tabelas/grants conforme os guias dos backends. Não há
-equipes independentes, papéis personalizados, envio de e-mail ou cancelamento
-administrativo de convite pendente. O convite vale até sete dias, limitado
-também pela expiração do vínculo. Tudo segue local para revisão.
+Use as versões dos três serviços verificadas na entrega, com as migrações e grants
+explícitos dos respectivos guias; a combinação histórica de colaboração era
+Identidade 0.3.0, Projetos 0.4.0 e Backlog 0.3.0. O convite vale até sete dias,
+limitado também pela expiração do vínculo. O Resend fica somente no backend de
+Identidade; envio a outros destinatários exige remetente/domínio autorizado.
 
-MVP integrado: criar conta, entrar, organizar projetos e acompanhar histórias
-priorizadas até a conclusão. Versão candidata SemVer `0.4.0` em [VERSION](VERSION);
-alterações em [CHANGELOG.md](CHANGELOG.md).
+Criar conta, entrar, organizar projetos e acompanhar histórias priorizadas até a
+conclusão continua sendo o fluxo principal. Versão SemVer `0.5.0` em
+[VERSION](VERSION), preparada para publicação; alterações em
+[CHANGELOG.md](CHANGELOG.md). A versão no arquivo não comprova deploy.
 
 HTML/CSS/JavaScript modular, sem dependências de produto ou build. Identidade visual
 do módulo 6, fontes locais e temas claro/escuro. O portal definitivo será o do módulo 6;
 esta interface demonstra o recorte local e permite reaproveitar clientes/tokens visuais.
 
+## Refinamento visual
+
+Entrada com contexto no desktop, conta com dados e atalhos separados e workspace
+com filtros, tabelas e quadro refinados. A identidade do módulo 6, as cores, Inter,
+as fontes locais e as camadas existentes foram preservadas, sem novas dependências
+ou build. Veja [decisões e evidências](docs/premium-frontend.md) e o
+[sistema visual](DESIGN.md). A revisão independente das 36 capturas foi concluída;
+os dois achados tiveram correção e recaptura aprovadas. A evidência visual local
+não comprova disponibilidade da versão em produção.
+
 ## Executar
 
 Para publicação no Azure Static Web Apps e retomada das APIs suspensas, siga o [guia de deploy](docs/deploy-azure.md). A configuração pública de produção é gerada no artefato, preservando os endereços locais no código fonte.
+
+URLs e contrato para os colegas estão no [guia de integração entre módulos](docs/integracao-outros-modulos.md).
 
 Prepare cada backend pelo README correspondente:
 
@@ -41,7 +77,9 @@ Prepare cada backend pelo README correspondente:
 | Backlog | [MOD1-BacklogService](https://github.com/igorcpds/MOD1-BacklogService) | 8002 |
 
 Identidade precisa de banco/chave RSA preparados; projetos/backlog precisam de seus
-schemas/tabelas. Configure CORS nas três APIs para `http://127.0.0.1:5173` e inicie
+schemas/tabelas e migrações explícitas. Configure `AUTH_API_BASE_URL` em Projetos
+e Backlog, `PROJECTS_API_BASE_URL` no Backlog e `BACKLOG_API_BASE_URL` em Projetos.
+Preserve verificação online habilitada. Configure CORS nas três APIs para `http://127.0.0.1:5173` e inicie
 os serviços em terminais próprios. Use as instruções de instalação de cada repositório.
 
 Na raiz do frontend, com Python instalado:
@@ -71,28 +109,29 @@ O valor é tornar necessidades, critérios de entrega, prioridades e progresso v
 preservando dados e acesso por conta. [Resultados e capturas](docs/verification.md).
 
 JWT fica somente em memória; recarregar a página exige login. Só o tema pode persistir.
-Logout não revoga JWT no servidor. Cadastro permite login imediato, sem confirmação
-de posse do e-mail ou recuperação de senha. Projetos têm proprietário protegido e membros com RBAC fixo; não há
-equipes independentes ou papéis personalizados. Backlog permite refinar título, descrição e critérios; não inclui
-tarefas, sprints, estimativas ou exclusão de histórias.
+Logout revoga a sessão no servidor e limpa imediatamente a aba. Troca/reset de
+senha revogam todas as sessões; consumidores consultam o estado online.
+Cadastro permite login imediato, com confirmação de e-mail disponível separadamente.
+Há recuperação de senha, equipes, RBAC personalizado, tarefas e estimativas.
+Sprints e exclusão individual de histórias não fazem parte desta entrega.
 
-## Gerenciamento básico — candidato 0.3.0
+## Gerenciamento básico
 
 - Na conta, **Alterar senha** solicita a senha atual, a nova e a confirmação.
   A interface mostra a política configurada pela Identidade e encerra a sessão
-  local após salvar. JWT já emitido nos consumidores ainda vale até expirar.
+  após salvar. A política atual também revoga as credenciais nos consumidores.
 - Em Projetos, registre o objetivo, use **Editar projeto** para refinar nome,
   descrição e objetivo, ou busque pelo nome. A edição pode ser cancelada.
 - No Backlog, refine título, descrição e critérios de aceite; busque por título,
   descrição ou ID e combine filtros de status/prioridade. Descarte restaura o
   último valor salvo. Falhas de rede preservam o rascunho para nova tentativa.
 
-A base 0.3.0 usava Identidade 0.2.0, Projetos 0.3.0 e Backlog 0.2.0;
-o candidato atual requer as versões de colaboração informadas acima.
+A base histórica 0.3.0 usava Identidade 0.2.0, Projetos 0.3.0 e Backlog 0.2.0.
 Em banco de Projetos anterior, executar a migração administrativa explícita
 conforme o README desse backend. Nenhuma tela executa migração ou concede acesso.
-Status/etiquetas de projetos, equipes independentes, papéis personalizados, recuperação por e-mail, MFA e IA
-continuam pendentes; a prioridade atual do backlog não é MoSCoW.
+Status/etiquetas, equipes, papéis personalizados, recuperação, MFA e MoSCoW foram
+acrescentados desde essa base. IA real e compatibilidade com o módulo externo
+de revisão continuam pendentes, conforme a matriz de US.
 
 Falha de rede não equivale a acesso negado. Se POST/PATCH tiver sucesso e a recarga
 falhar, a tela confirma a gravação e orienta atualizar a lista. Timeout não confirma
@@ -108,6 +147,8 @@ uv pip install --python .venv/Scripts/python.exe -r tests/requirements.txt
 $env:AUTH_BACKEND_PATH = 'C:\CAMINHO\MOD1-IdentityService'
 $env:PROJECTS_BACKEND_PATH = 'C:\CAMINHO\MOD1-ProjectsServices'
 $env:BACKLOG_BACKEND_PATH = 'C:\CAMINHO\MOD1-BacklogService'
+$env:MAIL_PROVIDER = 'auto'
+Get-ChildItem Env: | Where-Object { $_.Name -like 'RESEND*' } | ForEach-Object { Remove-Item -LiteralPath ('Env:' + $_.Name) }
 .venv/Scripts/python.exe -m unittest discover -s tests -v
 ```
 
@@ -120,12 +161,14 @@ uv pip install --python .venv/bin/python -r tests/requirements.txt
 export AUTH_BACKEND_PATH=/CAMINHO/MOD1-IdentityService
 export PROJECTS_BACKEND_PATH=/CAMINHO/MOD1-ProjectsServices
 export BACKLOG_BACKEND_PATH=/CAMINHO/MOD1-BacklogService
+export MAIL_PROVIDER=auto
+# Execute sem variáveis RESEND_* e sem credenciais de e-mail reais no processo.
 .venv/bin/python -m unittest discover -s tests -v
 ```
 
 Fixtures usam SQLite, chaves/contas temporárias e portas livres; não acessam Neon.
-Sem os caminhos, integrações correspondentes são puladas explicitamente (seis testes
-quando nenhum backend está configurado). Isso não comprova PostgreSQL, Docker ou deploy.
+Sem os caminhos, integrações correspondentes são puladas explicitamente.
+Isso não comprova PostgreSQL, Docker ou deploy.
 
 Sistema visual: [DESIGN.md](DESIGN.md); [fontes e licenças](docs/font-sources.md).
 [Conferência dos requisitos](docs/requirements-review.md).

@@ -1,19 +1,18 @@
-import { ProjectsApiError } from "./projects-api.js";
-import { PERMISSIONS, PERMISSION_NAMES, ROLE_NAMES, permissionsFor } from "./permissions.js";
+import { ProjectsApiError } from "./api-errors.js";
+import { PERMISSIONS, PERMISSION_NAMES, ROLE_NAMES } from "./permissions.js";
+import { ROLE_KEYS, membershipExpiry, invitationDeadline } from "./collaboration-domain.js";
+import { isId } from "./project-domain.js";
+import { createWorkspaceApplication } from "./workspace-application.js";
 
 const byId = id => document.getElementById(id);
-const roleKeys = ["product_owner", "project_manager", "developer"];
-const uuid = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i;
+const roleKeys = ROLE_KEYS;
 function message(id, text = "", error = false) {
   const node = byId(id); node.textContent = text; node.hidden = !text; node.dataset.tone = error ? "error" : "notice";
 }
 function checkedRoles(prefix) { return roleKeys.filter(role => byId(`${prefix}-${role}`).checked); }
 function fillRoles(prefix, roles) { roleKeys.forEach(role => { byId(`${prefix}-${role}`).checked = roles.includes(role); }); }
 function expiry(input) {
-  if (!input.value) return null;
-  const date = new Date(input.value);
-  if (!Number.isFinite(date.valueOf()) || date.valueOf() <= Date.now()) throw new Error("Informe uma data de expiração futura ou deixe o campo vazio.");
-  return date.toISOString();
+  return membershipExpiry(input.value);
 }
 function localDate(iso) {
   if (!iso) return "";
@@ -21,7 +20,7 @@ function localDate(iso) {
   return new Date(date.valueOf() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 }
 
-export function createInvitationsController({ api, getToken, onUnauthorized }) {
+export function createInvitationsController({ api, getToken, getSessionKey = getToken, onUnauthorized }) {
   let generation = 0, controller = null, busy = false;
   const form = byId("invitation-action-form");
   function setBusy(value) {
@@ -33,11 +32,11 @@ export function createInvitationsController({ api, getToken, onUnauthorized }) {
   }
   async function consume(accept) {
     if (busy) return;
-    const code = byId("invitation-code").value.trim(), token = getToken();
+    const code = byId("invitation-code").value.trim(), token = getToken(), sessionKey = getSessionKey();
     if (!token) { clear(); onUnauthorized(); return; }
     if (!code || code.length > 512) { message("invitation-status", "Informe o código recebido do gestor do projeto.", true); return; }
     const current = ++generation; controller = new AbortController();
-    const valid = () => current === generation && token === getToken() && !byId("profile-view").hidden;
+    const valid = () => current === generation && sessionKey === getSessionKey() && !byId("profile-view").hidden;
     setBusy(true); message("invitation-status", "Conferindo convite…");
     try {
       if (accept) await api.acceptInvitation(token, code, { signal: controller.signal });
@@ -57,7 +56,8 @@ export function createInvitationsController({ api, getToken, onUnauthorized }) {
   return { clear };
 }
 
-export function createMembersController({ api, getToken, getUserId, onUnauthorized, onSelfChange, onAccessChange }) {
+export function createMembersController({ api, getToken, getSessionKey = getToken, getUserId, onUnauthorized, onSelfChange, onAccessChange }) {
+  const application = createWorkspaceApplication({ projects: api });
   let generation = 0, controller = null, busy = false, project = null, selected = null;
   let page = { items: [], total: 0, limit: 20, offset: 0 }, manage = false;
   let catalog = [];
@@ -86,7 +86,7 @@ export function createMembersController({ api, getToken, getUserId, onUnauthoriz
     for (const member of value.items) {
       const row = document.createElement("li"), id = document.createElement("strong"), roles = document.createElement("p"), until = document.createElement("p");
       id.textContent = member.user_id;
-      roles.textContent = member.roles.length ? member.roles.map(key => ROLE_NAMES[key] || key).join(" · ") : "Sem papéis — sem acesso";
+      roles.textContent = member.roles.length ? member.roles.map(key => ROLE_NAMES[key] || catalog.find(role => role.key === key)?.name || key).join(" · ") : "Sem papéis — sem acesso";
       until.className = "field-hint";
       const expired = member.expires_at !== null && Date.parse(member.expires_at) <= Date.now();
       until.textContent = member.is_owner ? "Responsável protegido" : member.expires_at
@@ -112,12 +112,12 @@ export function createMembersController({ api, getToken, getUserId, onUnauthoriz
     byId("members-count").textContent = `${value.total} integrante${value.total === 1 ? "" : "s"}`;
   }
   async function run(action, onSuccess, confirmed = () => "") {
-    const token = getToken(), projectId = project?.id;
+    const token = getToken(), sessionKey = getSessionKey(), projectId = project?.id;
     if (!token) { clear(); onUnauthorized(); return; }
     if (!projectId) return;
     const current = ++generation; controller?.abort(); controller = new AbortController();
     const { signal } = controller;
-    const valid = () => current === generation && token === getToken() && projectId === project?.id && !byId("projects-view").hidden;
+    const valid = () => current === generation && sessionKey === getSessionKey() && projectId === project?.id && !byId("projects-view").hidden;
     setBusy(true); message("members-status", "Conferindo acessos…");
     try {
       const result = await action(token, projectId, signal);
@@ -134,37 +134,45 @@ export function createMembersController({ api, getToken, getUserId, onUnauthoriz
     } finally { if (current === generation) { controller = null; setBusy(false); } }
   }
   function load(offset = 0) {
-    return run((token, id, signal) => Promise.all([api.get(token, id, { signal }), api.roles(token, id, { signal }),
-      api.members(token, id, { offset, signal })]), ([currentProject, roles, members]) => {
-      project = { ...currentProject, permissions: permissionsFor(currentProject, getUserId()) };
+    return run((token, id, signal) => application.loadMembers(token, id, getUserId(), { offset, signal }), result => {
+      project = result.project;
       manage = project.permissions.includes("project:members:manage"); inviteForm.hidden = !manage;
       if (!manage) {
         selected = null; editForm.hidden = true; editForm.reset();
         byId("generated-invite-code").value = ""; byId("generated-invite").hidden = true;
       }
       onAccessChange?.(project.permissions);
-      catalog = roles.items; render(members);
+      catalog = result.roles; render(result.members);
     });
   }
   inviteForm.addEventListener("submit", event => {
     event.preventDefault(); if (busy || !manage) return;
     byId("generated-invite-code").value = ""; byId("generated-invite").hidden = true;
     const user_id = byId("invite-user-id").value.trim(), roles = checkedRoles("invite-role");
-    if (!uuid.test(user_id) || !roles.length) { message("members-status", "Informe um ID de conta válido e selecione ao menos um papel.", true); return; }
+    if (!isId(user_id) || !roles.length) { message("members-status", "Informe um ID de conta válido e selecione ao menos um papel.", true); return; }
     let expires_at;
     try { expires_at = expiry(byId("invite-member-expiry")); } catch (error) { message("members-status", error.message, true); return; }
     run((token, id, signal) => api.invite(token, id, { user_id, roles, expires_at }, { signal }), invitation => {
       byId("generated-invite-code").value = invitation.code; byId("generated-invite").hidden = false;
-      const deadline = Math.min(Date.parse(invitation.code_expires_at), invitation.expires_at ? Date.parse(invitation.expires_at) : Infinity);
+      const deadline = invitationDeadline(invitation.code_expires_at, invitation.expires_at);
       byId("generated-invite-expiry").textContent = `Aceite disponível até ${new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(deadline))}. Compartilhe somente com a pessoa convidada.`;
       message("members-status", "Convite criado. Compartilhe o código com a conta indicada.");
     });
   });
   editForm.addEventListener("submit", event => {
     event.preventDefault(); if (busy || !manage || !selected) return;
-    const change = { roles: checkedRoles("member-role") };
+    // This compact editor exposes fixed roles only. Keep custom roles and
+    // individual deadlines until the manager explicitly changes them elsewhere.
+    const change = { roles: [...checkedRoles("member-role"), ...selected.roles.filter(role => !roleKeys.includes(role))] };
     if (byId("member-expiry").value !== localDate(selected.expires_at)) {
       try { change.expires_at = expiry(byId("member-expiry")); } catch (error) { message("members-status", error.message, true); return; }
+    }
+    if (selected.role_grants?.length) {
+      change.role_grants = change.roles.map(role => {
+        const existing = selected.role_grants.find(grant => grant.role === role);
+        return { role, expires_at: Object.hasOwn(change, "expires_at") ? change.expires_at
+          : existing ? existing.expires_at : selected.expires_at };
+      });
     }
     const target = selected.user_id; let saved = false;
     run((token, id, signal) => api.updateMember(token, id, target, change, { signal }), async (_, ctx) => {

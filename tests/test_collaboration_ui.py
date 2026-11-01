@@ -85,6 +85,31 @@ class CollaborationUiTests(BrowserCase):
         self.page.get_by_role('button', name='Meus projetos', exact=True).click()
         self.page.get_by_role('button', name=PROJECT['name'], exact=True).click()
 
+    def test_basic_member_editor_preserves_custom_roles_and_each_existing_expiry(self):
+        custom = 'custom:77777777-7777-4777-8777-777777777777'
+        self.member.update(roles=['developer', 'product_owner', custom], expires_at='2032-01-01T00:00:00Z', role_grants=[
+            {'role': 'developer', 'expires_at': '2030-01-01T00:00:00Z'},
+            {'role': 'product_owner', 'expires_at': None},
+            {'role': custom, 'expires_at': '2031-01-01T00:00:00Z'}])
+        self.page.route('**/projects/*/roles', lambda r: r.fulfill(json={'items': [
+            {'key': 'product_owner', 'name': 'Product Owner', 'permissions': ALL},
+            {'key': 'project_manager', 'name': 'PM/Scrum Master', 'permissions': ALL},
+            {'key': 'developer', 'name': 'Desenvolvedor', 'permissions': DEV},
+            {'key': custom, 'name': 'Observador', 'permissions': ['project:read']}]}))
+        self.open_project()
+        self.page.get_by_role('button', name='Membros e papéis', exact=True).click()
+        self.page.get_by_role('button', name='Editar acessos de ' + OTHER, exact=True).click()
+        self.page.locator('#member-role-project_manager').check()
+        self.page.get_by_role('button', name='Salvar acessos', exact=True).click()
+        expect(self.page.locator('#members-status')).to_contain_text('Acessos atualizados')
+        draft = next(value for kind, value in self.writes if kind == 'member')
+        self.assertIn(custom, draft['roles'])
+        grants = {grant['role']: grant['expires_at'] for grant in draft['role_grants']}
+        self.assertEqual(grants['developer'], '2030-01-01T00:00:00Z')
+        self.assertEqual(grants[custom], '2031-01-01T00:00:00Z')
+        self.assertIsNone(grants['product_owner'])
+        self.assertEqual(grants['project_manager'], '2032-01-01T00:00:00Z')
+
     def test_edit_profile_skills_levels_and_availability(self):
         expect(self.page.locator('#profile-user-id')).to_have_text(self.identity['id'])
         self.page.get_by_role('button', name='Editar perfil profissional', exact=True).click()

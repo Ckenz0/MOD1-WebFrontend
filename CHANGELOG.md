@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.5.0 — 2026-11-01, preparada para publicação
+
+- Arquitetura multicamadas: apresentação/DOM, aplicação, domínio e infraestrutura HTTP separados, com testes das fronteiras e casos de uso sem DOM/rede.
+- Contas com sessões persistidas no backend, renovação, bloqueio por tentativas, revogação, recuperação, confirmação de e-mail, MFA e administração global.
+- Equipes, convites, alocação, notificações, metadados/planejamento de projetos, papéis personalizados, concessões e histórico.
+- Histórias orientadas, épicos/tarefas, MoSCoW, esforço, responsáveis, bloqueios, dependências e quadro com arraste/ordenação por teclado.
+- Refinamento premium de entrada, conta, projetos e workspace; cores atuais do módulo 6, fontes locais e temas preservados. Revisão independente de 36 capturas, com os dois achados corrigidos e recapturados.
+- Guia de integração para os outros módulos e documentação atualizada, distinguindo limites atuais dos registros históricos do MVP.
+- Resend implementado na infraestrutura de Identidade e envio/recebimento real de transporte verificado. O remetente de teste limita destinatários à conta do titular; isso não comprova fluxo externo real de reset ou confirmação.
+- Pendências explícitas: provedor/modelo real de IA e contrato efetivo com o produtor externo de revisão de código. Simulação permanece identificada.
+
+A versão SemVer é independente das APIs. A preparação e os testes locais não
+comprovam publicação, tag ou deploy; confirme SHA, versão e ambiente no fechamento
+da entrega.
+
+## Histórico anterior
+
 ## Colaboração e perfil (0.4.0) — candidato local, 2026-10-28
 
 - Atualização/reabertura de membros e atualização do backlog consultam as permissões atuais; perda de acesso remove controles anteriores.

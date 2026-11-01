@@ -1,4 +1,30 @@
-# Conferência dos requisitos — MVP P6 — 11/10/2026
+# Conferência dos requisitos
+
+## Versão 0.5.0 — preparada para publicação em 01/11/2026
+
+O frontend integra as três APIs com arquitetura interna multicamadas, contas e
+sessões seguras, equipes, papéis por projeto, planejamento e backlog com
+histórias/épicos/tarefas, estimativas, MoSCoW e quadro. O refinamento premium
+preserva as cores atuais e as fontes do módulo 6. A revisão independente das
+36 capturas e das correções está em [premium-frontend.md](premium-frontend.md).
+
+Logout e troca/reset de senha revogam sessões no servidor. Confirmação de e-mail
+e MFA estão implementados; o cadastro ainda permite login imediato. O transporte
+Resend teve envio e recebimento reais verificados somente para a conta do titular,
+limite do remetente de teste. Esse teste não comprova o fluxo externo completo de
+reset ou confirmação, nem autoriza afirmar envio para qualquer destinatário.
+
+IA real e o contrato efetivo do módulo de revisão de código continuam pendentes.
+Sprints, exclusão individual de histórias e integração com o portal definitivo
+do módulo 6 não fazem parte desta entrega. A [matriz de US](backlog-status.md),
+o [guia dos fluxos](local-user-stories.md) e a [validação](verification.md)
+registram o alcance e os limites das evidências. A versão preparada não comprova
+publicação ou disponibilidade de produção.
+
+## Registro histórico — MVP P6 — 11/10/2026
+
+As versões, capacidades ausentes e limitações abaixo descrevem exclusivamente
+o recorte demonstrado em 11/10/2026. Não representam o estado da versão 0.5.0.
 
 Referências fornecidas pelo aluno: documento da disciplina, slide P6 (demonstração,
 link para versão específica e apresentação parcial) e Guia_Visual_Modulo6.pdf v1.0.

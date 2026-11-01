@@ -1,40 +1,8 @@
-const messages = {
-  unauthorized: "Sua sessão terminou. Entre novamente para continuar.",
-  validation: "Confira o título e os campos da história e tente novamente.",
-  "not-found": "Esta história não está disponível para sua conta. Volte para a lista.",
-  unavailable: "O serviço de backlog está indisponível. Tente novamente em instantes.",
-  network: "Não foi possível conectar ao serviço de backlog. Confira a conexão e tente novamente.",
-  timeout: "O serviço de backlog demorou para responder. Atualize a lista antes de tentar novamente.",
-  "invalid-response": "Não foi possível confirmar os dados da história. Tente novamente.",
-  cancelled: "A solicitação foi cancelada.",
-  forbidden: "Você não tem permissão para esta ação no backlog. Volte ao projeto para conferir seus acessos.",
-};
+import { BacklogApiError } from "./api-errors.js";
+export { BacklogApiError } from "./api-errors.js";
 
-export class BacklogApiError extends Error {
-  constructor(kind) { super(messages[kind]); this.name = "BacklogApiError"; this.kind = kind; }
-}
-
-const uuid = /^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i;
-// JS whitespace plus Python's NEL and information separators: same rules as StoryDraft.
-export const trimStoryTitle = value => value.replace(/^[\s\u0085\u001c-\u001f]+|[\s\u0085\u001c-\u001f]+$/gu, "");
-const isId = value => typeof value === "string" && uuid.test(value);
-const text = (value, max) => typeof value === "string" && Array.from(value).length <= max;
-function isStory(s, projectId, storyId) {
-  return s !== null && typeof s === "object" && isId(s.id) && isId(s.created_by)
-    && s.project_id === projectId && (!storyId || s.id === storyId)
-    && text(s.title, 120) && trimStoryTitle(s.title).length > 0
-    && text(s.description, 2000) && text(s.acceptance_criteria, 2000)
-    && ["high", "medium", "low"].includes(s.priority) && ["todo", "in_progress", "done"].includes(s.status)
-    && typeof s.created_at === "string" && Number.isFinite(Date.parse(s.created_at))
-    && typeof s.updated_at === "string" && Number.isFinite(Date.parse(s.updated_at))
-    && Date.parse(s.updated_at) >= Date.parse(s.created_at);
-}
-function isPage(p, projectId, limit, offset) {
-  return p !== null && typeof p === "object" && Array.isArray(p.items)
-    && p.items.every(s => isStory(s, projectId)) && Number.isSafeInteger(p.total) && p.total >= 0
-    && p.limit === limit && p.offset === offset && p.items.length <= limit
-    && p.items.length <= Math.max(0, p.total - offset);
-}
+import { isId, isStory, isPage } from "./story-domain.js";
+export { trimStoryTitle } from "./story-domain.js";
 
 export function createBacklogApiClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000, readiness = null }) {
   const url = new URL(baseUrl);

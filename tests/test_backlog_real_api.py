@@ -32,6 +32,10 @@ class BacklogRealApiTests(projects_real.ProjectsRealApiTests):
         self.backlog_process = self.start(self.backlog_python, self.backlog_root, self.backlog_env,
             'backlog_service.app:create_app', self.backlog_port)
         self.server.backlog_api_url = self.backlog_url
+        self.projects_env['BACKLOG_API_BASE_URL'] = self.backlog_url
+        self.stop(self.projects_process)
+        self.projects_process = self.start(self.projects_python, self.projects_root, self.projects_env,
+            'projects_service.app:create_app', self.projects_port)
 
     def test_registration_project_stories_progress_restart_and_access_isolation(self):
         self.page.goto(self.base_url)

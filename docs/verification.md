@@ -1,4 +1,115 @@
+# Preparação da versão 0.5.0 — 01/11/2026
+
+A suíte completa executou **152 testes aprovados, sem skips, em 181,392 s**,
+usando `.venv/Scripts/python.exe -m unittest discover -s tests -v`. Os três
+caminhos de backend estavam configurados para os checkouts da entrega. O
+processo de testes recebeu `MAIL_PROVIDER=auto` e nenhuma variável `RESEND_*`.
+As fixtures inicializaram APIs reais locais com SQLite, RSA e contas temporários;
+não usaram banco de produção ou transporte real de e-mail.
+
+Essa execução inclui os fluxos de MFA/confirmação/reset locais, revogação nos
+consumidores, planejamento/papéis/quadro e as regressões do refinamento premium
+para filtros móveis e contraste de foco. A revisão visual independente das
+36 capturas e das correções está em [premium-frontend.md](premium-frontend.md).
+
+O artefato de deploy foi reproduzido em diretório temporário copiando somente
+`public/` e gerando a configuração das três APIs HTTPS: **37 arquivos**, com
+`config.js` sem cache e sem arquivos privados ou padrões de segredos encontrados
+na inspeção. Links locais de README e nove documentos foram conferidos sem
+destinos ausentes; `git diff --check` passou. Arquivos locais de agentes,
+Superpowers e `.local/` não estão rastreados.
+
+O transporte Resend teve envio/recebimento real confirmado separadamente para o
+titular. O remetente de teste atual limita os destinatários a essa conta. Essa
+evidência de transporte não substitui teste externo ponta a ponta de reset ou
+confirmação. IA real e contrato efetivo do módulo de revisão seguem pendentes.
+Os testes e a preparação descritos aqui não comprovam push, tag, merge,
+disponibilidade de produção ou deploy da versão 0.5.0.
+
+## Histórico — validação adicional de 31/10/2026, funcionalidades locais
+
+Na branch local `feat/remaining-user-stories`, a suíte completa com
+`AUTH_BACKEND_PATH`, `PROJECTS_BACKEND_PATH` e `BACKLOG_BACKEND_PATH`
+apontando para os worktrees locais executou **150 testes, todos passaram, sem
+skips**, em 180,595 s. Comando: `python -m unittest discover -s tests -v`.
+
+O Edge headless exercitou APIs reais em portas loopback, bancos SQLite
+temporários e chaves próprias. Os fluxos novos incluem metadados/orçamento/
+datas, papel personalizado, história orientada/MoSCoW/estimativa, arrastar para
+ordenar e atualizar status, MFA com recuperação, confirmação de e-mail e reset.
+Reset revoga a credencial anterior também em Projetos e Backlog. Parar a API de
+Identidade durante uma edição retorna indisponibilidade, preserva os campos e
+permite repetir a gravação após o reinício.
+
+Testes controlados também verificam caixa de notificações, equipe/convite,
+sessões e revogação, limites de inatividade/validade absoluta, renovação única,
+cancelamento da primeira tela durante rotação e logout durante resposta tardia.
+Retornar do fluxo de token público limpa também a identidade anterior, impedindo
+que uma verificação de expiração remova o formulário de recuperação em seguida.
+Recomendação simulada mostra janela de observação e exige decisão humana;
+projetos em consulta ocultam ações de alteração de dados.
+O editor compacto de membros preserva papéis personalizados e os prazos por
+papel, inclusive concessões sem expiração, ao editar os papéis fixos.
+Os testes de fronteira impedem HTTP/DOM nas camadas puras.
+
+Inspeção desktop/claro e móvel/escuro preservou o guia visual existente; a tabela
+usa rolagem horizontal em telas estreitas. O detector visual emitiu apenas
+avisos sobre cores já presentes em DESIGN.md. Capturas com dados sintéticos
+permanecem locais. Não houve publicação, SMTP externo ou IA real.
+
+As limitações e os caminhos de teste estão em
+[local-user-stories.md](local-user-stories.md) e
+[backlog-status.md](backlog-status.md).
+
+## Histórico das validações anteriores
+
 # Validação do frontend 0.2.0 — 11/10/2026
+
+## Arquitetura multicamadas — 30/10/2026
+
+- Organização concluída preservando os arquivos atuais: apresentação, aplicação
+  de conta/workspace, domínio/contratos e transporte HTTP. Sem mudança de versão,
+  HTML/CSS, rotas públicas ou dados de produção. Ver [architecture.md](architecture.md).
+- Baseline: 100 testes, 8 integrações puladas por ausência dos caminhos dos backends.
+- RED de arquitetura: sessão importava transporte e quatro telas importavam
+  clientes HTTP concretos. Após extração, testes dessas fronteiras passaram.
+- Casos de uso e domínio: login/identidade/sessão, logout com respostas antigas,
+  cancelamento, expiração, falha após emissão do token, troca de senha, leituras
+  compostas, normalização de competências e alterações de história por papel.
+- Revisão independente das quatro mudanças não encontrou regressão funcional ou
+  de segurança; apontou uma lacuna de testes sem DOM. A correção adicionou execução
+  real de conta/workspace e dos módulos puros em Worker sem DOM e com fetch bloqueado,
+  mais proteção de imports/globais. A fixture negativa do verificador falhou antes
+  da implementação e passou depois; os dez testes de conta e sete de fronteiras passaram.
+- Integração com os três backends refatorados: primeiro 120 testes aprovados sem
+  skips em 130,357 s; após reforço da verificação, **124 testes aprovados sem skips
+  em 113,660 s**. A execução final usou a mesma descoberta `unittest` com um runner
+  de diagnóstico que registra erros JS/requisições sem alterar os testes ou produto.
+- Uma execução intermediária de 124 testes teve um timeout de 4 s ao preencher
+  o e-mail ainda desativado no setup de `test_logout_then_other_login_ignores_late_project_response`.
+  Seis repetições isoladas passaram em 6,302 s; o problema não se reproduziu na
+  suíte final instrumentada. Não foi alterado código nem timeout para ocultá-lo;
+  a causa desse episódio isolado não foi estabelecida.
+- O fluxo de colaboração/perfil com duas contas e três APIs reais passou,
+  incluindo aceite de convite, status por Desenvolvedor, promoção a PO e remoção.
+- Ambiente local reiniciado com o código refatorado e os mesmos bancos locais:
+  três readiness HTTP 200, CORS correto, login da conta de teste existente e
+  listagem de projetos HTTP 200 pelo Edge, sem erros JavaScript. Nenhum registro
+  foi apagado; esse smoke fez apenas login e consultas.
+- PostgreSQL, Docker e Azure não foram revalidados nesta etapa; fixtures usam
+  SQLite e RSA temporários. As evidências históricas abaixo não substituem esse limite.
+
+Para reproduzir a suíte, prepare os quatro ambientes conforme o README e defina
+`AUTH_BACKEND_PATH`, `PROJECTS_BACKEND_PATH` e `BACKLOG_BACKEND_PATH` com os checkouts
+de Identidade, Projetos e Backlog que serão testados. Execute:
+
+```powershell
+.venv/Scripts/python.exe -m unittest discover -s tests -v
+```
+
+Os bancos dos testes reais são temporários e locais; não configure credenciais
+de produção. Não há necessidade de acessar um arquivo de plano local para executar
+ou interpretar os resultados acima.
 
 ## Conferência para PR — 30/10/2026
 

@@ -1,6 +1,7 @@
-import { BacklogApiError, trimStoryTitle } from "./backlog-api.js";
+import { BacklogApiError } from "./api-errors.js";
+import { trimStoryTitle, storyChange } from "./story-domain.js";
+import { createWorkspaceApplication } from "./workspace-application.js";
 import { createFormValidation } from "./validation.js";
-import { permissionsFor } from "./permissions.js";
 
 const byId = id => document.getElementById(id);
 const priorities = { high: "Alta", medium: "Média", low: "Baixa" };
@@ -8,7 +9,8 @@ const statuses = { todo: "A fazer", in_progress: "Em andamento", done: "Concluí
 const date = value => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 const emptyPage = () => ({ items: [], total: 0, limit: 20, offset: 0 });
 
-export function createBacklogController({ api, getProject, getUserId, getToken, onUnauthorized, onBack }) {
+export function createBacklogController({ api, getProject, getUserId, getToken, getSessionKey = getToken, onUnauthorized, onBack, onOpenWorkspace }) {
+  const application = createWorkspaceApplication({ projects: { get: getProject }, backlog: api });
   let generation = 0, controller = null, busy = false, project = null, selected = null;
   let page = emptyPage();
   let filters = {};
@@ -100,12 +102,12 @@ export function createBacklogController({ api, getProject, getUserId, getToken, 
     byId("backlog-count").textContent = value.items.length ? `${value.offset + 1}–${value.offset + value.items.length} de ${value.total} histórias` : "";
   }
   async function run(action, onSuccess, errorPrefix = () => "", confirmedNotice = () => "") {
-    const token = getToken(), projectId = project?.id;
+    const token = getToken(), sessionKey = getSessionKey(), projectId = project?.id;
     if (!token) { clear(); onUnauthorized(); return; }
     if (!projectId) return;
     const current = ++generation;
     controller?.abort(); controller = new AbortController(); const { signal } = controller;
-    const valid = () => current === generation && token === getToken() && projectId === project?.id && !byId("backlog-view").hidden;
+    const valid = () => current === generation && sessionKey === getSessionKey() && projectId === project?.id && !byId("backlog-view").hidden;
     status("Carregando histórias…"); setBusy(true);
     try {
       const result = await action(token, projectId, signal);
@@ -121,10 +123,10 @@ export function createBacklogController({ api, getProject, getUserId, getToken, 
     }
   }
   function load(offset = 0) {
-    return run((token, id, signal) => Promise.all([getProject(token, id, { signal }),
-      api.list(token, id, { offset, limit: 20, ...filters, signal })]), ([currentProject, value]) => {
-      permissions = new Set(permissionsFor(currentProject, getUserId()));
-      hideDetail(); renderPage(value);
+    return run((token, id, signal) => application.loadBacklog(token, id, getUserId(),
+      { offset, limit: 20, ...filters, signal }), result => {
+      permissions = new Set(result.permissions);
+      hideDetail(); renderPage(result.page);
     });
   }
   function close() {
@@ -159,12 +161,9 @@ export function createBacklogController({ api, getProject, getUserId, getToken, 
     if (!canUpdate && !canStatus) return;
     if (canUpdate && !updateValidation.validate()) { status("Confira os campos destacados para salvar a história.", "error"); return; }
     const storyId = selected.id;
-    const change = { status: byId("story-update-status").value };
-    if (canUpdate) change.priority = byId("story-update-priority").value;
-    for (const [field, input] of canUpdate ? [["title", "story-update-title"], ["description", "story-update-description"], ["acceptance_criteria", "story-update-criteria"]] : []) {
-      const value = field === "title" ? trimStoryTitle(byId(input).value) : byId(input).value;
-      if (value !== selected[field]) change[field] = value;
-    }
+    const change = storyChange(selected, { status: byId("story-update-status").value,
+      priority: byId("story-update-priority").value, title: byId("story-update-title").value,
+      description: byId("story-update-description").value, acceptance_criteria: byId("story-update-criteria").value }, [...permissions]);
     let saved = false;
     run((token, id, signal) => api.update(token, id, storyId, change, { signal }), async (story, ctx) => {
       saved = true; renderDetail(story);
@@ -184,6 +183,11 @@ export function createBacklogController({ api, getProject, getUserId, getToken, 
   byId("backlog-previous").addEventListener("click", () => { if (!busy) load(Math.max(0, page.offset - 20)); });
   byId("backlog-next").addEventListener("click", () => { if (!busy) load(page.offset + 20); });
   byId("backlog-back").addEventListener("click", () => { clear(); onBack(); });
+  const advanced = document.createElement("button"); advanced.type = "button";
+  advanced.className = "button button-secondary"; advanced.textContent = "Abrir quadro e itens";
+  advanced.hidden = !onOpenWorkspace;
+  advanced.addEventListener("click", () => { if (!busy && project) onOpenWorkspace?.({ ...project, permissions: [...permissions] }); });
+  byId("backlog-back").parentElement.append(advanced);
   setBusy(false);
   return { async open(value) {
     clear(); project = { id: value.id, name: value.name };
