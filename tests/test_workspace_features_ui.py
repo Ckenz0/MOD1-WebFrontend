@@ -73,9 +73,11 @@ class WorkspaceFeaturesUiTests(BrowserCase):
             'items': [], 'total': 0, 'limit': 20, 'offset': 0}))
         self.page.locator('html').evaluate("node => node.dataset.theme = 'dark'")
         self.page.get_by_role('button', name='Segurança e sessões', exact=True).click()
-        self.page.keyboard.press('Tab')
         button = self.page.get_by_role('button', name='Sessões', exact=True)
+        expect(button).to_be_enabled()
+        self.page.keyboard.press('Tab')
         button.focus()
+        expect(button).to_be_focused()
         result = button.evaluate('''node => {
           const style = getComputedStyle(node);
           let parent = node.parentElement;
