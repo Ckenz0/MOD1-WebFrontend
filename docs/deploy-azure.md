@@ -21,6 +21,10 @@ Durante a espera aparece “Preparando acesso…”. Cancelar ou sair impede o e
 
 ## Validar e atualizar
 
+O deploy gera `/release.json` com a versão lida de `VERSION` e o SHA do código,
+sem segredos, para conferir a versão efetivamente servida. Esse arquivo e
+`config.js` usam `Cache-Control: no-store`; o config local versionado é preservado.
+
 Abra a URL pública de outra máquina e percorra cadastro → login → projetos → backlog. Confira teclado, mensagens de espera, duas contas isoladas, persistência e retomada após suspensão. Os testes de CI sem caminhos de backend têm skips explícitos de integração; isso não comprova integração com Neon/Azure. Para rodar o fluxo completo com APIs sintéticas locais, siga os caminhos de backend no README.
 
 Na preparação da versão 0.5.0, o artefato foi conferido em diretório temporário:
