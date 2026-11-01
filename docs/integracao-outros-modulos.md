@@ -1,9 +1,10 @@
 # Integração com o módulo 1
 
 Este guia reúne os endereços e o contrato para integrar os outros módulos.
-A versão frontend 0.5.0 está preparada para publicação em 01/11/2026. Os endereços
-abaixo são os destinos da integração; a disponibilidade e a versão efetivamente
-implantada precisam ser conferidas no fechamento da publicação.
+Esta entrega usa frontend 0.5.0, Identidade 0.4.0, Projetos 0.5.0 e Backlog 0.4.0.
+Os endereços abaixo são os destinos de produção. As evidências finais, o SHA do
+frontend implantado e os limites da validação estão nas
+[notas da release 0.5.0](https://github.com/Ckenz0/MOD1-WebFrontend/releases/tag/v0.5.0).
 
 | Componente | Endereço HTTPS |
 | --- | --- |
@@ -49,6 +50,12 @@ as permissões atuais naquele projeto. Não trate PO, PM ou Desenvolvedor como
 autorização universal. O servidor revalida cada operação; `403` não exige apagar
 a sessão, e `404` pode representar projeto inacessível àquela conta.
 
+Para acessar um projeto existente, enviem ao gestor o ID retornado por
+`GET /auth/me`, peçam um convite com os papéis necessários e aceitem o convite
+na interface. Cadastro e login não concedem acesso aos projetos de outras
+pessoas. Também é possível criar um projeto próprio pela interface ou por
+`POST /projects`; compartilhem seu `project_id` entre os módulos que o integram.
+
 ## Exclusão e GitHub Sync
 
 `DELETE /projects/{project_id}` exige o proprietário e se destina a cadastros
@@ -86,8 +93,21 @@ contas nem fluxo real completo de recuperação/confirmação.
 
 ## Registro da entrega
 
-Preparado por CK em 01/11/2026 para frontend 0.5.0. Antes de compartilhar como
-versão publicada, registrar aqui a data/hora da conferência, sigla do responsável,
-SHA/tag e versões observadas do frontend e das três APIs, além dos resultados
-de readiness, CORS e fluxo integrado. A preparação local não preenche nem
-substitui essa conferência de produção.
+APIs conferidas por CK em 01/11/2026 às 17:02 UTC:
+
+| API | Versão observada | Código implantado |
+| --- | --- | --- |
+| Identidade | 0.4.0 | [`f4aa7be`](https://github.com/Ckenz0/MOD1-IdentityService/commit/f4aa7be567cb603706933922350d5c97ab12c79f) |
+| Projetos | 0.5.0 | [`3b4f942`](https://github.com/briankfreire/MOD1-ProjectsServices/commit/3b4f942982cdfc84ddb41ac1f30a0ee005c07694) |
+| Backlog | 0.4.0 | [`8301009`](https://github.com/igorcpds/MOD1-BacklogService/commit/83010094dc794d3077e62a6cfe480d82472d0b86) |
+
+As três responderam readiness 200, expuseram os novos contratos e preservaram
+CORS para a origem atual do frontend. A chave pública JWT permaneceu igual à
+anterior à atualização. Migrações tiveram backup e preservação dos dados
+preexistentes conferidos. Isso não comprova a integração dos outros grupos.
+
+O frontend expõe `/release.json` sem cache com versão e SHA implantados. As
+notas da release vinculadas acima registram o workflow de publicação e a
+validação final do fluxo entre APIs e pela interface pública, com seus limites.
+Os testes de exclusão de projetos foram executados localmente; nenhuma exclusão
+de dados de produção foi usada para validar esta entrega.
