@@ -1,0 +1,53 @@
+openapi: 3.0.3
+info:
+  title: Gemini generateContent subset used by Module 1
+  version: 1.0.0
+  description: Local test contract, based on https://ai.google.dev/api/generate-content. Not a complete Google API specification.
+servers:
+  - url: https://generativelanguage.googleapis.com/v1beta
+paths:
+  /models/{model}:generateContent:
+    post:
+      operationId: generateContent
+      parameters:
+        - name: model
+          in: path
+          required: true
+          schema: {type: string}
+      security:
+        - googleApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [systemInstruction, contents, generationConfig]
+              properties:
+                systemInstruction: {type: object}
+                contents: {type: array, items: {type: object}}
+                generationConfig: {type: object}
+      responses:
+        '200':
+          description: Candidate containing structured JSON text; consumer also validates STOP and domain references.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  candidates: {type: array, items: {type: object}}
+              example:
+                candidates:
+                  - finishReason: STOP
+                    content:
+                      role: model
+                      parts:
+                        - text: '{"summary":"Análise fictícia","justification":"Nenhuma alteração justificada.","evidence":["synthetic"],"suggestions":[]}'
+        '429': {description: Quota exhausted}
+        '503': {description: Provider unavailable}
+components:
+  securitySchemes:
+    googleApiKey:
+      type: apiKey
+      in: header
+      name: x-goog-api-key

@@ -146,7 +146,8 @@ class WorkspaceFeaturesUiTests(BrowserCase):
         proposal = {'id': rid, 'kind': 'access_revocation', 'status': 'pending', 'version': 1,
             'summary': 'Revisar acesso observado', 'justification': 'Janela observada e evidência identificada',
             'simulated': True, 'provider': 'structured-http', 'model': 'local-test',
-            'created_at': '2026-10-30T12:00:00Z', 'evidence': ['project:' + pid], 'suggestions': []}
+            'created_at': '2026-10-30T12:00:00Z', 'evidence': ['project:' + pid], 'suggestions': [
+                {'user_id': '77777777-7777-4777-8777-777777777777', 'reason': 'Acesso sem atividade na janela observada'}]}
         calls, approvals = [], []
         self.page.route('**/projects?*', lambda route: route.fulfill(json={
             'items': [project], 'total': 1, 'limit': 20, 'offset': 0}))

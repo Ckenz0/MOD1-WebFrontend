@@ -1,0 +1,30 @@
+purpose:
+  stands_in_for: Gemini generateContent structured output, using synthetic responses only.
+  unblocks: Local HTTP contract, timeout and failure tests of the three Module 1 adapters without secrets, remote data or billing.
+assumptions:
+  - id: official-structured-contract
+    status: supported
+    claim: Gemini REST documents generationConfig.responseFormat.text with APPLICATION_JSON and JSON Schema.
+    reason: The mock models the official REST contract subset used by the adapters; it does not reproduce language model generation.
+    verification: Official REST reference and Gemini 3.5 Flash-Lite docs read on 2026-11-03; adapters exercised against this subset.
+    source: https://ai.google.dev/api/generate-content; postman/contracts/gemini-generate-content.yaml
+    updated_at: '2026-11-03'
+  - id: controlled-caller-behavior
+    status: supported
+    claim: In the controlled HTTP run, seven kinds accepted empty structured proposals and each backend sanitized quota, unavailable, timeout, malformed and truncated results without observed retries.
+    reason: The actual backend adapters ran in separate subprocesses against the Postman mock, and 22 expected requests appeared in its log.
+    verification: On 2026-11-03 scripts/smoke_gemini.py completed 22 of 22 cases; simulation log contained exactly 22 requests (7 successful, 3 per failure scenario). Services and persistence are covered by separate backend tests.
+    source: scripts/smoke_gemini.py; postman/mocks/gemini/default.js; docs/local-ai-testing.md
+    updated_at: '2026-11-03'
+  - id: real-google-availability
+    status: unknown
+    claim: The user's Google API project can call the configured Gemini model and produce useful authorized recommendations within its quota.
+    reason: No Gemini API key was configured and no real Google request was made. Google AI Pro does not establish API quota for this project.
+    verification: Pending a bounded real call using synthetic local data, followed by domain validation and human review. Mock success does not establish real output quality or free-tier availability.
+    source: https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite; https://ai.google.dev/gemini-api/docs/pricing
+    updated_at: '2026-11-03'
+fingerprints:
+  - id: local-gemini-20261103
+    date: '2026-11-03'
+    commit: Frontend ab309e3 plus local uncommitted integration; Identity9bbb752, Projects0cf37d0, Backlog593c5df; backend review fixes in progress.
+    cli: Postman 1.75.0

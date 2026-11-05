@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.6.0 — 2026-11-03, candidato local
+
+- Recomendações identificam Google Gemini e exibem papéis e ações em português, preservando as cores e os temas existentes.
+- Análises sem sugestões podem ser dispensadas e não oferecem aprovação; decisões com sugestões continuam exigindo ação humana explícita.
+- Interface explica o envio do contexto autorizado ao provedor; texto do modelo continua sendo exibido como texto seguro.
+- Contrato, mock e simulação Postman locais, com smoke HTTP dos três adaptadores, sem dependência de chave real ou banco remoto.
+- Integração Gemini implementada nas APIs; validação com o provedor real ainda depende da chave. Este candidato não foi publicado.
+
 ## 0.5.0 — 2026-11-01, preparada para publicação
 
 - Arquitetura multicamadas: apresentação/DOM, aplicação, domínio e infraestrutura HTTP separados, com testes das fronteiras e casos de uso sem DOM/rede.
