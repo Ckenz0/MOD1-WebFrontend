@@ -36,7 +36,45 @@ remoto foi usado. Esses números não incluem uma chamada real ao Google.
 
 Esses resultados comprovam o comportamento local contra respostas controladas.
 **Não comprovam disponibilidade, quota, gratuidade ou qualidade do Gemini real.**
-A chamada real continua pendente da chave de API e deve usar dados fictícios.
+A rodada de 05/11 não incluiu chamadas reais. A verificação posterior abaixo
+registra os testes autorizados com chave privada e dados fictícios.
+
+## Verificação real dos adaptadores — 14/11/2026
+
+Os sete tipos foram executados nos adaptadores reais contra o endpoint oficial
+`https://generativelanguage.googleapis.com/v1beta`, com `gemini-3.5-flash-lite`:
+
+| API | Tipos | Resultado com dados sintéticos |
+| --- | --- | --- |
+| Identidade | `access_anomalies` | HTTP 200, sem sugestões ou evidências inventadas |
+| Projetos | `roles`, `access_revocation`, `teams`, `skills_map`, `training` | HTTP 200 nos cinco, propostas vazias sem candidatos elegíveis e evidências autorizadas |
+| Backlog | `initial_backlog` | HTTP 200, uma história válida e uma evidência do projeto |
+
+`roles` recebeu primeiro HTTP 503 do Google e passou em uma repetição manual
+limitada. Não foram adicionados retries automáticos ou fallback. A simulação HTTP
+foi repetida após a correção: 22 casos passaram e o log confirmou 22 requisições.
+
+O schema completo de Identidade retornava HTTP 400; remover apenas `maxItems` dos
+arrays enviados produziu HTTP 200. Os adaptadores agora copiam o schema sem esse
+limite para geração e continuam validando todos os limites nos modelos locais.
+Regressões cobrem arrays aninhados, schema original preservado e rejeição acima
+do máximo. A documentação Google também descreve a complexidade adicionada por
+[limites de arrays](https://ai.google.dev/gemini-api/docs/structured-output#simplifying-complex-schemas).
+
+Essas chamadas não abriram bancos nem persistiram propostas ou alteraram
+permissões. Elas não validam todos os fluxos HTTP/UI, a qualidade geral ou todas
+as US de IA. Os processos da demonstração simulada e a configuração Azure foram
+preservados; o runtime exige configuração explícita conforme descrito abaixo.
+Nenhuma chave ou evidência privada faz parte desta documentação.
+
+As suítes completas dos backends passaram após a correção: Identidade 343
+aprovados/8 ignorados, Projetos 287/11 e Backlog 354/2, totalizando **984
+aprovados e 21 ignorados**. Os ignorados exigem PostgreSQL local descartável ou
+o caminho de outro serviço, ausentes nessa execução; nenhum banco remoto foi
+usado. Ruff, verificação de formato e mypy passaram nos três backends. Os três
+testes do harness de smoke também passaram. Permanece o aviso já existente de
+depreciação Starlette/httpx no TestClient de Backlog. A suíte UI completa não foi
+repetida nesta correção, que não alterou código da interface.
 
 ## Repetir a simulação HTTP
 
@@ -98,5 +136,5 @@ teste. Use dados fictícios na faixa gratuita, conforme os termos do provedor.
 Não habilite faturamento como parte deste procedimento local.
 
 Documentação específica de cada API: `docs/gemini.md` no respectivo repositório.
-O contrato externo com o módulo de revisão de código e as restrições do remetente
-Resend continuam sendo pendências independentes desta integração.
+O contrato externo com o módulo de revisão de código e a configuração do envio
+transacional são etapas independentes desta integração.

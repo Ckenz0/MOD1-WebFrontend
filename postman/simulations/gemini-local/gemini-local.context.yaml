@@ -19,11 +19,29 @@ assumptions:
   - id: real-google-availability
     status: unknown
     claim: The user's Google API project can call the configured Gemini model and produce useful authorized recommendations within its quota.
-    reason: No Gemini API key was configured and no real Google request was made. Google AI Pro does not establish API quota for this project.
-    verification: Pending a bounded real call using synthetic local data, followed by domain validation and human review. Mock success does not establish real output quality or free-tier availability.
-    source: https://ai.google.dev/gemini-api/docs/models/gemini-3.5-flash-lite; https://ai.google.dev/gemini-api/docs/pricing
-    updated_at: '2026-11-03'
+    reason: On 2026-11-03 no key or real request was available. Bounded synthetic calls succeeded for all seven kinds on 2026-11-14 after schema correction, with one initial roles 503 followed by a successful manual repeat. General quality, future availability and quota remain unverified.
+    verification: Actual adapters returned HTTP 200 and validated all seven kinds at the official endpoint. Identity invented no actions; Projects returned empty proposals and allowed evidence with no eligible candidates; Backlog returned one synthetic story. No databases, runtime processes or production settings were changed.
+    source: docs/local-ai-testing.md; https://ai.google.dev/gemini-api/docs/pricing
+    updated_at: '2026-11-14'
+  - id: observed-array-schema-compatibility
+    status: supported
+    claim: The tested access_anomalies schema returned 400 on gemini-3.5-flash-lite while omitting only array maxItems returned 200 and a locally valid response.
+    reason: Real-request isolation retained types, required fields, enums, text limits and array minimums. This does not imply all maxItems uses are unsupported; the simulation does not emulate Google's schema grammar compiler.
+    verification: On 2026-11-14 removing only maxItems resolved the original 400. All three corrected adapters then validated real responses. Regression tests still reject over-limit output and preserve Backlog's original schema.
+    source: docs/local-ai-testing.md; backend docs/gemini.md; https://ai.google.dev/gemini-api/docs/structured-output#simplifying-complex-schemas
+    updated_at: '2026-11-14'
+  - id: controlled-caller-behavior-after-schema-fix
+    status: supported
+    claim: Corrected adapters accept seven controlled successful kinds and sanitize quota, unavailable, timeout, malformed and truncated responses without observed retries.
+    reason: The existing local Postman simulation was rerun unchanged, separately from Google, with synthetic keys and no database access.
+    verification: On 2026-11-14 scripts/smoke_gemini.py passed 22 cases; an isolated simulation log contained exactly 22 request events. The owned simulation was stopped afterwards; existing demo processes were preserved.
+    source: scripts/smoke_gemini.py; postman/mocks/gemini/default.js; docs/local-ai-testing.md
+    updated_at: '2026-11-14'
 fingerprints:
+  - id: local-gemini-schema-fix-20261114
+    date: '2026-11-14'
+    commit: Dirty local feat/gemini-integration worktrees; Identity d9db2864, Projects 9d947219, Backlog 79530f46, Frontend 6cc3c9e plus schema correction, regression tests and documentation.
+    cli: Postman 1.75.0
   - id: local-gemini-20261103
     date: '2026-11-03'
     commit: Frontend ab309e3 plus local uncommitted integration; Identity9bbb752, Projects0cf37d0, Backlog593c5df; backend review fixes in progress.
