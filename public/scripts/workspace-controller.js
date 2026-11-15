@@ -544,15 +544,17 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     return run(async request => {
       const base = service === "identity" ? "/admin/recommendations" : `/projects/${project.id}/recommendations`;
       const page = await request(service, "GET", base + "?limit=20&offset=0");
-      const panel = section("Recomendações com aprovação humana", "Sugestões não alteram acessos nem criam entregas automaticamente. Confira a justificativa, os dados usados e o contexto antes de aprovar.");
+      const panel = section("Recomendações com aprovação humana", "Ao solicitar, o contexto autorizado é enviado ao provedor de IA configurado. Confira a justificativa e os dados usados antes de aprovar. Sugestões só são aplicadas após sua aprovação.");
       const kinds = service === "identity" ? { access_anomalies: "Análise de acessos" } : service === "backlog" ? { initial_backlog: "Backlog inicial" } : { roles: "Papéis e menor privilégio", access_revocation: "Acessos não utilizados", teams: "Formação de equipe", skills_map: "Mapa de competências", training: "Lacunas e treinamentos" };
-      const generate = form("recommendation-create", [{ name: "kind", label: "Tipo de recomendação", type: "select", options: kinds },
-        { name: "preference", label: "Foco da formação de equipe", type: "select", options: { availability: "Disponibilidade", cost: "Custo informado", seniority: "Senioridade" } },
+      const emptyNotice = pageItems(page).length ? null : el("p", "Nenhuma recomendação registrada. O serviço de IA precisa estar configurado para gerar sugestões.");
+      const generate = form("recommendation-create", [{ name: "kind", label: "Tipo de recomendação", type: "select", options: kinds, value: Object.keys(kinds)[0] },
+        { name: "preference", label: "Foco da formação de equipe", type: "select", options: { availability: "Disponibilidade", cost: "Custo informado", seniority: "Senioridade" }, value: "availability" },
         { name: "unused_days", label: "Dias sem atividade autorizada observada", type: "number", required: true, min: 1, max: 3650, step: 1, value: "30", hint: "Somente acessos observados durante toda a janela podem ser considerados inativos. Histórico desconhecido não é inatividade." }], "Solicitar recomendação", values => run(async req => {
           const constraints = values.kind === "teams" ? { preference: values.preference }
             : values.kind === "access_revocation" ? { unused_days: Number(values.unused_days) } : {};
           const proposal = await req(service, "POST", base, { kind: values.kind, constraints }, { timeout: 35000 });
           panel.append(recommendationCard(proposal, service, base));
+          emptyNotice?.remove();
         }, "Recomendação recebida para análise. Nenhuma alteração foi aplicada."));
       function scopeFields() {
         for (const [name, kind] of [["preference", "teams"], ["unused_days", "access_revocation"]]) {
@@ -563,24 +565,32 @@ export function createWorkspaceController({ clients, account, session, getIdenti
       generate.inputs.kind.addEventListener("change", scopeFields); scopeFields();
       panel.append(generate.node);
       for (const proposal of pageItems(page)) panel.append(recommendationCard(proposal, service, base));
-      if (!pageItems(page).length) panel.append(el("p", "Nenhuma recomendação registrada. O serviço de IA precisa estar configurado para gerar sugestões."));
+      if (emptyNotice) panel.append(emptyNotice);
       content.replaceChildren(panel);
     });
   }
   function recommendationCard(proposal, service, base) {
     const panel = section(proposal.summary || "Recomendação", proposal.justification);
+    const suggestions = proposal.suggestions || [];
     panel.append(details({ "Situação": ({ pending: "Aguardando decisão", approved: "Aprovada", rejected: "Rejeitada", expired: "Contexto expirado" })[proposal.status] || proposal.status,
-      "Origem": proposal.simulated ? "Simulação local · não é uma avaliação de IA real" : proposal.provider || "Provedor configurado", "Modelo": proposal.model, "Criada em": textDate(proposal.created_at) }));
-    for (const suggestion of proposal.suggestions || []) {
+      "Origem": proposal.simulated ? "Simulação local · não é uma avaliação de IA real" : proposal.provider === "gemini" ? "Google Gemini" : proposal.provider || "Provedor configurado", "Modelo": proposal.model, "Criada em": textDate(proposal.created_at) }));
+    if (!suggestions.length) panel.append(el("p", "Esta análise não trouxe sugestões aplicáveis. Você pode consultar a justificativa e dispensar a análise."));
+    for (const suggestion of suggestions) {
       const fields = {};
       const labels = { user_id: "Pessoa", team_id: "Equipe", name: "Nome", roles: "Papéis", reason: "Motivo", title: "História sugerida", description: "Descrição", topics: "Tópicos de estudo", skill: "Competência", gap: "Lacuna", user_ids: "Integrantes", action: "Ação sugerida", acceptance_criteria: "Critérios de aceitação" };
-      for (const [key, value] of Object.entries(suggestion)) if (labels[key]) fields[labels[key]] = Array.isArray(value) ? value.map(item => typeof item === "string" ? item : item.name || "Sugestão estruturada").join(", ") : value;
+      for (const [key, value] of Object.entries(suggestion)) if (labels[key]) {
+        if (key === "roles" && Array.isArray(value)) fields[labels[key]] = value.map(roleLabel).join(", ");
+        else if (key === "action") fields[labels[key]] = ({ review_access: "Revisar acesso", review_login: "Revisar login", review_sessions: "Revisar sessões" })[value] || value;
+        else if (key === "gap" && typeof value === "boolean") fields[labels[key]] = value ? "Sim" : "Não";
+        else fields[labels[key]] = Array.isArray(value) ? value.map(item => typeof item === "string" ? item : item.name || "Sugestão estruturada").join(", ") : value;
+      }
       panel.append(details(fields));
     }
     if (proposal.evidence?.length) panel.append(el("p", `Dados consultados: ${proposal.evidence.join(", ")}`, { class: "field-hint" }));
     if (proposal.status === "pending") {
       const decisions = el("div", null, { class: "form-actions" });
-      for (const [choice, label] of [["approve", "Aprovar recomendação"], ["reject", "Rejeitar recomendação"]]) decisions.append(action(label, () => run(async request => {
+      const choices = suggestions.length ? [["approve", "Aprovar recomendação"], ["reject", "Rejeitar recomendação"]] : [["reject", "Dispensar análise"]];
+      for (const [choice, label] of choices) decisions.append(action(label, () => run(async request => {
         const result = await request(service, "POST", `${base}/${proposal.id}/${choice}`, { expected_version: proposal.version });
         panel.replaceWith(recommendationCard(result || { ...proposal, status: choice === "approve" ? "approved" : "rejected" }, service, base));
       }, choice === "approve" ? "Recomendação aprovada com as permissões atuais." : "Recomendação rejeitada. Nenhuma alteração aplicada.")));

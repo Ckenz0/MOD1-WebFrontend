@@ -1,0 +1,11 @@
+version: 1
+name: Gemini generateContent subset used by Module 1
+slug: gemini-generatecontent-subset-us
+protocol: http
+interceptRequests: true
+origin: generativelanguage.googleapis.com
+port: 4010
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true

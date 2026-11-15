@@ -23,6 +23,11 @@ simulação é identificada. O transporte Resend recebeu teste real de envio e
 recebimento, limitado à conta do titular pelo remetente de teste atual. Isso
 não comprova recuperação/confirmação ponta a ponta por e-mail externo.
 
+O candidato local 0.6.0 acrescenta suporte à integração Gemini dos três serviços,
+mantendo aprovação humana e permitindo dispensar análises sem sugestões.
+Veja [configuração e testes locais de IA](docs/local-ai-testing.md). A validação
+com o Google real ainda depende de uma chave; este candidato não foi publicado.
+
 ## Colaboração e perfil
 
 Na conta, edite resumo, senioridade, competências/domínio e disponibilidade.

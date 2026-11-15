@@ -14,6 +14,12 @@ repositório indicado e não dependem de planos/arquivos privados.
 
 ## Dependências externas
 
+Atualização local de 04/11/2026: adaptadores Gemini implementados nas três APIs,
+com contratos estruturados e testes HTTP controlados. O frontend candidato 0.6.0
+identifica o provedor e trata análises vazias. A matriz abaixo conserva a pendência
+de validação externa das US de IA: ainda não houve chamada real ao Google.
+Veja [evidências e configuração](local-ai-testing.md).
+
 - E-mail: recuperação/confirmação têm transporte Resend implementado e testes
   controlados, além da caixa postal local. Envio e recebimento reais de transporte
   foram verificados para a conta do titular; o remetente de teste atual limita
