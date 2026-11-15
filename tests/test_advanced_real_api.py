@@ -24,8 +24,16 @@ class AdvancedRealApiTests(real.BacklogRealApiTests):
         return {'LOCAL_MAILBOX_ENABLED': 'true', 'FRONTEND_ORIGIN': self.base_url,
                 'MFA_ENCRYPTION_KEY': base64.urlsafe_b64encode(os.urandom(32)).decode()}
 
+    def security_email(self):
+        return 'security@example.com'
+
+    def mail_link(self, headers, fragment):
+        mailbox = self.context.request.get(self.auth_url + '/admin/mailbox', headers=headers).json()
+        return next(re.search(r'https?://\S+', m['body']).group()
+                    for m in mailbox['items'] if '#' + fragment + '=' in m['body'])
+
     def test_mfa_recovery_email_confirmation_and_reset_preserve_second_factor(self):
-        email = 'security@example.com'
+        email = self.security_email()
         self.register(email)
         result = self.context.request.post(self.auth_url + '/auth/token', form={
             'username': email, 'password': 'ProjetoMvp!2026'})
@@ -63,20 +71,21 @@ class AdvancedRealApiTests(real.BacklogRealApiTests):
         self.page.get_by_role('button', name='E-mail', exact=True).click()
         self.page.get_by_role('button', name='Enviar link de confirmação', exact=True).click()
         expect(self.page.locator('#workspace-status')).to_contain_text('confira a caixa')
-        mailbox = self.context.request.get(self.auth_url + '/admin/mailbox', headers=headers).json()
-        confirmation = next(re.search(r'https?://\S+', m['body']).group() for m in mailbox['items'] if '#verify-email=' in m['body'])
+        confirmation = self.mail_link(headers, 'verify-email')
         self.page.goto(confirmation)
         self.page.wait_for_function('location.hash === ""')
         self.assertEqual(urlsplit(self.page.url).fragment, '')
         self.page.get_by_role('button', name='Confirmar meu e-mail', exact=True).click()
         expect(self.page.locator('#recovery-view')).to_contain_text('Endereço de e-mail confirmado')
+        confirmation_token = urlsplit(confirmation).fragment.split('=', 1)[1]
+        self.assertEqual(self.context.request.post(self.auth_url + '/auth/email/confirm',
+            data={'token': confirmation_token}).status, 400)
         self.page.get_by_role('button', name='Voltar para entrar', exact=True).click()
         self.page.get_by_role('button', name='Esqueci minha senha', exact=True).click()
         self.page.get_by_label('E-mail para recuperação', exact=True).fill(email)
         self.page.get_by_role('button', name='Solicitar link de recuperação', exact=True).click()
         expect(self.page.locator('#recovery-status')).to_contain_text('Se o endereço estiver cadastrado')
-        mailbox = self.context.request.get(self.auth_url + '/admin/mailbox', headers=headers).json()
-        reset = next(re.search(r'https?://\S+', m['body']).group() for m in mailbox['items'] if '#recovery=' in m['body'])
+        reset = self.mail_link(headers, 'recovery')
         self.page.goto(reset)
         self.page.wait_for_function('location.hash === ""')
         self.assertEqual(urlsplit(self.page.url).fragment, '')
@@ -88,6 +97,12 @@ class AdvancedRealApiTests(real.BacklogRealApiTests):
         self.assertEqual(self.context.request.get(self.auth_url + '/auth/me', headers=headers).status, 401)
         self.assertEqual(self.context.request.get(self.projects_url + '/projects', headers=headers).status, 401)
         self.assertEqual(self.context.request.get(self.backlog_url + '/projects/11111111-1111-4111-8111-111111111111/items', headers=headers).status, 401)
+        self.assertEqual(self.context.request.post(self.auth_url + '/auth/token', form={
+            'username': email, 'password': 'ProjetoMvp!2026'}).status, 401)
+        reset_token = urlsplit(reset).fragment.split('=', 1)[1]
+        self.assertEqual(self.context.request.post(self.auth_url + '/auth/password/reset/confirm',
+            data={'token': reset_token, 'new_password': 'OutraSenha!2026Mod1',
+                  'recovery_code': codes[2]}).status, 400)
         result = self.context.request.post(self.auth_url + '/auth/token', form={
             'username': email, 'password': 'SenhaNova!2026Mod1'})
         self.assertTrue(result.json().get('mfa_required'))

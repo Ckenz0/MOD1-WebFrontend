@@ -1,10 +1,10 @@
 # Integração com o módulo 1
 
 Este guia reúne os endereços e o contrato para integrar os outros módulos.
-Esta entrega usa frontend 0.5.0, Identidade 0.4.0, Projetos 0.5.0 e Backlog 0.4.0.
-Os endereços abaixo são os destinos de produção. As evidências finais, o SHA do
-frontend implantado e os limites da validação estão nas
-[notas da release 0.5.0](https://github.com/Ckenz0/MOD1-WebFrontend/releases/tag/v0.5.0).
+Em 15/11/2026 foram conferidos frontend 0.6.0, Identidade 0.5.0, Projetos 0.6.0
+e Backlog 0.5.0. Os endereços abaixo são os destinos de produção. As evidências
+e seus limites estão em [verification.md](verification.md); `/release.json`
+identifica o SHA do frontend efetivamente implantado.
 
 | Componente | Endereço HTTPS |
 | --- | --- |
@@ -76,30 +76,39 @@ fica no repositório de Projetos, em `docs/module2-project-deletion.md`.
 Para integrar pelo navegador, enviem ao responsável pela API a origem exata do
 frontend: esquema, host e porta, sem caminho. `http://localhost:5173` e
 `http://127.0.0.1:5173` são origens diferentes. A origem atual do frontend do
-módulo 1 precisa ser preservada ao configurar `CORS_ORIGINS`. Até a preparação
-deste guia, nenhuma URL de frontend externo dos outros grupos foi fornecida;
-nenhuma liberação adicional de CORS está sendo afirmada.
+módulo 1 precisa ser preservada ao configurar `CORS_ORIGINS`.
+
+As três APIs já permitem estas quatro origens, verificadas por preflight em
+15/11/2026:
+
+- `https://green-river-02e44e810.2.azurestaticapps.net`
+- `https://mackai-conversas.calmfield-d7c6c49f.brazilsouth.azurecontainerapps.io`
+- `https://ai-platform-github-service-eduardo-frapb8fbbcd0bfdm.brazilsouth-01.azurewebsites.net`
+- `http://localhost:5173`
+
+Isso não confirma CORS recíproco nas APIs dos outros grupos. Outros frontends
+devem informar sua origem exata. O envio de notificações ao Módulo 6 ocorre
+entre backends e não depende de CORS; a chave de integração fica no servidor.
 
 No teste conjunto, confiram `/health/ready`, cadastro/login individual, acesso
 permitido e negado por projeto e tratamento de `204`, `401`, `403`, `404`, `409`
 e `503`. APIs suspensas podem precisar de tempo para retomar. Nunca repitam
 automaticamente uma gravação cujo resultado ficou incerto.
 
-IA real e o contrato efetivo de eventos com o módulo de revisão de código ainda
-estão pendentes. A proposta local não comprova compatibilidade externa. E-mail
-usa Resend na Identidade; houve envio/recebimento real de transporte para o
-titular, mas o remetente de teste atual não permite afirmar entrega para outras
-contas nem fluxo real completo de recuperação/confirmação.
+Gemini real e Resend estão configurados nas APIs. Os links reais de confirmação
+e recuperação foram validados em ambiente isolado, com entrega reportada pelo
+Resend. O contrato efetivo de eventos com o produtor de revisão de código
+permanece pendente e desabilitado; a proposta local não comprova compatibilidade.
 
 ## Registro da entrega
 
-APIs conferidas por CK em 01/11/2026 às 17:02 UTC:
+APIs conferidas na publicação de 15/11/2026:
 
 | API | Versão observada | Código implantado |
 | --- | --- | --- |
-| Identidade | 0.4.0 | [`f4aa7be`](https://github.com/Ckenz0/MOD1-IdentityService/commit/f4aa7be567cb603706933922350d5c97ab12c79f) |
-| Projetos | 0.5.0 | [`3b4f942`](https://github.com/briankfreire/MOD1-ProjectsServices/commit/3b4f942982cdfc84ddb41ac1f30a0ee005c07694) |
-| Backlog | 0.4.0 | [`8301009`](https://github.com/igorcpds/MOD1-BacklogService/commit/83010094dc794d3077e62a6cfe480d82472d0b86) |
+| Identidade | 0.5.0 | [`e4a2e70`](https://github.com/Ckenz0/MOD1-IdentityService/commit/e4a2e70130d2bf80b5425e24b06d69d00b107275) |
+| Projetos | 0.6.0 | [`ebdacfe`](https://github.com/briankfreire/MOD1-ProjectsServices/commit/ebdacfe3b3abaa687933e89da2c1b7ba6c5088d0) |
+| Backlog | 0.5.0 | [`35898bd`](https://github.com/igorcpds/MOD1-BacklogService/commit/35898bd2a0287ef5efeb202d54601fd031ceabaf) |
 
 As três responderam readiness 200, expuseram os novos contratos e preservaram
 CORS para a origem atual do frontend. A chave pública JWT permaneceu igual à
@@ -107,7 +116,8 @@ anterior à atualização. Migrações tiveram backup e preservação dos dados
 preexistentes conferidos. Isso não comprova a integração dos outros grupos.
 
 O frontend expõe `/release.json` sem cache com versão e SHA implantados. As
-notas da release vinculadas acima registram o workflow de publicação e a
-validação final do fluxo entre APIs e pela interface pública, com seus limites.
+evidências de validação registram o fluxo entre APIs e pela interface pública,
+com seus limites. Esta tabela registra a publicação verificada, não cada commit
+posterior de testes/documentação.
 Os testes de exclusão de projetos foram executados localmente; nenhuma exclusão
 de dados de produção foi usada para validar esta entrega.

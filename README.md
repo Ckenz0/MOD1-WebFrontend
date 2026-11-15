@@ -4,7 +4,7 @@ O frontend segue arquitetura multicamadas com apresentação, casos de uso,
 domínio e clientes HTTP separados. Componentes e fluxos reais estão em
 [Arquitetura](docs/architecture.md).
 
-## Recursos da versão 0.5.0
+## Recursos da versão 0.6.0
 
 Sessões persistentes no backend, renovação, bloqueio por tentativas, recuperação,
 confirmação de e-mail, MFA e administração global. Na conta, abra **Segurança e
@@ -18,15 +18,16 @@ responsáveis, bloqueios, dependências e ordenação por arraste ou teclado.
 
 Veja [guia dos fluxos](docs/local-user-stories.md),
 [situação das US](docs/backlog-status.md) e [validação](docs/verification.md).
-IA real e o contrato externo de revisão ainda precisam de validação;
-simulação é identificada. O transporte Resend recebeu teste real de envio e
-recebimento, limitado à conta do titular pelo remetente de teste atual. Isso
-não comprova recuperação/confirmação ponta a ponta por e-mail externo.
+Gemini real está configurado nos três serviços; simulação continua identificada
+quando escolhida no desenvolvimento. O contrato externo de revisão permanece
+pendente. Resend usa domínio verificado `ckenzo.me`; confirmação e reset por
+links reais passaram em ambiente isolado com entrega reportada pelo provedor.
+Veja [aceite de e-mail](docs/email-acceptance.md) para escopo e reprodução.
 
-O candidato local 0.6.0 acrescenta suporte à integração Gemini dos três serviços,
+A versão 0.6.0 acrescenta suporte à integração Gemini dos três serviços,
 mantendo aprovação humana e permitindo dispensar análises sem sugestões.
 Veja [configuração e testes locais de IA](docs/local-ai-testing.md). A validação
-com o Google real ainda depende de uma chave; este candidato não foi publicado.
+com dados sintéticos usa um teste opt-in; a versão 0.6.0 já foi publicada.
 
 ## Colaboração e perfil
 
@@ -49,8 +50,8 @@ limitado também pela expiração do vínculo. O Resend fica somente no backend 
 Identidade; envio a outros destinatários exige remetente/domínio autorizado.
 
 Criar conta, entrar, organizar projetos e acompanhar histórias priorizadas até a
-conclusão continua sendo o fluxo principal. Versão SemVer `0.5.0` em
-[VERSION](VERSION), preparada para publicação; alterações em
+conclusão continua sendo o fluxo principal. Versão SemVer `0.6.1` em
+[VERSION](VERSION), com correções finais de permissões/navegação; alterações em
 [CHANGELOG.md](CHANGELOG.md). A versão no arquivo não comprova deploy.
 
 HTML/CSS/JavaScript modular, sem dependências de produto ou build. Identidade visual
@@ -135,8 +136,9 @@ A base histórica 0.3.0 usava Identidade 0.2.0, Projetos 0.3.0 e Backlog 0.2.0.
 Em banco de Projetos anterior, executar a migração administrativa explícita
 conforme o README desse backend. Nenhuma tela executa migração ou concede acesso.
 Status/etiquetas, equipes, papéis personalizados, recuperação, MFA e MoSCoW foram
-acrescentados desde essa base. IA real e compatibilidade com o módulo externo
-de revisão continuam pendentes, conforme a matriz de US.
+acrescentados desde essa base. Gemini real está configurado nas três APIs;
+o contrato externo de revisão de código continua pendente. Consulte a
+[matriz de US](docs/backlog-status.md) e a [validação](docs/verification.md).
 
 Falha de rede não equivale a acesso negado. Se POST/PATCH tiver sucesso e a recarga
 falhar, a tela confirma a gravação e orienta atualizar a lista. Timeout não confirma
