@@ -1,4 +1,31 @@
-# Testes locais da integração Gemini
+# Testes da integração Gemini
+
+## Fechamento de 15/11/2026
+
+Gemini real está configurado nas três APIs publicadas. O teste opt-in
+`tests/test_gemini_real_api.py` também passou com Edge, APIs reais locais e dados
+sintéticos: sete chamadas ao Google retornaram HTTP 200 e geraram propostas
+persistidas. Nenhum perfil sem consentimento ou credencial foi enviado no corpo.
+As propostas/decisões continuaram iguais após reiniciar as APIs.
+
+| Tipo | Sugestões na última rodada | Decisão exercitada |
+| --- | ---: | --- |
+| `roles` | 1 | Aprovação explícita, concessão e evento/outbox conferidos, repetição idempotente |
+| `teams` | 0 | Análise vazia dispensada; nenhuma equipe criada |
+| `skills_map` | 3 | Rejeição sem alterar dados de negócio |
+| `training` | 2 | Rejeição sem alterar dados de negócio |
+| `access_revocation` | 1 | Contexto alterado: aprovação recusada com 409, proposta expirada sem revogar acesso |
+| `initial_backlog` | 2 | Aprovação explícita criou itens; repetição não duplicou itens |
+| `access_anomalies` | 0 | Análise vazia dispensada; nenhuma conta alterada |
+
+O resultado vazio de equipes é válido e não comprova aprovação de equipe com
+Gemini nessa rodada. O caminho positivo de criação/vínculo/notificação de equipe
+continua coberto pelos testes controlados do serviço de Projetos. Não há uma
+pendência de chave/provedor; a utilidade das sugestões deve ser avaliada no
+contexto real de cada projeto. A reprodução opt-in está na seção
+[Aceitação local com Gemini real](#aceitação-local-com-gemini-real).
+
+## Histórico — preparação de 05/11/2026
 
 Estado de 05/11/2026: integração implementada em branches locais, sem push,
 tag, release ou deploy. Candidatos SemVer: Identidade 0.5.0, Projetos 0.6.0,
@@ -138,3 +165,95 @@ Não habilite faturamento como parte deste procedimento local.
 Documentação específica de cada API: `docs/gemini.md` no respectivo repositório.
 O contrato externo com o módulo de revisão de código e a configuração do envio
 transacional são etapas independentes desta integração.
+
+
+## Aceitação local com Gemini real
+
+`tests/test_gemini_real_api.py` executa o frontend no Edge headless, três APIs reais
+em portas locais livres e o endpoint oficial HTTPS do Google Gemini. Não usa
+respostas simuladas nem substitui a resposta do provedor. O teste é opt-in e pode
+consumir a cota da chave configurada. A descoberta normal da suíte o ignora e não
+lê arquivos de credenciais.
+
+### Preparação e execução
+
+Prepare os quatro ambientes virtuais com as dependências de teste de cada
+repositório. O frontend precisa de Playwright e do Microsoft Edge instalado,
+conforme os demais testes de navegador. As APIs precisam estar instaladas nos
+respectivos ambientes virtuais; não é necessário iniciar serviços manualmente.
+
+No PowerShell, a partir da raiz do frontend:
+
+```powershell
+$env:AUTH_BACKEND_PATH = 'C:/caminho/Identidade'
+$env:PROJECTS_BACKEND_PATH = 'C:/caminho/Projetos'
+$env:BACKLOG_BACKEND_PATH = 'C:/caminho/Backlog'
+$env:GEMINI_ACCEPTANCE_ENV_FILE = 'C:/caminho/privado/.env'
+$env:GEMINI_ACCEPTANCE_MODEL = 'gemini-3.5-flash-lite'
+$env:RUN_REAL_GEMINI_ACCEPTANCE = '1'
+.venv/Scripts/python.exe -X utf8 -m unittest discover -s tests -p test_gemini_real_api.py -v
+```
+
+O arquivo privado deve conter `GEMINI_API_KEY=...` e permanecer ignorado pelo Git.
+Também é possível fornecer `GEMINI_API_KEY` pelo ambiente; nesse caso nenhum
+arquivo é lido. A chave nunca deve ser incluída no comando, em capturas ou em
+relatórios. Depois da execução, remova `RUN_REAL_GEMINI_ACCEPTANCE` do ambiente
+para que a suíte normal continue sem chamadas externas.
+
+### Garantias verificadas
+
+- Os sete tipos são solicitados pelos controles reais da interface:
+  `access_anomalies`, `roles`, `access_revocation`, `teams`, `skills_map`,
+  `training` e `initial_backlog`.
+- Cada resposta deve ser uma proposta persistida `pending`, versão 1,
+  `provider=gemini`, `simulated=false`, com o modelo escolhido, resumo e
+  justificativa. A interface identifica a origem e informa que nenhuma alteração
+  foi aplicada.
+- A geração e a rejeição preservam projeto, membros, equipes e itens. Propostas
+  aplicáveis de papéis/equipes e backlog só alteram dados depois do clique de
+  aprovação, com repetição idempotente. O teste confere concessões/evento/outbox
+  para papéis e vínculos/notificações internas para equipes quando sugeridas.
+  Na rodada registrada acima, equipes retornou vazio, então esse caminho
+  positivo ficou coberto pelos testes controlados. Análise vazia pode ser dispensada.
+- As propostas e decisões devem continuar iguais após reiniciar as três APIs.
+  A leitura pela conta sem acesso, por outro projeto ou sem autenticação é
+  bloqueada. A análise administrativa exige administrador.
+- Histórico de uso desconhecido retorna conflito antes de chamar Gemini. Para
+  testar revogação, somente a observação temporal de um membro sintético é
+  preparada diretamente no SQLite temporário. Quando há sugestões aplicáveis,
+  uma mudança dessa observação após a geração impede a aprovação e persiste a
+  proposta como expirada.
+- O transporte HTTP real é observado nos processos temporários. Devem ocorrer
+  exatamente sete chamadas Gemini HTTP 200. Não são encaminhados Bearer/cookie
+  nem a chave no corpo. O perfil profissional sem consentimento é excluído do
+  prompt; candidatos, projeto, evidências e elegibilidade para revogação são
+  conferidos contra o contexto autorizado. Referências da análise de acessos
+  devem pertencer aos usuários e eventos de auditoria enviados.
+
+Cada execução cria bancos SQLite, chave RSA e serviços efêmeros exclusivamente
+locais, com contas e projeto fictícios. Envio de e-mail e Módulo 6 são
+explicitamente desativados; nenhum worker de entrega é iniciado. O observador
+de transporte permite apenas chamadas locais e o host oficial do Gemini.
+Os processos pertencentes ao teste são encerrados e os bancos são removidos ao
+final, inclusive se uma asserção falhar.
+
+Um resumo sanitizado da última execução integralmente aprovada é salvo em
+`.local/gemini-acceptance/summary.json`, ignorado pelo Git. Ele contém modelo,
+horário, tipos, quantidades de sugestões e decisões, sem chave, tokens, e-mails,
+corpos de prompts ou texto gerado. A documentação publicada não depende desse
+arquivo para explicar ou executar o teste.
+
+### Limites da evidência
+
+A saída textual e o número de sugestões não são determinísticos. As asserções
+verificam contratos, referências autorizadas e efeitos das decisões, sem exigir
+uma frase ou proposta específica. As verificações de aplicação do backlog e
+expiração por mudança de contexto dependem de haver sugestões aplicáveis; o
+resumo registra as decisões efetivamente exercitadas.
+
+Este teste não demonstra qualidade em todos os contextos profissionais, precisão
+estatística da IA, entrega de notificações, envio de e-mail ou funcionamento das
+APIs implantadas. Os testes unitários de adaptadores e serviços continuam sendo
+a evidência para respostas malformadas, indisponibilidade, cota, dados inventados
+e outras falhas injetadas. Os testes de interface com respostas controladas
+continuam cobrindo renderização segura e mensagens de erro.

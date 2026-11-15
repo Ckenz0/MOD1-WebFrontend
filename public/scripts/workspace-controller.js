@@ -25,6 +25,11 @@ export function createWorkspaceController({ clients, account, session, getIdenti
   const can = permission => Boolean(project?.permissions?.includes(permission) || own());
   const writable = () => !project?.archived && ["active", "planned", undefined].includes(project?.status);
   const canWrite = permission => writable() && can(permission);
+  const canRecommendProject = kind => !project?.archived
+    && can("project:members:manage") && can("project:members:read")
+    && (kind === "access_revocation" || can("backlog:read"))
+    && (kind !== "roles" || can("project:roles:manage"))
+    && (kind !== "teams" || can("project:teams:manage"));
 
   function status(text = "", error = false) { notice.textContent = text; notice.hidden = !text; notice.dataset.tone = error ? "error" : "notice"; }
   function setBusy(value) { busy = value; root.setAttribute("aria-busy", String(value)); for (const button of root.querySelectorAll("button")) button.disabled = value; }
@@ -280,10 +285,12 @@ export function createWorkspaceController({ clients, account, session, getIdenti
   }); }
 
   function projectNavigation(active) {
-    const tabs = [["context", "Contexto", () => go("context", renderProject)], ["board", "Quadro e itens", () => go("board", renderBoard)],
-      ["project-teams", "Equipes", () => go("project-teams", renderProjectTeams)]];
+    const tabs = [["context", "Contexto", () => go("context", renderProject)]];
+    if (can("backlog:read")) tabs.push(["board", "Quadro e itens", () => go("board", renderBoard)]);
+    if (can("project:members:read")) tabs.push(["project-teams", "Equipes", () => go("project-teams", renderProjectTeams)]);
     if (can("project:members:read")) tabs.push(["roles", "Papéis e acessos", () => go("roles", renderRoles)]);
-    tabs.push(["history", "Histórico", () => go("history", renderProjectHistory)], ["recommendations", "Recomendações", () => go("recommendations", () => renderRecommendations("projects"))]);
+    if (can("project:audit:read")) tabs.push(["history", "Histórico", () => go("history", renderProjectHistory)]);
+    if (can("project:members:manage")) tabs.push(["recommendations", "Recomendações", () => go("recommendations", () => renderRecommendations("projects"))]);
     show(project?.name || "Projeto", "Contexto, planejamento e colaboração do projeto.", tabs, active);
   }
   async function refreshProject(request) { project = await request("projects", "GET", `/projects/${project.id}`); return project; }
@@ -347,25 +354,27 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     const linked = await request("projects", "GET", `/projects/${project.id}/teams`);
     const panel = section("Equipes vinculadas", "O vínculo concede papéis aos membros ativos da equipe. Remover o vínculo elimina apenas essa origem de acesso.");
     panel.append(rows(pageItems(linked), [{ label: "Equipe", value: row => row.team_name || row.name || row.team_id }, { label: "Papéis herdados", value: row => row.roles?.map(roleLabel).join(", ") }],
-      { caption: "Equipes do projeto", actions: can("project:teams:manage") || can("project:members:manage") ? row => [action("Desvincular equipe", () => {
+      { caption: "Equipes do projeto", actions: can("project:teams:manage") ? row => [action("Desvincular equipe", () => {
         if (confirm("Remover os acessos herdados por esta equipe neste projeto?")) run(async req => { await req("projects", "DELETE", `/projects/${project.id}/teams/${row.team_id || row.id}`); }, "Equipe desvinculada. Atualize para conferir.");
       })] : undefined }));
-    if (can("project:teams:manage") || can("project:members:manage")) {
+    if (can("project:teams:manage")) {
       const teams = pageItems(await request("projects", "GET", "/teams?limit=100&offset=0"));
       const link = form("project-team-link", [{ name: "team_id", label: "Equipe para vincular", type: "select", options: teams.map(team => ({ value: team.id, label: team.name })), required: true },
         { name: "roles", label: "Papéis da equipe no projeto", type: "multiselect", options: roleOptions, value: ["developer"], required: true },
         { name: "expires_at", label: "Expiração do vínculo da equipe", type: "datetime-local" }], "Vincular equipe", values => run(async req => {
           await req("projects", "POST", `/projects/${project.id}/teams`, { ...values, expires_at: values.expires_at ? new Date(values.expires_at).toISOString() : null });
         }, "Equipe vinculada. Atualize os acessos para conferir.")); panel.append(link.node);
+    }
+    if (can("project:members:manage")) {
       const allocation = form("project-allocation", [{ name: "user_id", label: "ID da pessoa para alocação", required: true },
         { name: "weekly_hours", label: "Horas semanais no projeto", type: "number", min: 0, max: 168, step: "0.5", required: true },
         { name: "hourly_rate", label: "Custo por hora informado", hint: "Opcional; não é inferido pela senioridade." }, { name: "currency", label: "Moeda do custo", value: "BRL" }], "Salvar alocação", values => run(async req => {
           const rate = decimalValue(values.hourly_rate);
           await req("projects", "PUT", `/projects/${project.id}/allocations`, { ...values, weekly_hours: decimalValue(values.weekly_hours), hourly_rate: rate, currency: rate === null ? null : values.currency });
         }, "Alocação salva.")); panel.append(section("Alocação de capacidade"), allocation.node);
+      const allocations = await request("projects", "GET", `/projects/${project.id}/allocations`);
+      panel.append(rows(pageItems(allocations), [{ label: "Pessoa", value: identityLabel }, { label: "Horas semanais", key: "weekly_hours", numeric: true }, { label: "Custo por hora", value: row => row.hourly_rate !== null && row.hourly_rate !== undefined ? `${row.currency || ""} ${row.hourly_rate}` : "Não informado", numeric: true }], { caption: "Alocações do projeto" }));
     }
-    const allocations = await request("projects", "GET", `/projects/${project.id}/allocations`);
-    panel.append(rows(pageItems(allocations), [{ label: "Pessoa", value: identityLabel }, { label: "Horas semanais", key: "weekly_hours", numeric: true }, { label: "Custo por hora", value: row => row.hourly_rate !== null && row.hourly_rate !== undefined ? `${row.currency || ""} ${row.hourly_rate}` : "Não informado", numeric: true }], { caption: "Alocações do projeto" }));
     content.replaceChildren(panel);
   }); }
 
@@ -461,7 +470,8 @@ export function createWorkspaceController({ clients, account, session, getIdenti
       action("Subir", () => reorderItem(item, -1), { label: `Subir ${item.title}` }), action("Descer", () => reorderItem(item, 1), { label: `Descer ${item.title}` }),
     ] : undefined }));
     if (can("backlog:create") && !project.archived && ["active", "planned", undefined].includes(project.status)) panel.append(action("Novo item de backlog", () => itemEditor()));
-    panel.append(action("Atualizar quadro", () => go("board", renderBoard)), action("Sugerir backlog inicial", () => go("recommendations", () => renderRecommendations("backlog"))));
+    panel.append(action("Atualizar quadro", () => go("board", renderBoard)));
+    if (canWrite("backlog:create")) panel.append(action("Sugerir backlog inicial", () => go("recommendations", () => renderRecommendations("backlog"))));
     content.replaceChildren(panel);
   }); }
   function changeItemStatus(item, state) { return run(async request => {
@@ -545,7 +555,7 @@ export function createWorkspaceController({ clients, account, session, getIdenti
       const base = service === "identity" ? "/admin/recommendations" : `/projects/${project.id}/recommendations`;
       const page = await request(service, "GET", base + "?limit=20&offset=0");
       const panel = section("Recomendações com aprovação humana", "Ao solicitar, o contexto autorizado é enviado ao provedor de IA configurado. Confira a justificativa e os dados usados antes de aprovar. Sugestões só são aplicadas após sua aprovação.");
-      const kinds = service === "identity" ? { access_anomalies: "Análise de acessos" } : service === "backlog" ? { initial_backlog: "Backlog inicial" } : { roles: "Papéis e menor privilégio", access_revocation: "Acessos não utilizados", teams: "Formação de equipe", skills_map: "Mapa de competências", training: "Lacunas e treinamentos" };
+      const kinds = service === "identity" ? { access_anomalies: "Análise de acessos" } : service === "backlog" ? { initial_backlog: "Backlog inicial" } : Object.fromEntries(Object.entries({ roles: "Papéis e menor privilégio", access_revocation: "Acessos não utilizados", teams: "Formação de equipe", skills_map: "Mapa de competências", training: "Lacunas e treinamentos" }).filter(([kind]) => canRecommendProject(kind)));
       const emptyNotice = pageItems(page).length ? null : el("p", "Nenhuma recomendação registrada. O serviço de IA precisa estar configurado para gerar sugestões.");
       const generate = form("recommendation-create", [{ name: "kind", label: "Tipo de recomendação", type: "select", options: kinds, value: Object.keys(kinds)[0] },
         { name: "preference", label: "Foco da formação de equipe", type: "select", options: { availability: "Disponibilidade", cost: "Custo informado", seniority: "Senioridade" }, value: "availability" },
@@ -563,7 +573,7 @@ export function createWorkspaceController({ clients, account, session, getIdenti
         }
       }
       generate.inputs.kind.addEventListener("change", scopeFields); scopeFields();
-      panel.append(generate.node);
+      if (Object.keys(kinds).length) panel.append(generate.node);
       for (const proposal of pageItems(page)) panel.append(recommendationCard(proposal, service, base));
       if (emptyNotice) panel.append(emptyNotice);
       content.replaceChildren(panel);
@@ -589,7 +599,8 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     if (proposal.evidence?.length) panel.append(el("p", `Dados consultados: ${proposal.evidence.join(", ")}`, { class: "field-hint" }));
     if (proposal.status === "pending") {
       const decisions = el("div", null, { class: "form-actions" });
-      const choices = suggestions.length ? [["approve", "Aprovar recomendação"], ["reject", "Rejeitar recomendação"]] : [["reject", "Dispensar análise"]];
+      const canApprove = service === "projects" ? canRecommendProject(proposal.kind) : service !== "backlog" || canWrite("backlog:create");
+      const choices = suggestions.length ? [...(canApprove ? [["approve", "Aprovar recomendação"]] : []), ["reject", "Rejeitar recomendação"]] : [["reject", "Dispensar análise"]];
       for (const [choice, label] of choices) decisions.append(action(label, () => run(async request => {
         const result = await request(service, "POST", `${base}/${proposal.id}/${choice}`, { expected_version: proposal.version });
         panel.replaceWith(recommendationCard(result || { ...proposal, status: choice === "approve" ? "approved" : "rejected" }, service, base));

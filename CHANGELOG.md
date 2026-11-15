@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.6.1 — fechamento de 15/11/2026
+
+- Equipes consultáveis por leitores sem buscar alocações restritas; controles,
+  tipos e aprovações de IA respeitam as permissões atuais de cada operação.
+- Retorno do workspace de projeto à lista de projetos, preservando o retorno
+  ao perfil nas ferramentas da conta.
+- Aceite opt-in de e-mail com Resend real e Gemini real usando APIs/bancos
+  temporários e navegador; regressões de uso único dos links e revogação.
+- Matriz de US, integração, versões e evidências atualizadas; contrato externo
+  de revisão de código continua como dependência explícita.
+
 ## 0.6.0 — 2026-11-15
 
 - Recomendações identificam Google Gemini e exibem papéis e ações em português, preservando as cores e os temas existentes.

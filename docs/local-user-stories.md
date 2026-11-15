@@ -1,9 +1,8 @@
-# Fluxos da versão 0.5.0
+# Fluxos da versão 0.6.0
 
 Os quatro repositórios usam microsserviços com arquitetura interna multicamadas.
-A versão 0.5.0 está preparada para publicação. Os fluxos abaixo têm evidência
-local; SHA, versão e disponibilidade do ambiente publicado exigem conferência
-separada na entrega.
+A versão 0.6.0 foi publicada em 15/11/2026. As evidências de integração local e
+produção, com seus limites, estão em [verification.md](verification.md).
 
 ## Onde testar
 
@@ -37,14 +36,14 @@ continua exigindo o segundo fator quando estiver ativo.
 ## Limites explícitos
 
 - Caixa postal local é um instrumento de teste restrito a administrador; não
-  comprova entrega externa. O transporte real escolhido é o Resend, implementado
-  no backend de Identidade. O teste real de transporte teve envio e recebimento
-  confirmados para a conta do titular, único destino permitido pelo remetente de
-  teste atual. Isso não comprova reset/confirmação reais de ponta a ponta nem
-  envio para terceiros. Para ampliar os destinos, configure remetente/domínio
-  autorizado no backend. Nenhuma chave é configurada no frontend.
-- IA tem contrato/adaptador configurável e testes controlados. Qualidade e
-  integração de um provedor/modelo real ainda precisam de validação.
+  comprova entrega externa. Produção usa Resend com domínio verificado
+  `ckenzo.me`, caixa postal local desativada e segredos somente no backend.
+  Os links reais de confirmação/reset passaram pelo navegador e pelas três APIs
+  temporárias; o provedor reportou entrega ao destinatário de teste autorizado.
+  Veja [email-acceptance.md](email-acceptance.md) para reprodução e limites.
+- IA usa Gemini real em produção. Os testes controlados de permissões,
+  respostas inválidas e aprovação continuam necessários; a configuração e os
+  limites das chamadas reais estão em [local-ai-testing.md](local-ai-testing.md).
 - Uso de acesso desconhecido não é tratado como acesso não utilizado.
   Recomendações de revogação exigem uma janela completa observada (30 dias por
   padrão, configurável na solicitação), excluem proprietário/solicitante e

@@ -1,4 +1,73 @@
-# Preparação da versão 0.5.0 — 01/11/2026
+# Validação final — 15/11/2026
+
+O frontend 0.6.1 corrige permissões e navegação e fecha os testes de aceite de
+e-mail/IA. A [matriz](backlog-status.md) registra 99 US implementadas, US-096
+bloqueada por contrato externo e US-101 duplicada. Consulte também o
+[registro de fechamento](final-delivery.md).
+
+## Suíte final local
+
+**172 testes executados em 244,447 s: 170 aprovados e 2 ignorados por opt-in.**
+Os dois ignorados são os testes reais Resend/Gemini, executados separadamente
+com sucesso e com autorização para chamadas externas. Os três caminhos de
+backend estavam configurados para checkouts com os pacotes instalados. As APIs
+do harness usam SQLite, RSA e contas temporários em portas loopback.
+
+```powershell
+# Defina AUTH_BACKEND_PATH, PROJECTS_BACKEND_PATH e BACKLOG_BACKEND_PATH.
+$env:MAIL_PROVIDER = 'auto'
+$env:AI_PROVIDER = 'structured-http'
+$env:AI_SIMULATED = 'false'
+$env:MODULE6_ENABLED = 'false'
+.venv/Scripts/python.exe -X utf8 -m unittest discover -s tests -q
+```
+
+Execute a suíte normal sem variáveis privadas `RESEND_*` ou opt-ins externos.
+As regressões finais incluem 9 testes de permissões e 2 de navegação,
+reproduzidos antes das correções. A revisão independente reexecutou esses
+11 testes e não deixou achados críticos/importantes. As fronteiras entre
+apresentação, aplicação, domínio e clientes HTTP continuam verificadas.
+
+## Provedores reais
+
+- **Resend:** um cenário de navegador aprovado, duas mensagens reais com
+  entrega reportada pelo provedor. Links retornados pelo Resend confirmaram
+  e-mail/reset; replay recusado, fragmento removido, senha anterior recusada,
+  sessões anteriores invalidadas nas três APIs e MFA preservado. Nenhuma conta
+  de produção foi alterada. [Reprodução e limites](email-acceptance.md).
+- **Gemini:** um cenário de navegador aprovado, sete chamadas HTTP 200 ao host
+  oficial, propostas persistidas e preservadas após reiniciar as três APIs.
+  Papéis e backlog tiveram aprovação explícita/idempotente; revogação expirou
+  diante de contexto alterado, sem revogar acesso. Equipes retornou vazio válido,
+  sem alegação de aprovação real de equipe nessa rodada. Perfil sem consentimento
+  e credenciais foram excluídos do corpo. [Resultados por tipo](local-ai-testing.md).
+
+## Publicação e integrações
+
+Na publicação de 15/11 foram conferidos Identidade 0.5.0, Projetos 0.6.0,
+Backlog 0.5.0 e a primeira publicação frontend 0.6.0. O patch final 0.6.1 está
+descrito no changelog. `/release.json` registra versão/SHA efetivamente publicados;
+o arquivo VERSION sozinho não comprova deploy.
+
+Os quatro deploys da publicação foram aprovados. Saúde pública, 10 verificações
+de login/JWT/acesso/logout entre APIs e navegador de produção passaram. A chave
+JWT/JWKS permaneceu igual. Foram aprovados 36 preflights CORS e bloqueadas
+3 origens negativas. Após logout, as três APIs recusaram o Bearer anterior.
+Não houve erro JavaScript ou overflow observado em desktop/mobile nessa rodada.
+
+Os workers de Backlog/Projetos para o Módulo 6 foram verificados prontos. Um aviso
+real com escopo de projeto foi aceito com HTTP 200. Isso não comprova a
+apresentação na Central nem cria eventos de negócio artificiais em produção.
+CORS do Módulo 1 para Módulos 2/7 foi liberado; liberação recíproca é externa.
+
+Inspeção dos arquivos candidatos não encontrou credenciais reais ou arquivos
+locais protegidos rastreados. Links Markdown locais e `git diff --check` passaram.
+Produto e evidências publicadas não dependem de planos privados.
+
+As seções abaixo são históricas: seus estados de IA/e-mail, versões e limites
+descrevem a data registrada, e não substituem o aceite final acima.
+
+## Histórico — preparação da versão 0.5.0 — 01/11/2026
 
 A suíte completa executou **152 testes aprovados, sem skips, em 181,392 s**,
 usando `.venv/Scripts/python.exe -m unittest discover -s tests -v`. Os três

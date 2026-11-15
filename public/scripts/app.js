@@ -89,7 +89,10 @@ function hideMainViews() {
   for (const id of ["login-view", "register-view", "profile-view"]) byId(id).hidden = true;
 }
 const workspace = createWorkspaceController({ clients, account, session, getIdentity: () => identity,
-  onEnter: hideMainViews, onBack: () => { byId("profile-view").hidden = false; byId("profile-title").focus(); },
+  onEnter: hideMainViews, onBack: project => {
+    if (project) { projects.open(); return; }
+    byId("profile-view").hidden = false; byId("profile-title").focus();
+  },
   onUnauthorized: () => endSession("Sua sessão terminou. Entre novamente para continuar.") });
 const publicAuth = createPublicAuthController({ client: clients.identity, account, onEnter: () => { workspace.clear(); hideMainViews(); },
   onBack: () => endSession(), onIdentity: renderIdentity });
