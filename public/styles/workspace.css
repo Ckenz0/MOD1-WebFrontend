@@ -32,8 +32,14 @@ main:has(#workspace-view:not([hidden])) > .access-check, main:has(#recovery-view
 #project-search-form .field { flex: 1 1 145px; min-width: 0; }
 .workspace-secret textarea { width: 100%; min-height: 110px; font-family: var(--font-mono); }
 .workspace-panel button:focus-visible { outline: 2px solid var(--color-primary-hover); outline-offset: 3px; }
+.module4-text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; max-width: 75ch; }
+.module4-finding { margin-block: var(--space-md); }
+.module4-finding h3 { font-size: var(--text-sm); overflow-wrap: anywhere; }
+.module4-form .check-field { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-content: start; padding-block-start: 26px; }
+.module4-form .check-field .field-hint { grid-column: 2; margin: 0; }
 @media (max-width: 680px) {
   .workspace-panel { padding: var(--space-sm); border-radius: var(--radius-control); }
   .workspace-form, .workspace-details, .workspace-board { grid-template-columns: minmax(0, 1fr); }
   .workspace-panel .projects-heading { align-items: flex-start; flex-direction: column; }
+  .module4-form .check-field { padding-block-start: 0; }
 }

@@ -1,7 +1,6 @@
-# Situação das histórias de usuário — fechamento de 15/11/2026
+# Situação das histórias de usuário — integração de 16/11/2026
 
-A matriz contém **100 histórias distintas: 99 implementadas com evidências de
-testes e 1 dependente de contrato externo (US-096)**. US-101 repete US-009 e não
+A matriz contém **100 histórias distintas implementadas com evidências de testes**. US-101 repete US-009 e não
 entra novamente na contagem. A coluna de auditoria inicial é histórica:
 30 implementadas, 13 parciais e 57 pendentes antes da implementação atual.
 
@@ -27,12 +26,21 @@ respostas probabilísticas. Cada API mantém seu schema e a arquitetura multicam
 - CORS dos frontends informados pelos Módulos 2 e 7 foi liberado nas três APIs.
   CORS nas APIs de outros grupos continua sob responsabilidade deles.
 
-## Dependência externa que permanece aberta
+## Code Review — US-096 integrada
 
-US-096 aguarda o contrato real do produtor de eventos de revisão de código.
-O ingresso local tem autenticação dedicada, Bearer, escopo, mapeamento,
-versão/idempotência e testes, mas está desabilitado até validar esse contrato.
-O número/equipe do produtor não foi confirmado; não foi inventado acordo.
+O Módulo 4 foi identificado e seu contrato autenticado foi conferido. Backlog
+chama `POST /api/analisar` com Basic privado e vincula o resultado ao item.
+Após análise válida, somente “A fazer” avança para “Em andamento”; itens já
+iniciados/concluídos preservam o status e a conclusão permanece manual.
+Essa regra foi aprovada pelo responsável pelo Módulo 1.
+
+Há histórico local por item, pedidos idempotentes, checagem de acesso/versão
+após HTTP e tratamento de resultados incertos sem reenvio automático. O ingresso
+antigo de eventos continua desabilitado e separado; não foi inventado callback.
+O fluxo real passou com três APIs temporárias e o serviço M4: HTTP201, um POST
+nessa rodada, status iniciado, replay sem segunda análise e persistência após
+reinício. Nenhuma entidade de negócio de produção ou comentário GitHub foi
+criado por esse aceite. [Contrato e interface](module4-reviews.md).
 
 ## Matriz de rastreabilidade
 
@@ -133,7 +141,7 @@ O número/equipe do produtor não foi confirmado; não foi inventado acordo.
 | US-093 | Reordenar tarefas por drag and drop. | Pendente | Implementada e testada | Backlog: `item_service.py`, `item_repository.py`, `tests/test_expanded_items.py`, `test_expanded_api.py`; Frontend: `planning-domain.js`, `workspace-controller.js`, `tests/test_advanced_real_api.py`. Drag and drop e botões; ordem canônica completa, limite de 100 itens no controle da interface. |
 | US-094 | Visualizar tarefas ordenadas por prioridade. | Implementada | Implementada e testada | Backlog: `item_service.py`, `item_repository.py`, `tests/test_expanded_items.py`, `test_expanded_api.py`; Frontend: `planning-domain.js`, `workspace-controller.js`, `tests/test_advanced_real_api.py`. |
 | US-095 | Buscar itens por ID ou palavras em título/descrição. | Implementada | Implementada e testada | Backlog: `item_service.py`, `item_repository.py`, `tests/test_expanded_items.py`, `test_expanded_api.py`; Frontend: `planning-domain.js`, `workspace-controller.js`, `tests/test_advanced_real_api.py`. |
-| US-096 | Atualizar status automaticamente por integração com módulo de revisão de código. | Pendente | Bloqueada por contrato externo | Backlog: `review_service.py`, `review_auth.py`, `tests/test_review_api.py`, `test_review_events.py`; ver `docs/code-review-proposal.md`. Não representa compatibilidade com o produtor externo. |
+| US-096 | Atualizar status automaticamente por integração com módulo de revisão de código. | Pendente | Implementada; Módulo 4 real validado | Backlog: `module4_service.py`, `module4_repository.py`, `module4_routes.py`, `tests/test_module4_api.py`, `tests/test_module4_postgresql.py`; Frontend: `tests/test_module4_ui.py`, `tests/test_module4_real_api.py`. Regra aprovada: análise válida inicia somente itens a fazer, sem conclusão automática. Aceite real com idempotência e persistência. |
 | US-097 | Registrar dependências entre itens. | Pendente | Implementada e testada | Backlog: `item_service.py`, `item_repository.py`, `tests/test_expanded_items.py`, `test_expanded_api.py`; Frontend: `planning-domain.js`, `workspace-controller.js`, `tests/test_advanced_real_api.py`. |
 | US-098 | Marcar item bloqueado com motivo. | Pendente | Implementada e testada | Backlog: `item_service.py`, `item_repository.py`, `tests/test_expanded_items.py`, `test_expanded_api.py`; Frontend: `planning-domain.js`, `workspace-controller.js`, `tests/test_advanced_real_api.py`. |
 | US-099 | Consultar histórico de mudanças da história. | Pendente | Implementada e testada | Backlog: `item_service.py`, `item_repository.py`, `tests/test_expanded_items.py`, `test_expanded_api.py`; Frontend: `planning-domain.js`, `workspace-controller.js`, `tests/test_advanced_real_api.py`. |

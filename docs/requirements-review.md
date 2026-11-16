@@ -16,8 +16,8 @@ entrega reportada pelo provedor para o destinatário autorizado; não inspeciono
 manualmente sua caixa nem alterou contas de produção. Veja
 [email-acceptance.md](email-acceptance.md).
 
-Gemini real está configurado nas três APIs. O contrato efetivo do produtor de
-revisão de código permanece como dependência externa. Backlog e Projetos enviam
+Gemini real está configurado nas três APIs. O Code Review do Módulo 4 está integrado pelo Backlog, com
+regra explícita de início do item e conclusão manual. Backlog e Projetos enviam
 os eventos mapeados à API do Módulo 6; um aviso real de teste foi aceito com
 HTTP 200, sem inspeção visual da Central. Sprints e exclusão individual de
 histórias não fazem parte desta entrega. A [matriz de US](backlog-status.md),

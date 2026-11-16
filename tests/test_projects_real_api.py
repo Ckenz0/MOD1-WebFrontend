@@ -48,6 +48,7 @@ class ProjectsRealApiTests(BrowserCase):
             JWT_ISSUER='mod1-auth-local', JWT_AUDIENCE='engenharia-software-api',
             JWKS_URL=self.auth_url+'/.well-known/jwks.json', AUTH_API_BASE_URL=self.auth_url,
             AUTH_SESSION_CHECK_ENABLED='true', CORS_ORIGINS=json.dumps([self.base_url]))
+        self.projects_env.update(self.additional_projects_settings())
         self.auth_process = self.projects_process = None
         self.addCleanup(lambda: self.stop(self.auth_process))
         self.addCleanup(lambda: self.stop(self.projects_process))
@@ -64,6 +65,9 @@ class ProjectsRealApiTests(BrowserCase):
         self.server.projects_api_url = self.projects_url
 
     def additional_auth_settings(self):
+        return {}
+
+    def additional_projects_settings(self):
         return {}
 
     def admin(self, python, cwd, env, script):
