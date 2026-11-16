@@ -2,6 +2,8 @@ import { PlatformApiError } from "./api-errors.js";
 import { PERMISSIONS, PERMISSION_NAMES, ROLE_NAMES } from "./permissions.js";
 import { projectDetails, itemDraft, listValues, decimalValue, PROJECT_STATUSES, MOSCOW, ITEM_KINDS, ITEM_STATUSES } from "./planning-domain.js";
 import { el, action, section, form, rows, details, secret, textDate } from "./workspace-view.js";
+import { module4Draft, isModule4Record, isModule4Page } from "./module4-domain.js";
+import { module4Form, module4Record } from "./module4-view.js";
 
 const roleOptions = { product_owner: "Product Owner", project_manager: "PM/Scrum Master", developer: "Desenvolvedor" };
 const pageItems = value => Array.isArray(value) ? value : value?.items || [];
@@ -20,6 +22,8 @@ export function createWorkspaceController({ clients, account, session, getIdenti
   root.append(header, navigation, notice, content); document.getElementById("main").append(root);
   let generation = 0, controller = null, busy = false, mode = "", tab = "", project = null, selectedTeam = null, selectedItem = null;
   let roleCatalog = [], itemPage = [], boardVersion = 0, itemQuery = {}, adminQuery = "", teamQuery = "";
+  const reviewAttempts = new Map();
+  const unresolvedReviews = new Map();
   const key = () => session.getSessionId() || session.getRequestToken();
   const own = () => Boolean(project && project.owner_id === getIdentity()?.id);
   const can = permission => Boolean(project?.permissions?.includes(permission) || own());
@@ -37,6 +41,8 @@ export function createWorkspaceController({ clients, account, session, getIdenti
   function clear() {
     invalidate(); root.hidden = true; content.replaceChildren(); navigation.replaceChildren();
     project = selectedTeam = selectedItem = null; roleCatalog = []; itemPage = []; status();
+    reviewAttempts.clear();
+    unresolvedReviews.clear();
   }
   async function run(work, successText = "") {
     if (busy || root.hidden) return;
@@ -46,11 +52,13 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     setBusy(true); status("Carregando…");
     async function request(service, method, path, body, options = {}) {
       const token = await account.accessToken({ signal });
+      if (!valid()) throw new PlatformApiError("cancelled");
       const value = await clients[service].request(method, path, token, body, { signal, ...options });
       if (!valid()) throw new PlatformApiError("cancelled");
       return value;
     }
-    try { await work(request); if (valid()) status(successText); }
+    const assertCurrent = () => { if (!valid()) throw new PlatformApiError("cancelled"); };
+    try { await work(request, { signal, assertCurrent }); if (valid()) status(successText); }
     catch (error) {
       if (!valid() || error.kind === "cancelled") return;
       if (error.kind === "unauthorized") { clear(); onUnauthorized(); return; }
@@ -509,6 +517,7 @@ export function createWorkspaceController({ clients, account, session, getIdenti
       "Responsável": item.assignee_available === false ? `${item.assignee_id} · indisponível` : item.assignee_id, "Autor": item.created_by, "Épico": item.epic_id, "História vinculada": item.parent_story_id,
       "Situação": ITEM_STATUSES[item.status], "Bloqueio": item.is_blocked ? item.blocked_reason : "Sem bloqueio", "Criado em": textDate(item.created_at), "Atualizado em": textDate(item.updated_at) }));
     if (can("backlog:update") && !project.archived && ["active", "planned", undefined].includes(project.status)) panel.append(action("Editar item", () => itemEditor(item)));
+    if (can("backlog:read")) panel.append(action("Revisões de código", () => go("code-reviews", renderCodeReviews)));
     if (canWrite("backlog:update_status")) {
       const statusForm = form("item-status", [{ name: "status", label: "Nova situação do item", type: "select", options: ITEM_STATUSES, value: item.status }], "Atualizar situação do item", values => changeItemStatus(item, values.status)); panel.append(statusForm.node);
     }
@@ -520,6 +529,72 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     const history = await request("backlog", "GET", `/projects/${project.id}/items/${item.id}/history?limit=100&offset=0`);
     panel.append(section("Histórico do item"), auditRows(history), action("Voltar para o quadro", () => go("board", renderBoard))); content.replaceChildren(panel);
   }); }
+  function renderCodeReviews(offset = 0) { projectNavigation("board"); return run(request => loadCodeReviews(request, offset)); }
+  async function loadCodeReviews(request, offset = 0) {
+    const projectId = project.id, itemId = selectedItem.id;
+    await refreshProject(request); projectNavigation("board");
+    const path = `/projects/${projectId}/items/${itemId}/code-reviews`;
+    const page = await request("backlog", "GET", `${path}?limit=20&offset=${offset}`, undefined,
+      { validate: value => isModule4Page(value, projectId, itemId, offset) });
+    selectedItem = await request("backlog", "GET", `/projects/${projectId}/items/${itemId}`);
+    const attempt = reviewAttempts.get(itemId);
+    const stored = attempt && page.items.find(row => row.request_id === attempt.requestId);
+    const unresolved = unresolvedReviews.get(itemId) || new Set();
+    for (const row of page.items) {
+      if (["pending", "uncertain"].includes(row.status)) unresolved.add(row.request_id);
+      else unresolved.delete(row.request_id);
+    }
+    unresolvedReviews.set(itemId, unresolved);
+    if (stored && !["pending", "uncertain"].includes(stored.status)) reviewAttempts.delete(itemId);
+    else if (attempt?.uncertain) attempt.refreshed = true;
+    drawCodeReviews(page, offset);
+  }
+  function drawCodeReviews(page, offset = 0) {
+    const item = selectedItem, itemId = item.id, projectId = project.id;
+    const panel = section("Revisões de código", "Uma análise válida inicia apenas itens a fazer. A conclusão do item é sempre manual.");
+    panel.append(details({ "Item": item.title, "Situação atual": ITEM_STATUSES[item.status] }),
+      action("Atualizar revisões", () => renderCodeReviews(offset)), action("Voltar ao item", () => go("item-detail", renderItem)));
+    let attempt = reviewAttempts.get(itemId);
+    const unresolved = Boolean(unresolvedReviews.get(itemId)?.size);
+    if (attempt?.uncertain || unresolved) {
+      panel.append(el("p", "Resultado incerto. Consulte o histórico antes de solicitar outra análise.", { role: "status" }));
+      if (attempt?.requestId && !page.items.some(row => row.request_id === attempt.requestId)) panel.append(details({ "Solicitação": attempt.requestId }));
+      panel.append(el("p", "Uma nova análise pode duplicar trabalho já recebido pelo serviço. Não há reenvio automático.", { class: "field-hint" }));
+      if (offset === 0 && page.enabled && canWrite("backlog:update_status") && (!attempt?.uncertain || attempt.refreshed)) panel.append(action("Nova análise mesmo com risco de duplicidade", () => {
+        reviewAttempts.set(itemId, { requestId: crypto.randomUUID(), acknowledged: true }); drawCodeReviews(page, offset);
+      }));
+    }
+    const allowForm = offset === 0 && page.enabled && canWrite("backlog:update_status") && !attempt?.uncertain && (!unresolved || attempt?.acknowledged);
+    if (!page.enabled) panel.append(el("p", "Novas revisões estão desativadas. O histórico permanece disponível.", { class: "field-hint" }));
+    if (allowForm) {
+      if (!attempt) { attempt = { requestId: crypto.randomUUID() }; reviewAttempts.set(itemId, attempt); }
+      const editor = module4Form((values, files) => run(async (request, { assertCurrent }) => {
+        if (files.length > 20 || files.reduce((sum, file) => sum + file.size, 0) > 100000) throw new TypeError("Selecione até 20 arquivos, somando no máximo 100.000 bytes UTF-8.");
+        const arquivos = [];
+        for (const file of files) { const conteudo = await file.text(); assertCurrent(); arquivos.push({ caminho: file.webkitRelativePath || file.name, conteudo }); }
+        assertCurrent();
+        const draft = module4Draft({ ...values, arquivos, request_id: attempt.requestId, expected_version: item.version });
+        try {
+          await request("backlog", "POST", `/projects/${projectId}/items/${itemId}/code-reviews`, draft,
+            { timeout: 75000, validate: row => isModule4Record(row, projectId, itemId) });
+          reviewAttempts.delete(itemId);
+        } catch (error) {
+          if (!["network", "timeout", "unavailable", "invalid-response", "conflict"].includes(error.kind)) throw error;
+          attempt.uncertain = true; attempt.refreshed = false;
+          drawCodeReviews(page, offset);
+          try { await loadCodeReviews(request, 0); } catch (refreshError) {
+            if (["unauthorized", "forbidden", "cancelled"].includes(refreshError.kind)) throw refreshError;
+          }
+          return;
+        }
+        await loadCodeReviews(request, 0);
+      }));
+      panel.append(editor.node);
+    }
+    if (!page.items.length) panel.append(el("p", "Nenhuma revisão registrada para este item.", { class: "projects-empty" }));
+    for (const row of page.items) panel.append(module4Record(row));
+    panel.append(pagination(page, next => renderCodeReviews(next))); content.replaceChildren(panel);
+  }
   function itemEditor(item = null) {
     const panel = section(item ? "Editar item de backlog" : "Novo item de backlog", "Use o formato orientado quando quiser registrar persona, ação e objetivo separadamente.");
     const values = item || {};

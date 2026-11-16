@@ -1,8 +1,8 @@
 # Integração com o módulo 1
 
 Este guia reúne os endereços e o contrato para integrar os outros módulos.
-Em 15/11/2026 foram conferidos frontend 0.6.0, Identidade 0.5.0, Projetos 0.6.0
-e Backlog 0.5.0. Os endereços abaixo são os destinos de produção. As evidências
+A entrega de 16/11/2026 usa frontend 0.7.0, Identidade 0.5.0, Projetos 0.6.0
+e Backlog 0.6.0. As referências de 15/11 abaixo preservam o registro histórico. Os endereços abaixo são os destinos de produção. As evidências
 e seus limites estão em [verification.md](verification.md); `/release.json`
 identifica o SHA do frontend efetivamente implantado.
 
@@ -97,8 +97,8 @@ automaticamente uma gravação cujo resultado ficou incerto.
 
 Gemini real e Resend estão configurados nas APIs. Os links reais de confirmação
 e recuperação foram validados em ambiente isolado, com entrega reportada pelo
-Resend. O contrato efetivo de eventos com o produtor de revisão de código
-permanece pendente e desabilitado; a proposta local não comprova compatibilidade.
+Resend. O Módulo 4 está integrado por análise síncrona via Backlog; a proposta
+legada de eventos permanece desabilitada. [Contrato atual](module4-reviews.md).
 
 ## Registro da entrega
 
@@ -121,3 +121,13 @@ com seus limites. Esta tabela registra a publicação verificada, não cada comm
 posterior de testes/documentação.
 Os testes de exclusão de projetos foram executados localmente; nenhuma exclusão
 de dados de produção foi usada para validar esta entrega.
+
+## Code Review pelo Módulo 1
+
+Use as rotas de revisões do Backlog com o mesmo Bearer do usuário. A senha
+Basic do Módulo 4 nunca é repassada ao frontend ou aos consumidores.
+`GET /projects/{project_id}/items/{item_id}/code-reviews` lista o histórico local
+autorizado; `POST` no mesmo caminho solicita análise de PR ou arquivos Python,
+com `request_id` e `expected_version`. Não espelhe o histórico global do M4.
+Resultados incertos devem ser consultados antes de qualquer nova análise;
+não repita POST automaticamente. [Campos e limites](module4-reviews.md).

@@ -1,4 +1,4 @@
-# Fluxos da versão 0.6.0
+# Fluxos da versão 0.7.0
 
 Os quatro repositórios usam microsserviços com arquitetura interna multicamadas.
 A versão 0.6.0 foi publicada em 15/11/2026. As evidências de integração local e
@@ -48,8 +48,9 @@ continua exigindo o segundo fator quando estiver ativo.
   Recomendações de revogação exigem uma janela completa observada (30 dias por
   padrão, configurável na solicitação), excluem proprietário/solicitante e
   precisam de aprovação humana. Uso recente invalida uma proposta antiga.
-- Integração com revisão de código depende do contrato do outro grupo; o contrato
-  local proposto não prova compatibilidade com esse produtor.
+- Revisões de código usam a API real do Módulo 4 pelo Backlog. Uma análise
+  válida inicia somente itens a fazer; não significa merge nem conclusão.
+  Veja [contrato e interface](module4-reviews.md).
 - O editor exige referências por identificador para épicos, responsáveis e
   dependências; o servidor valida escopo e permissões. Não inventa candidatos.
 - Ordenação manual exige um conjunto canônico completo, com limite de 100 itens

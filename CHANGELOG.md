@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.7.0 — integração com Code Review, 16/11/2026
+
+- Revisões de código por item, com PR ou arquivos Python, arquitetura e IA
+  opcional; credenciais do Módulo 4 permanecem somente no backend.
+- Análise válida inicia apenas itens “A fazer”; a conclusão continua manual.
+- Relatórios, achados e estado da IA exibidos em texto seguro, com histórico
+  restrito ao item/projeto e persistência após reinício.
+- Pedidos idempotentes, recuperação após conflito e proteção contra reenvio de
+  resultados incertos, inclusive ao navegar entre páginas do histórico.
+- Aceite com três APIs temporárias/provedor controlado e cenário real do
+  Módulo 4; matriz de US atualizada para a regra aprovada.
+
 ## 0.6.1 — fechamento de 15/11/2026
 
 - Equipes consultáveis por leitores sem buscar alocações restritas; controles,

@@ -24,6 +24,7 @@ class BacklogRealApiTests(projects_real.ProjectsRealApiTests):
         self.backlog_env = dict(self.projects_env, DATABASE_SCHEMA='backlog',
             DATABASE_URL=f"sqlite:///{(Path(self.temp.name)/'backlog.db').as_posix()}",
             PROJECTS_API_BASE_URL=self.projects_url)
+        self.backlog_env.update(self.additional_backlog_settings())
         self.backlog_process = None
         self.addCleanup(lambda: self.stop(self.backlog_process))
         self.addCleanup(lambda: setattr(self.server, 'backlog_api_url', None))
@@ -36,6 +37,9 @@ class BacklogRealApiTests(projects_real.ProjectsRealApiTests):
         self.stop(self.projects_process)
         self.projects_process = self.start(self.projects_python, self.projects_root, self.projects_env,
             'projects_service.app:create_app', self.projects_port)
+
+    def additional_backlog_settings(self):
+        return {}
 
     def test_registration_project_stories_progress_restart_and_access_isolation(self):
         self.page.goto(self.base_url)

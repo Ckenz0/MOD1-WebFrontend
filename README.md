@@ -4,7 +4,7 @@ O frontend segue arquitetura multicamadas com apresentação, casos de uso,
 domínio e clientes HTTP separados. Componentes e fluxos reais estão em
 [Arquitetura](docs/architecture.md).
 
-## Recursos da versão 0.6.0
+## Recursos da versão 0.7.0
 
 Sessões persistentes no backend, renovação, bloqueio por tentativas, recuperação,
 confirmação de e-mail, MFA e administração global. Na conta, abra **Segurança e
@@ -19,8 +19,8 @@ responsáveis, bloqueios, dependências e ordenação por arraste ou teclado.
 Veja [guia dos fluxos](docs/local-user-stories.md),
 [situação das US](docs/backlog-status.md) e [validação](docs/verification.md).
 Gemini real está configurado nos três serviços; simulação continua identificada
-quando escolhida no desenvolvimento. O contrato externo de revisão permanece
-pendente. Resend usa domínio verificado `ckenzo.me`; confirmação e reset por
+quando escolhida no desenvolvimento. O Code Review está integrado ao Módulo 4 pelo backend, com histórico por item
+e conclusão manual. Resend usa domínio verificado `ckenzo.me`; confirmação e reset por
 links reais passaram em ambiente isolado com entrega reportada pelo provedor.
 Veja [aceite de e-mail](docs/email-acceptance.md) para escopo e reprodução.
 
@@ -50,7 +50,7 @@ limitado também pela expiração do vínculo. O Resend fica somente no backend 
 Identidade; envio a outros destinatários exige remetente/domínio autorizado.
 
 Criar conta, entrar, organizar projetos e acompanhar histórias priorizadas até a
-conclusão continua sendo o fluxo principal. Versão SemVer `0.6.1` em
+conclusão continua sendo o fluxo principal. Versão SemVer `0.7.0` em
 [VERSION](VERSION), com correções finais de permissões/navegação; alterações em
 [CHANGELOG.md](CHANGELOG.md). A versão no arquivo não comprova deploy.
 
@@ -137,7 +137,7 @@ Em banco de Projetos anterior, executar a migração administrativa explícita
 conforme o README desse backend. Nenhuma tela executa migração ou concede acesso.
 Status/etiquetas, equipes, papéis personalizados, recuperação, MFA e MoSCoW foram
 acrescentados desde essa base. Gemini real está configurado nas três APIs;
-o contrato externo de revisão de código continua pendente. Consulte a
+o Code Review do Módulo 4 está integrado com a regra aprovada de início de trabalho. Consulte a
 [matriz de US](docs/backlog-status.md) e a [validação](docs/verification.md).
 
 Falha de rede não equivale a acesso negado. Se POST/PATCH tiver sucesso e a recarga
