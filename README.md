@@ -4,7 +4,7 @@ O frontend segue arquitetura multicamadas com apresentação, casos de uso,
 domínio e clientes HTTP separados. Componentes e fluxos reais estão em
 [Arquitetura](docs/architecture.md).
 
-## Recursos da versão 0.7.0
+## Recursos da versão 0.8.0
 
 Sessões persistentes no backend, renovação, bloqueio por tentativas, recuperação,
 confirmação de e-mail, MFA e administração global. Na conta, abra **Segurança e
@@ -15,6 +15,10 @@ No projeto, **Gerenciar projeto e planejamento** reúne contexto/orçamento/data
 ciclo de vida, equipes, papéis personalizados, concessões por papel e histórico.
 O quadro oferece histórias/épicos/tarefas, campos orientados, MoSCoW, esforço,
 responsáveis, bloqueios, dependências e ordenação por arraste ou teclado.
+
+**Curadoria** carrega o feed de tecnologia e pesquisa artigos sob solicitação
+explícita pela API de Projetos. Recomendações de treinamento com tópicos
+preenchem uma pergunta editável. Veja [Curadoria no projeto](docs/module5-curation.md).
 
 Veja [guia dos fluxos](docs/local-user-stories.md),
 [situação das US](docs/backlog-status.md) e [validação](docs/verification.md).
@@ -50,8 +54,8 @@ limitado também pela expiração do vínculo. O Resend fica somente no backend 
 Identidade; envio a outros destinatários exige remetente/domínio autorizado.
 
 Criar conta, entrar, organizar projetos e acompanhar histórias priorizadas até a
-conclusão continua sendo o fluxo principal. Versão SemVer `0.7.0` em
-[VERSION](VERSION), com correções finais de permissões/navegação; alterações em
+conclusão continua sendo o fluxo principal. Versão SemVer `0.8.0` em
+[VERSION](VERSION), com curadoria no projeto. Alterações em
 [CHANGELOG.md](CHANGELOG.md). A versão no arquivo não comprova deploy.
 
 HTML/CSS/JavaScript modular, sem dependências de produto ou build. Identidade visual
@@ -87,6 +91,7 @@ schemas/tabelas e migrações explícitas. Configure `AUTH_API_BASE_URL` em Proj
 e Backlog, `PROJECTS_API_BASE_URL` no Backlog e `BACKLOG_API_BASE_URL` em Projetos.
 Preserve verificação online habilitada. Configure CORS nas três APIs para `http://127.0.0.1:5173` e inicie
 os serviços em terminais próprios. Use as instruções de instalação de cada repositório.
+Para Curadoria, use a API de Projetos 0.7.0 com a integração configurada nesse serviço.
 
 Na raiz do frontend, com Python instalado:
 

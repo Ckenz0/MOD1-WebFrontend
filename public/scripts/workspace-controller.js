@@ -4,8 +4,12 @@ import { projectDetails, itemDraft, listValues, decimalValue, PROJECT_STATUSES, 
 import { el, action, section, form, rows, details, secret, textDate } from "./workspace-view.js";
 import { module4Draft, isModule4Record, isModule4Page } from "./module4-domain.js";
 import { module4Form, module4Record } from "./module4-view.js";
+import { curationDraft, isCurationResult, trainingQuestion } from "./module5-domain.js";
+import { curationForm, curationResults } from "./module5-view.js";
 
 const roleOptions = { product_owner: "Product Owner", project_manager: "PM/Scrum Master", developer: "Desenvolvedor" };
+const CURATION_TIMEOUT = 70000;
+const CURATION_DENIED = "Você não tem permissão para acessar a curadoria deste projeto.";
 const pageItems = value => Array.isArray(value) ? value : value?.items || [];
 const identityLabel = value => value.display_name || value.user_id || value.id;
 const roleLabel = key => ROLE_NAMES[key] || key;
@@ -36,20 +40,28 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     && (kind !== "teams" || can("project:teams:manage"));
 
   function status(text = "", error = false) { notice.textContent = text; notice.hidden = !text; notice.dataset.tone = error ? "error" : "notice"; }
-  function setBusy(value) { busy = value; root.setAttribute("aria-busy", String(value)); for (const button of root.querySelectorAll("button")) button.disabled = value; }
-  function invalidate() { generation += 1; controller?.abort(); controller = null; busy = false; }
+  function setBusy(value, manageButtons = true) {
+    busy = value;
+    if (!manageButtons) return;
+    root.setAttribute("aria-busy", String(value));
+    for (const button of root.querySelectorAll("button")) button.disabled = value;
+  }
+  function invalidate() {
+    generation += 1; controller?.abort(); controller = null; busy = false;
+    if (tab === "curation") content.replaceChildren();
+  }
   function clear() {
     invalidate(); root.hidden = true; content.replaceChildren(); navigation.replaceChildren();
-    project = selectedTeam = selectedItem = null; roleCatalog = []; itemPage = []; status();
+    project = selectedTeam = selectedItem = null; tab = ""; roleCatalog = []; itemPage = []; status();
     reviewAttempts.clear();
     unresolvedReviews.clear();
   }
-  async function run(work, successText = "") {
+  async function run(work, successText = "", { inlineStatus = false } = {}) {
     if (busy || root.hidden) return;
     const current = generation, sessionKey = key();
     controller = new AbortController(); const signal = controller.signal;
     const valid = () => current === generation && !root.hidden && key() === sessionKey;
-    setBusy(true); status("Carregando…");
+    setBusy(true, !inlineStatus); status(inlineStatus ? "" : "Carregando…");
     async function request(service, method, path, body, options = {}) {
       const token = await account.accessToken({ signal });
       if (!valid()) throw new PlatformApiError("cancelled");
@@ -63,7 +75,7 @@ export function createWorkspaceController({ clients, account, session, getIdenti
       if (!valid() || error.kind === "cancelled") return;
       if (error.kind === "unauthorized") { clear(); onUnauthorized(); return; }
       status(error instanceof Error ? error.message : "Não foi possível concluir. Tente novamente.", true);
-    } finally { if (valid()) { controller = null; setBusy(false); } }
+    } finally { if (valid()) { controller = null; setBusy(false, !inlineStatus); } }
   }
   function show(title, description, tabs, active) {
     heading.textContent = title; scope.textContent = description;
@@ -299,6 +311,7 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     if (can("project:members:read")) tabs.push(["roles", "Papéis e acessos", () => go("roles", renderRoles)]);
     if (can("project:audit:read")) tabs.push(["history", "Histórico", () => go("history", renderProjectHistory)]);
     if (can("project:members:manage")) tabs.push(["recommendations", "Recomendações", () => go("recommendations", () => renderRecommendations("projects"))]);
+    if (can("project:read")) tabs.push(["curation", "Curadoria", () => go("curation", renderCuration)]);
     show(project?.name || "Projeto", "Contexto, planejamento e colaboração do projeto.", tabs, active);
   }
   async function refreshProject(request) { project = await request("projects", "GET", `/projects/${project.id}`); return project; }
@@ -624,6 +637,67 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     panel.append(editor.node, action("Cancelar edição do item", () => panel.remove())); content.prepend(panel); editor.inputs.title.focus();
   }
 
+  async function requestCuration(request, method, path, body) {
+    const result = await request("projects", method, path, body, { timeout: CURATION_TIMEOUT });
+    if (!isCurationResult(result)) throw new PlatformApiError("invalid-response");
+    return result;
+  }
+
+  function renderCuration(question = "") {
+    if (!can("project:read")) return;
+    projectNavigation("curation");
+    const base = `/projects/${project.id}/curation`;
+    const panel = section("Curadoria"), title = panel.firstElementChild;
+    const feed = curationResults("Feed de tecnologia", "Nenhum artigo disponível no feed.");
+    const search = curationResults("Resultados da pesquisa", "Nenhum artigo encontrado para esta pergunta.");
+    const editor = curationForm(question, value => run(async (request, { assertCurrent }) => {
+      const draft = curationDraft(value);
+      editor.searching(true);
+      search.message("Buscando artigos…");
+      try {
+        const result = await requestCuration(request, "POST", base + "/queries", draft);
+        search.show(result);
+      } catch (error) {
+        assertCurrent();
+        if (["unauthorized", "cancelled"].includes(error.kind)) throw error;
+        if (["network", "timeout", "unavailable", "invalid-response"].includes(error.kind)) {
+          search.message("A consulta pode ter sido registrada pelo Módulo 5. Nenhum resultado foi confirmado. Envie novamente apenas se desejar repetir a consulta.");
+        } else {
+          search.message(error.kind === "forbidden" ? CURATION_DENIED : error.message);
+        }
+      } finally {
+        assertCurrent();
+        editor.searching(false);
+      }
+    }, "", { inlineStatus: true }));
+
+    panel.append(search.node, feed.node);
+    content.replaceChildren(panel);
+    title.tabIndex = -1;
+    title.focus();
+    feed.message("Carregando feed…");
+    return run(async (request, { assertCurrent }) => {
+      try {
+        const result = await requestCuration(request, "GET", base + "/feed");
+        if (!result.enabled) {
+          feed.message("A curadoria está desativada.");
+          return;
+        }
+        feed.show(result);
+      } catch (error) {
+        assertCurrent();
+        if (["unauthorized", "cancelled"].includes(error.kind)) throw error;
+        if (["forbidden", "not-found"].includes(error.kind)) {
+          feed.message(CURATION_DENIED);
+          return;
+        }
+        feed.message("O feed está indisponível no momento.");
+      }
+      panel.insertBefore(editor.node, search.node);
+      if (question && document.activeElement === title) editor.focus();
+    }, "", { inlineStatus: true });
+  }
+
   function renderRecommendations(service) {
     if (service === "identity") adminNavigation("anomalies"); else projectNavigation("recommendations");
     return run(async request => {
@@ -671,6 +745,10 @@ export function createWorkspaceController({ clients, account, session, getIdenti
       }
       panel.append(details(fields));
     }
+    const question = service === "projects" && can("project:read") ? trainingQuestion(proposal) : "";
+    if (question) {
+      panel.append(action("Buscar materiais de estudo", () => go("curation", () => renderCuration(question))));
+    }
     if (proposal.evidence?.length) panel.append(el("p", `Dados consultados: ${proposal.evidence.join(", ")}`, { class: "field-hint" }));
     if (proposal.status === "pending") {
       const decisions = el("div", null, { class: "form-actions" });
@@ -686,7 +764,7 @@ export function createWorkspaceController({ clients, account, session, getIdenti
   }
 
   function enter(nextMode) {
-    invalidate(); mode = nextMode; selectedTeam = selectedItem = null; status(); root.hidden = false;
+    invalidate(); mode = nextMode; tab = ""; selectedTeam = selectedItem = null; status(); root.hidden = false;
     back.textContent = nextMode === "project" ? "Voltar para projetos" : "Voltar para minha conta";
     back.setAttribute("aria-label", back.textContent); onEnter();
   }

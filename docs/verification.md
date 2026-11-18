@@ -1,4 +1,32 @@
-# Validação — Backlog 0.6.0 / Frontend 0.7.0
+# Validação do frontend
+
+## Aceite controlado do Módulo 5 — 18/11/2026
+
+O frontend 0.8.0 foi exercitado com as APIs temporárias de Identidade,
+Projetos 0.7.0 e Backlog e um provedor Módulo 5 em loopback. O navegador
+verificou que abrir o projeto não consulta o provedor, abrir **Curadoria**
+carrega o feed e cada clique explícito em **Buscar artigos** envia uma pesquisa.
+O provedor recebeu `GET /feed` sem Bearer e `POST /consultas` com o Bearer da
+sessão e somente `pergunta` no corpo. O teste confirmou lista de resultados,
+retorno vazio, `503` com aviso de resultado incerto, ausência de reenvio
+automático e igualdade do registro do projeto antes e depois.
+
+Os cenários de interface cobrem projeto arquivado, permissão de leitura,
+pré-preenchimento a partir de treinamento, limites da pergunta, links e texto
+seguros, integração desativada, fontes indisponíveis, truncamento, timeout,
+duplo envio, descarte de respostas antigas e encerramento por `401`. As
+capturas em 1366 px no tema claro e 390 px no escuro foram inspecionadas
+visualmente. Nenhuma largura apresentou rolagem horizontal na seção.
+
+A suíte completa do frontend com os três backends executou **197 testes em
+301,297 s, com 195 aprovações e 2 opt-ins ignorados**. Os opt-ins usam
+Resend e Gemini reais. A verificação da Curadoria usou exclusivamente
+serviços locais e contas descartáveis.
+
+Na API de Projetos, o CI do commit `ef233ea` aprovou 408 testes e ignorou
+11 opt-ins após a correção do prazo de DNS. O alcance dessa suíte inclui
+autorização e contrato das duas rotas, revalidação após comunicação externa
+e limites do adaptador. Veja [contrato e reprodução](module5-curation.md).
 
 ## Aceite do Módulo 4 — 16/11/2026
 

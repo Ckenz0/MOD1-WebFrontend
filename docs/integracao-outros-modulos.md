@@ -6,6 +6,10 @@ e Backlog 0.6.0. As referências de 15/11 abaixo preservam o registro histórico
 e seus limites estão em [verification.md](verification.md); `/release.json`
 identifica o SHA do frontend efetivamente implantado.
 
+A versão 0.8.0 usa a [curadoria da API de Projetos 0.7.0](module5-curation.md).
+O navegador acessa as duas rotas de curadoria pela origem de Projetos, com o
+Bearer atual e `project:read`. A integração externa é configurada nesse backend.
+
 | Componente | Endereço HTTPS |
 | --- | --- |
 | Frontend | https://green-river-02e44e810.2.azurestaticapps.net |

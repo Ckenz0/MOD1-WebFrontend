@@ -90,6 +90,19 @@ A autorização efetiva pertence aos servidores. Ocultar controles não concede
 nem comprova acesso. Backlog consulta permissões na API de Projetos com o mesmo
 Bearer; cada backend valida JWT usando sua configuração confiável.
 
+## Curadoria de tecnologia
+
+`module5-domain.js` valida a pergunta, o contrato de artigos e os links, e
+organiza os tópicos de treinamento em uma pergunta editável. `module5-view.js`
+exibe o formulário e as listas com os componentes do workspace.
+`workspace-controller.js` coordena o feed e a pesquisa pelo cliente de Projetos
+injetado e usa a sessão e o cancelamento do espaço de trabalho. Os estados de
+carregamento ficam na seção, preservando a navegação e o foco durante as
+requisições. O navegador espera até 70 s pela API de Projetos, cujo orçamento
+de comunicação com o Módulo 5 é de 60 s.
+
+Veja [Curadoria no projeto](module5-curation.md) para acompanhar os dois fluxos.
+
 ## Verificação e execução
 
 - `tests/test_layer_dependencies.py`: direção dos imports e proteção contra
