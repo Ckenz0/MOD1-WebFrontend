@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.8.0 — curadoria no projeto, 18/11/2026
+
+- Aba Curadoria com feed de tecnologia e pesquisa explícita de artigos,
+  disponível para quem tem `project:read`, inclusive em projetos arquivados.
+- Recomendações de treinamento com tópicos podem abrir uma pergunta editável.
+- Resultados com links HTTP(S) protegidos, estados de carregamento e falha,
+  indicação de fontes indisponíveis e limite de artigos por resposta.
+- O cliente cancela solicitações ao sair da seção. Depois de uma falha de
+  pesquisa, o usuário decide se envia a pergunta novamente.
+
 ## 0.7.0 — integração com Code Review, 16/11/2026
 
 - Revisões de código por item, com PR ou arquivos Python, arquitetura e IA

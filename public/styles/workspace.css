@@ -37,6 +37,14 @@ main:has(#workspace-view:not([hidden])) > .access-check, main:has(#recovery-view
 .module4-finding h3 { font-size: var(--text-sm); overflow-wrap: anywhere; }
 .module4-form .check-field { display: grid; grid-template-columns: 20px minmax(0, 1fr); align-content: start; padding-block-start: 26px; }
 .module4-form .check-field .field-hint { grid-column: 2; margin: 0; }
+.curation-results { margin-block: var(--space-md); overflow-wrap: anywhere; }
+.curation-results h3 { font-size: var(--text-md); margin-block: 0 var(--space-xs); }
+.curation-articles { list-style: none; margin: 0; padding: 0; }
+.curation-articles li { padding-block: var(--space-sm); border-block-end: 1px solid var(--color-border); }
+.curation-articles li .field-hint { margin-block-end: 0; }
+.curation-articles a { color: var(--color-text); text-underline-offset: .16em; }
+.curation-articles a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.curation-form button[aria-disabled="true"] { cursor: wait; opacity: .65; }
 @media (max-width: 680px) {
   .workspace-panel { padding: var(--space-sm); border-radius: var(--radius-control); }
   .workspace-form, .workspace-details, .workspace-board { grid-template-columns: minmax(0, 1fr); }
