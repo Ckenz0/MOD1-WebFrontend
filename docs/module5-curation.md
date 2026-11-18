@@ -24,9 +24,9 @@ do Módulo 1.
 
 As duas rotas recebem o Bearer pelo cabeçalho `Authorization`. Projetos solicita
 o feed externo sem Bearer. Na pesquisa externa, encaminha o Bearer no cabeçalho
-e somente a pergunta no corpo. A seção não lê ou altera o histórico de conversas
-do provedor nem muda os dados do projeto. Configuração e comunicação com o
-Módulo 5 ficam na API de Projetos.
+e somente a pergunta no corpo. O frontend não consulta nem edita conversas existentes.
+O Módulo 5 pode registrar a pergunta enviada. Os dados do projeto permanecem intactos.
+Configuração e comunicação com o Módulo 5 ficam na API de Projetos.
 
 Ambas retornam `enabled`, `artigos`, `total`, `categoria`, `fontes_consultadas`,
 `fontes_indisponiveis` e `truncated`. Cada artigo traz título, link, fonte,
