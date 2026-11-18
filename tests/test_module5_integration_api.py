@@ -190,6 +190,8 @@ class Module5IntegrationApiTests(real.BacklogRealApiTests):
             expect(self.page.get_by_label('Pergunta sobre tecnologia', exact=True)).to_be_editable()
             expect(self.page.get_by_role('button', name='Buscar artigos', exact=True)).to_be_enabled()
             expect(self.page.get_by_role('button', name='Contexto', exact=True)).to_be_enabled()
+            expect(self.page.get_by_role('button', name='Voltar para projetos', exact=True)).to_be_enabled()
+            expect(self.page.locator('#workspace-view')).to_have_attribute('aria-busy', 'false')
             self.assertTrue(self.page.evaluate('''() =>
                 document.documentElement.scrollWidth === window.innerWidth &&
                 Array.from(document.querySelectorAll('#workspace-view, #workspace-content form, #workspace-content ul'))

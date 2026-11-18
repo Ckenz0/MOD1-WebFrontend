@@ -14,12 +14,15 @@ automático e igualdade do registro do projeto antes e depois.
 Os cenários de interface cobrem projeto arquivado, permissão de leitura,
 pré-preenchimento a partir de treinamento, limites da pergunta, links e texto
 seguros, integração desativada, fontes indisponíveis, truncamento, timeout,
-duplo envio, descarte de respostas antigas e encerramento por `401`. As
+duplo envio, descarte de respostas antigas e encerramento por `401`.
+Abrir Curadoria durante a leitura de Contexto libera a navegação e mantém
+o carregamento restrito ao feed. O teste também confirma que uma resposta
+antiga de Contexto não libera os controles de uma requisição mais nova. As
 capturas em 1366 px no tema claro e 390 px no escuro foram inspecionadas
 visualmente. Nenhuma largura apresentou rolagem horizontal na seção.
 
-A suíte completa do frontend com os três backends executou **197 testes em
-301,297 s, com 195 aprovações e 2 opt-ins ignorados**. Os opt-ins usam
+A suíte completa do frontend com os três backends executou **198 testes em
+316,452 s, com 196 aprovações e 2 opt-ins ignorados**. Os opt-ins usam
 Resend e Gemini reais. A verificação da Curadoria usou exclusivamente
 serviços locais e contas descartáveis.
 

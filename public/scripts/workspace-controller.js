@@ -47,7 +47,8 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     for (const button of root.querySelectorAll("button")) button.disabled = value;
   }
   function invalidate() {
-    generation += 1; controller?.abort(); controller = null; busy = false;
+    generation += 1; controller?.abort(); controller = null;
+    setBusy(false, root.getAttribute("aria-busy") === "true");
     if (tab === "curation") content.replaceChildren();
   }
   function clear() {

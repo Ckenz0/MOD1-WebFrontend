@@ -24,6 +24,7 @@ class Module5UiTests(BrowserCase):
           window.article = (titulo, link = 'https://example.com/material', fonte = null) =>
             ({titulo,link,fonte,idioma:'pt',data_publicacao:'2026-11-18T12:00:00Z'});
           window.feed = result(); window.query = result(); window.signals = [];
+          window.pendingSummaries = [];
           const projects = {request: async (method,path,token,body,options) => {
             calls.push({method,path,token,body,timeout:options.timeout});
             if (path.includes('/curation/')) {
@@ -41,7 +42,12 @@ class Module5UiTests(BrowserCase):
               if (options.validate && !options.validate(value)) throw new PlatformApiError('invalid-response');
               return value;
             }
-            if (path.endsWith('/summary')) return {teams:[]};
+            if (path.endsWith('/summary')) {
+              if (window.holdSummary) {
+                return new Promise(resolve => {pendingSummaries.push({resolve, signal:options.signal});});
+              }
+              return {teams:[]};
+            }
             if (path.includes('/recommendations?')) return {items:[
               {id:'training',kind:'training',status:'approved',summary:'Formação em testes',
                 suggestions:[{user_id:'private-person-id',topics:['Testes de contrato','HTTP']}]},
@@ -187,6 +193,42 @@ class Module5UiTests(BrowserCase):
         self.assertTrue(self.evaluate('()=>signals[0].aborted'))
         expect(self.page.get_by_role('heading', name='Projeto B', exact=True)).to_be_visible()
         expect(self.page.get_by_text('Resultado do projeto anterior', exact=True)).to_have_count(0)
+
+    def test_curation_releases_context_loading_and_late_context_cannot_unlock_a_new_load(self):
+        self.open_project()
+        workspace = self.page.locator('#workspace-view')
+        back = self.page.get_by_role('button', name='Voltar para projetos', exact=True)
+        context = self.page.get_by_role('button', name='Contexto', exact=True)
+        self.evaluate('()=>{window.holdSummary=true;window.holdFeed=true;}')
+        context.click()
+        self.page.wait_for_function('window.pendingSummaries.length === 1')
+        expect(workspace).to_have_attribute('aria-busy', 'true')
+        expect(back).to_be_disabled()
+
+        self.open_curation()
+        self.page.wait_for_function('Boolean(window.finishFeed)')
+        expect(self.page.get_by_text('Carregando feed…', exact=True)).to_be_visible()
+        self.assertTrue(self.evaluate('()=>pendingSummaries[0].signal.aborted'))
+        expect(workspace).to_have_attribute('aria-busy', 'false')
+        expect(back).to_be_enabled()
+        self.evaluate("()=>{window.finishFeed(result());}")
+        expect(self.question).to_be_editable()
+        expect(workspace).to_have_attribute('aria-busy', 'false')
+        expect(back).to_be_enabled()
+
+        context.click()
+        self.page.wait_for_function('window.pendingSummaries.length === 2')
+        self.evaluate('''async ()=>{
+          pendingSummaries[0].resolve({teams:[{name:'Equipe de resposta obsoleta'}]});
+          await new Promise(resolve=>requestAnimationFrame(resolve));
+        }''')
+        expect(workspace).to_have_attribute('aria-busy', 'true')
+        expect(back).to_be_disabled()
+        self.evaluate("()=>{pendingSummaries[1].resolve({teams:[{name:'Equipe atual'}]});}")
+        expect(self.page.get_by_text('Equipe atual', exact=True)).to_be_visible()
+        expect(self.page.get_by_text('Equipe de resposta obsoleta', exact=True)).to_have_count(0)
+        expect(workspace).to_have_attribute('aria-busy', 'false')
+        expect(back).to_be_enabled()
 
     def test_session_change_discards_an_in_flight_query_result(self):
         self.open_project()
