@@ -10,12 +10,14 @@ IMPORT = re.compile(r'''(?:\bfrom\s*|\bimport\s*(?:\(\s*)?)["'](\.[^"']+)["']'''
 DOMAIN = {
     'session.js', 'permissions.js', 'auth-domain.js', 'project-domain.js',
     'story-domain.js', 'validation-rules.js', 'collaboration-domain.js', 'api-errors.js', 'planning-domain.js', 'module4-domain.js',
+    'module5-domain.js',
 }
 APPLICATION = {'account-application.js', 'workspace-application.js', 'session-application.js'}
 INFRASTRUCTURE = {'api.js', 'projects-api.js', 'backlog-api.js', 'service-readiness.js', 'platform-api.js'}
 PRESENTATION = {
     'validation.js', 'projects.js', 'backlog.js', 'collaboration.js', 'professional-profile.js',
     'workspace-controller.js', 'workspace-view.js', 'public-auth-controller.js', 'module4-view.js',
+    'module5-view.js',
 }
 
 
