@@ -1,10 +1,12 @@
 # Integração com o módulo 1
 
 Este guia reúne os endereços e o contrato para integrar os outros módulos.
-A entrega de 16/11/2026 usa frontend 0.7.0, Identidade 0.5.0, Projetos 0.6.0
-e Backlog 0.6.0. As referências de 15/11 abaixo preservam o registro histórico. Os endereços abaixo são os destinos de produção. As evidências
-e seus limites estão em [verification.md](verification.md); `/release.json`
-identifica o SHA do frontend efetivamente implantado.
+O código implantado até 22/11/2026 usa frontend 0.8.0, Identidade 0.5.0,
+Projetos 0.7.0 e Backlog 0.6.0. As referências de 15/11 abaixo preservam o
+registro histórico. Os endereços abaixo são os destinos de produção, sujeitos
+ao bloqueio operacional descrito a seguir. As evidências e seus limites estão
+em [verification.md](verification.md); `/release.json` identifica o SHA do
+frontend efetivamente implantado.
 
 A versão 0.8.0 usa a [curadoria da API de Projetos 0.7.0](module5-curation.md).
 O navegador acessa as duas rotas de curadoria pela origem de Projetos, com o
@@ -16,6 +18,28 @@ Bearer atual e `project:read`. A integração externa é configurada nesse backe
 | Identidade | https://mod1-auth.whitemeadow-deba1090.brazilsouth.azurecontainerapps.io |
 | Projetos | https://mod1-projects.whitemeadow-deba1090.brazilsouth.azurecontainerapps.io |
 | Backlog | https://mod1-backlog.whitemeadow-deba1090.brazilsouth.azurecontainerapps.io |
+
+## Disponibilidade e banco de dados — 22/11/2026
+
+O PostgreSQL no Neon está recusando as conexões das três APIs por cota excedida.
+Isso impede o aceite funcional em produção, incluindo login e operações que
+dependem do banco, mesmo com o código implantado. As novas releases de Projetos
+0.7.0 e Frontend 0.8.0 permanecem em rascunho até a validação operacional.
+
+A troca de provedor do PostgreSQL está em avaliação e ainda não foi executada.
+Ela deve preservar os endereços, rotas, formatos de requisição e resposta,
+Bearer RS256, issuer, audience, JWKS e origens CORS das APIs. Os módulos que
+integram por HTTP devem continuar usando os mesmos endpoints; a conexão com
+o banco é configuração privada dos backends. Cada API continua restrita ao
+próprio schema, e o frontend continua sem acesso direto ao banco.
+
+Essa compatibilidade também depende de preservar os dados e seus UUIDs.
+Uma restauração de backup antigo não recupera automaticamente contas, projetos
+ou itens criados depois dele: referências desses registros nos outros módulos
+podem retornar `404`. Antes de qualquer troca, é necessário definir quais dados
+serão mantidos e validar autenticação, permissões e referências entre módulos.
+Sessões podem exigir novo login após uma restauração. Nenhum endpoint, banco
+ou dado foi alterado por esta atualização de documentação.
 
 ## Conta e autenticação
 
