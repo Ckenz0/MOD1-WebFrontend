@@ -45,9 +45,21 @@ main:has(#workspace-view:not([hidden])) > .access-check, main:has(#recovery-view
 .curation-articles a { color: var(--color-text); text-underline-offset: .16em; }
 .curation-articles a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
 .curation-form button[aria-disabled="true"] { cursor: wait; opacity: .65; }
+.artifact-association { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs); margin-block: var(--space-md); }
+.artifact-association > p, .artifact-association > form { flex-basis: 100%; margin: 0; }
+.artifact-versions h3 { overflow-wrap: anywhere; }
 @media (max-width: 680px) {
   .workspace-panel { padding: var(--space-sm); border-radius: var(--radius-control); }
   .workspace-form, .workspace-details, .workspace-board { grid-template-columns: minmax(0, 1fr); }
   .workspace-panel .projects-heading { align-items: flex-start; flex-direction: column; }
   .module4-form .check-field { padding-block-start: 0; }
+  .artifact-files table, .artifact-files tbody { display: block; width: 100%; min-width: 0; }
+  .artifact-files thead { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); }
+  .artifact-files tbody tr { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-sm); padding-block: var(--space-sm); border-block-end: 1px solid var(--color-border); }
+  .artifact-files td { display: block; padding: 0; border: 0; min-width: 0; text-align: start; overflow-wrap: anywhere; }
+  .artifact-files td::before { display: block; content: attr(data-label); font-size: var(--text-sm); font-weight: 400; color: var(--color-text-muted); margin-block-end: 4px; }
+  .artifact-files td:first-child, .artifact-files td.row-actions { grid-column: 1 / -1; }
+  .artifact-files td:first-child { font-weight: 600; }
+  .artifact-files td.row-actions { display: flex; }
+  .artifact-files td.row-actions::before { content: none; }
 }
