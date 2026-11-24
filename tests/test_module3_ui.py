@@ -41,7 +41,10 @@ class Module3UiTests(BrowserCase):
                 if(options.validate && !options.validate(result)) throw new PlatformApiError('invalid-response');
                 return result;
               }
-              if(method==='PATCH') {project.module3_project_id=body.module3_project_id;return {...project};}
+              if(method==='PATCH') {
+                if(window.patchError) throw new PlatformApiError(patchError);
+                project.module3_project_id=body.module3_project_id;return {...project};
+              }
               if(path.endsWith('/summary')) return {teams:[]};
               return {...project};
             },
@@ -150,6 +153,32 @@ class Module3UiTests(BrowserCase):
         self.page.get_by_role('button', name='Baixar versão atual', exact=True).click()
         expect(self.page.get_by_text('Não foi possível baixar o arquivo. Tente novamente.', exact=True)).to_be_visible()
         expect(self.page.get_by_text('Preparando o arquivo para download…', exact=True)).to_have_count(0)
+
+    def test_denied_catalog_read_clears_previous_artifact_metadata(self):
+        self.open_project()
+        self.open_artifacts()
+        expect(self.page.get_by_text('Requisitos.md', exact=True)).to_be_visible()
+        self.evaluate("()=>{window.artifactsError='not-found';}")
+        self.page.get_by_role('button', name='Escolher projeto', exact=True).click()
+        expect(self.page.get_by_text('Requisitos.md', exact=True)).to_have_count(0)
+        expect(self.page.get_by_role('button', name='Escolher projeto', exact=True)).to_have_count(0)
+
+    def test_denied_unlink_clears_previous_artifact_metadata(self):
+        self.open_project()
+        self.open_artifacts()
+        expect(self.page.get_by_text('Requisitos.md', exact=True)).to_be_visible()
+        self.evaluate("()=>{window.patchError='forbidden';}")
+        self.page.get_by_role('button', name='Desvincular projeto', exact=True).click()
+        expect(self.page.get_by_text('Requisitos.md', exact=True)).to_have_count(0)
+        expect(self.page.get_by_role('button', name='Desvincular projeto', exact=True)).to_have_count(0)
+
+    def test_conflicted_initial_listing_hides_stale_link_and_edit_controls(self):
+        self.open_project()
+        self.evaluate("()=>{window.artifactsError='conflict';}")
+        self.open_artifacts()
+        expect(self.page.get_by_role('button', name='Tentar novamente', exact=True)).to_be_visible()
+        expect(self.page.get_by_text('Projeto vinculado no Módulo 3: #7.', exact=True)).to_have_count(0)
+        expect(self.page.get_by_role('button', name='Escolher projeto', exact=True)).to_have_count(0)
 
 
 class ArtifactBinaryClientTests(BrowserCase):

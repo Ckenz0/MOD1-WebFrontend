@@ -1,13 +1,13 @@
 # Integração com o módulo 1
 
-## Artefatos do M?dulo 3 ? frontend 0.9.0 / Projetos 0.8.0
+## Artefatos do Módulo 3 — frontend 0.9.0 / Projetos 0.8.0
 
-A aba Artefatos consulta cat?logo, arquivos, vers?es e download pelo backend de
-Projetos, usando a sess?o M1. O respons?vel escolhe explicitamente o projeto M3;
-n?o h? associa??o por nome nem altera??o de IDs/endpoints dos outros m?dulos.
-O provedor recebe somente GET, sem credenciais M1; CORS adicional ? dispensado.
-N?o s?o enviados uploads ou pedidos de IA. [Uso e contrato](module3-artifacts.md).
-Confira `/release.json` e o OpenAPI para identificar a vers?o efetivamente publicada.
+A aba Artefatos consulta catálogo, arquivos, versões e download pelo backend de
+Projetos, usando a sessão M1. O responsável escolhe explicitamente o projeto M3;
+não há associação por nome nem alteração de IDs/endpoints dos outros módulos.
+O provedor recebe somente GET, sem credenciais M1; CORS adicional é dispensado.
+Não são enviados uploads ou pedidos de IA. [Uso e contrato](module3-artifacts.md).
+Confira `/release.json` e o OpenAPI para identificar a versão efetivamente publicada.
 
 
 Este guia reúne os endereços e o contrato para integrar os outros módulos.
