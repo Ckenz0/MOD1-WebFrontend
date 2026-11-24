@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.9.0 — artefatos no projeto, 24/11/2026
+
+- Aba Artefatos com vínculo explícito ao projeto M3, filtros, versões e download.
+- Edição do vínculo somente com permissão; consultas pelo backend e apenas GET
+  ao provedor, sem token na URL e sem disparar análise de IA.
+- Cancelamento de respostas antigas e ações acessíveis em celular.
+- [Uso e limites](docs/module3-artifacts.md).
+
 ## 0.8.0 — curadoria no projeto, 18/11/2026
 
 - Aba Curadoria com feed de tecnologia e pesquisa explícita de artigos,

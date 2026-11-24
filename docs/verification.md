@@ -1,5 +1,25 @@
 # Validação do frontend
 
+## M?dulo 3 ? valida??o de 24/11/2026
+
+- Dez testes focados de interface/cliente bin?rio: v?nculo manual, somente leitura
+  para leitores, filtros, vers?es, download expl?cito, navega??o com resposta
+  antiga, falha do provedor, retirada de conte?do ap?s recusa e a??es no celular.
+- A su?te local executou 207 testes, com 16 opt-ins ignorados nessa configura??o;
+  dois casos novos de erro foram inclu?dos posteriormente nos dez testes focados.
+- Aceite adicional com duas APIs M1 reais, SQLite tempor?rio e M3 por HTTP loopback:
+  login, v?nculo persistido, vers?es, download de bytes e acesso recusado ? segunda
+  conta. O provedor recebeu somente GET sem token M1. N?o houve chamada externa
+  de escrita, e-mail ou notifica??o de teste.
+- Desktop claro 1366px e celular escuro 390px, sem overflow da p?gina. A??es de
+  arquivos permanecem acess?veis no celular sem rolagem lateral.
+- Valida??o do cliente backend com o M3 real: GET de cat?logo/arquivos/vers?es e
+  download aprovados. N?o foi atribu?do v?nculo a um projeto M1 de produ??o.
+- Resumos/classifica??es aguardam contrato GET para descobrir a an?lise. Esses
+  testes n?o representam an?lise IA, teste PostgreSQL ou deploy Azure.
+  [Uso e limites](module3-artifacts.md).
+
+
 ## Aceite controlado do Módulo 5 — 18/11/2026
 
 O frontend 0.8.0 foi exercitado com as APIs temporárias de Identidade,

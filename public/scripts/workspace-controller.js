@@ -6,6 +6,7 @@ import { module4Draft, isModule4Record, isModule4Page } from "./module4-domain.j
 import { module4Form, module4Record } from "./module4-view.js";
 import { curationDraft, isCurationResult, trainingQuestion } from "./module5-domain.js";
 import { curationForm, curationResults } from "./module5-view.js";
+import { renderArtifactsArea } from "./module3-controller.js";
 
 const roleOptions = { product_owner: "Product Owner", project_manager: "PM/Scrum Master", developer: "Desenvolvedor" };
 const CURATION_TIMEOUT = 70000;
@@ -28,6 +29,7 @@ export function createWorkspaceController({ clients, account, session, getIdenti
   let roleCatalog = [], itemPage = [], boardVersion = 0, itemQuery = {}, adminQuery = "", teamQuery = "";
   const reviewAttempts = new Map();
   const unresolvedReviews = new Map();
+  let artifactCleanup = null;
   const key = () => session.getSessionId() || session.getRequestToken();
   const own = () => Boolean(project && project.owner_id === getIdentity()?.id);
   const can = permission => Boolean(project?.permissions?.includes(permission) || own());
@@ -47,9 +49,10 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     for (const button of root.querySelectorAll("button")) button.disabled = value;
   }
   function invalidate() {
+    artifactCleanup?.(); artifactCleanup = null;
     generation += 1; controller?.abort(); controller = null;
     setBusy(false, root.getAttribute("aria-busy") === "true");
-    if (tab === "curation") content.replaceChildren();
+    if (["curation", "artifacts"].includes(tab)) content.replaceChildren();
   }
   function clear() {
     invalidate(); root.hidden = true; content.replaceChildren(); navigation.replaceChildren();
@@ -71,7 +74,14 @@ export function createWorkspaceController({ clients, account, session, getIdenti
       return value;
     }
     const assertCurrent = () => { if (!valid()) throw new PlatformApiError("cancelled"); };
-    try { await work(request, { signal, assertCurrent }); if (valid()) status(successText); }
+    async function download(path) {
+      const token = await account.accessToken({ signal });
+      assertCurrent();
+      const blob = await clients.projects.download(path, token, { signal, timeout: 35000 });
+      assertCurrent();
+      return blob;
+    }
+    try { await work(request, { signal, assertCurrent, download }); if (valid()) status(successText); }
     catch (error) {
       if (!valid() || error.kind === "cancelled") return;
       if (error.kind === "unauthorized") { clear(); onUnauthorized(); return; }
@@ -313,6 +323,7 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     if (can("project:audit:read")) tabs.push(["history", "Histórico", () => go("history", renderProjectHistory)]);
     if (can("project:members:manage")) tabs.push(["recommendations", "Recomendações", () => go("recommendations", () => renderRecommendations("projects"))]);
     if (can("project:read")) tabs.push(["curation", "Curadoria", () => go("curation", renderCuration)]);
+    if (can("project:read")) tabs.push(["artifacts", "Artefatos", () => go("artifacts", renderArtifacts)]);
     show(project?.name || "Projeto", "Contexto, planejamento e colaboração do projeto.", tabs, active);
   }
   async function refreshProject(request) { project = await request("projects", "GET", `/projects/${project.id}`); return project; }
@@ -642,6 +653,15 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     const result = await request("projects", method, path, body, { timeout: CURATION_TIMEOUT });
     if (!isCurationResult(result)) throw new PlatformApiError("invalid-response");
     return result;
+  }
+
+  function renderArtifacts(query = {}) {
+    projectNavigation("artifacts");
+    artifactCleanup = renderArtifactsArea({ project, content, query, run,
+      canEdit: canWrite("project:update"),
+      updateProject: value => { project = value; },
+      reload: filters => go("artifacts", () => renderArtifacts(filters)),
+    });
   }
 
   function renderCuration(question = "") {

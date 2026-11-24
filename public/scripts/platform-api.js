@@ -1,4 +1,5 @@
 import { PlatformApiError } from "./api-errors.js";
+import { artifactDownload } from "./artifact-download.js";
 
 export function createPlatformClient({ baseUrl, fetchImpl = fetch, timeoutMs = 10000 }) {
   const url = new URL(baseUrl);
@@ -7,6 +8,9 @@ export function createPlatformClient({ baseUrl, fetchImpl = fetch, timeoutMs = 1
   }
   const base = url.href.replace(/\/$/, "");
   return {
+    download(path, token, options = {}) {
+      return artifactDownload({ base, fetchImpl, path, token, ...options });
+    },
     async request(method, path, token, body, { signal, timeout = timeoutMs, validate = value => value !== null && typeof value === "object" } = {}) {
       const decoded = decodeURIComponent(path.split("?")[0]);
       if (!path.startsWith("/") || path.startsWith("//") || decoded.includes("\\")
