@@ -72,6 +72,7 @@ try {
     onOpenProject: (project, notice) => openProject(project, "overview", notice),
     onProjectChange: project => workspace.updateProject(project),
     onShowList: () => openProjects(),
+    onAccessDenied: id => { knownProjects.delete(id); return openProjects(); },
   });
 } catch { projectsConfigurationFailed = true; }
 const professionalProfile = createProfessionalProfile({ api: protectedApi, getToken: () => session.getRequestToken(), getSessionKey,
@@ -79,6 +80,7 @@ const professionalProfile = createProfessionalProfile({ api: protectedApi, getTo
 const invitations = createInvitationsController({ api: projectsApi, getToken: () => session.getRequestToken(), getSessionKey,
   onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar.") });
 function hideMainViews() {
+  publicAuth.clear();
   professionalProfile.clear(); invitations.clear(); projects?.close(); backlog?.close();
   for (const id of ["login-view", "register-view", "profile-view"]) byId(id).hidden = true;
 }
@@ -122,6 +124,7 @@ function clearRoute() {
 }
 function showHome() {
   if (!identity) return;
+  publicAuth.clear();
   workspace.clear(); projects?.close(); backlog?.close();
   byId("profile-view").hidden = false; byId("profile-title").focus();
   setRoute("#/inicio");
@@ -173,13 +176,24 @@ function routeAfterLogin() {
   if (/^#\/(projetos|equipes|notificacoes|seguranca|administracao)$/.test(target)) { route(target, { fromHistory: true }); return; }
   replaceRoute = true; setRoute("#/inicio"); replaceRoute = false;
 }
+let menuInertState = [];
 function openMenu() {
+  if (sidebar.dataset.open === "true") return;
+  const background = [];
+  for (let branch = sidebar; branch !== document.body; branch = branch.parentElement) {
+    background.push(...[...branch.parentElement.children].filter(node => node !== branch));
+  }
+  background.push(sidebar.querySelector(".sidebar-bar"));
+  menuInertState = background.map(node => [node, node.inert]);
+  for (const [node] of menuInertState) node.inert = true;
   sidebar.dataset.open = "true"; sidebarToggle.setAttribute("aria-expanded", "true");
   byId("sidebar-close").focus();
 }
 function closeMenu(returnFocus = true) {
   if (sidebar.dataset.open !== "true") return;
   delete sidebar.dataset.open; sidebarToggle.setAttribute("aria-expanded", "false");
+  for (const [node, inert] of menuInertState) node.inert = inert;
+  menuInertState = [];
   if (returnFocus) sidebarToggle.focus();
 }
 sidebarToggle.addEventListener("click", () => sidebar.dataset.open === "true" ? closeMenu() : openMenu());
@@ -211,7 +225,23 @@ byId("sidebar-new-project").addEventListener("click", async () => {
 // Signed-in chrome: the sidebar frames the workspace; the theme button stays fixed in its corner.
 function setSignedInChrome(value) { document.body.classList.toggle("is-signed-in", value); }
 byId("sidebar-close").addEventListener("click", () => closeMenu());
-document.addEventListener("keydown", event => { if (event.key === "Escape") closeMenu(); });
+document.addEventListener("keydown", event => {
+  if (sidebar.dataset.open !== "true") return;
+  if (event.key === "Escape") { event.preventDefault(); closeMenu(); return; }
+  if (event.key !== "Tab") return;
+  const panel = byId("sidebar-panel");
+  const controls = [...panel.querySelectorAll("a[href], button, input, select, textarea, [tabindex]")]
+    .filter(node => !node.disabled && node.tabIndex >= 0 && node.getClientRects().length);
+  const first = controls[0], last = controls.at(-1);
+  if (first && (!panel.contains(document.activeElement)
+      || (event.shiftKey && document.activeElement === first)
+      || (!event.shiftKey && document.activeElement === last))) {
+    event.preventDefault(); (event.shiftKey ? last : first).focus();
+  }
+});
+matchMedia("(min-width: 961px)").addEventListener("change", event => {
+  if (event.matches) closeMenu(false);
+});
 for (const link of sidebar.querySelectorAll(".sidebar-links a")) {
   link.addEventListener("click", event => { event.preventDefault(); closeMenu(false); route(link.getAttribute("href")); });
 }
@@ -443,6 +473,7 @@ byId("login-form").addEventListener("submit", async (event) => {
   const { signal } = controller;
   message("login");
   setBusy(true, "login");
+  let restoreRoute = false;
   try {
     const user = await account.login(byId("email").value, byId("password").value, { signal });
     if (current === epoch && user.mfa_required === true) { byId("password").value = ""; passwordHidden(); publicAuth.openMfa(); return; }
@@ -452,13 +483,16 @@ byId("login-form").addEventListener("submit", async (event) => {
     passwordHidden();
     message("profile");
     byId("profile-title").focus();
-    routeAfterLogin();
+    restoreRoute = true;
   } catch (error) {
     if (current !== epoch) return;
     account.logout();
     if (error.kind !== "cancelled") message("login", (error instanceof ApiError || error instanceof AccountError) ? error.message : "Não foi possível entrar. Tente novamente.");
   } finally {
-    if (current === epoch) { controller = null; setBusy(false, "login"); }
+    if (current === epoch) {
+      controller = null; setBusy(false, "login");
+      if (restoreRoute) routeAfterLogin();
+    }
   }
 });
 

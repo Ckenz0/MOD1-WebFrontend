@@ -8,7 +8,7 @@ const date = (value) => new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).
 
 // The list opens a project page; its overview and members panels are tabs that the workspace hosts.
 export function createProjectsController({ api, getToken, getSessionKey = getToken, getUserId = () => null, onUnauthorized,
-  onOpenProject = () => {}, onProjectChange = () => {}, onShowList = () => {} }) {
+  onOpenProject = () => {}, onProjectChange = () => {}, onShowList = () => {}, onAccessDenied = onShowList }) {
   let generation = 0;
   let controller = null;
   let busy = false;
@@ -143,6 +143,13 @@ export function createProjectsController({ api, getToken, getSessionKey = getTok
     } catch (error) {
       if (!valid() || error.kind === "cancelled") return;
       if (error.kind === "unauthorized") { const notice = confirmedNotice(); clear(); onUnauthorized(notice); return; }
+      if (onOverview() && ["forbidden", "not-found"].includes(error.kind)) {
+        const id = selectedProject?.id;
+        hideDetail(); setBusy(false);
+        await onAccessDenied(id);
+        if (sessionKey === getSessionKey() && !byId("projects-view").hidden) status(error.message, "error");
+        return;
+      }
       status(errorPrefix() + (error instanceof ProjectsApiError ? error.message : "Não foi possível carregar os projetos. Tente novamente."), "error");
     } finally {
       if (valid()) { controller = null; setBusy(false); }

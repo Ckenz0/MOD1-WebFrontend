@@ -1,6 +1,6 @@
 # Changelog
 
-## Não publicado — barra da plataforma e refinamento visual, 25/11/2026
+## 0.10.0 — navegação e refinamento visual, 25/11/2026
 
 - Barra comum dos módulos (`public/nav.js`, combinada entre os grupos) no topo de
   todas as telas, com o Módulo 1 ativo e o endereço do Módulo 2 (GitHub Sync).
@@ -35,6 +35,12 @@
 - Conteúdo legível dentro dos campos: seleção múltipla mostra todas as opções
   (antes ficava cortada em 34px), campo de arquivo estilizado, competências do
   perfil em uma linha, tabelas sem palavras partidas e coluna de ações alinhada.
+- Endereço inicial restaurado após concluir o login; telas de confirmação e
+  recuperação são limpas ao voltar à navegação autenticada.
+- Acesso revogado ou projeto indisponível apaga detalhes e ações em cache e
+  retorna à lista atualizada, preservando a sessão nos erros 403/404.
+- Menu móvel contém o foco e bloqueia os controles encobertos; fechar, sair ou
+  ampliar a tela restaura a interação com o conteúdo.
 
 ## 0.9.0 — artefatos no projeto, 24/11/2026
 
