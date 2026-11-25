@@ -166,7 +166,7 @@ engine.dispose()
         if not self.page.locator('#projects-view').is_visible():
             self.page.get_by_role('button', name='Meus projetos', exact=True).click()
         self.page.get_by_role('button', name=self.project['name'], exact=True).click()
-        self.page.get_by_role('button', name='Gerenciar projeto e planejamento', exact=True).click()
+        self.page.get_by_role('button', name='Planejamento', exact=True).click()
         if initial_backlog:
             self.page.get_by_role('button', name='Quadro e itens', exact=True).click()
             self.page.get_by_role('button', name='Sugerir backlog inicial', exact=True).click()
@@ -342,7 +342,7 @@ engine.dispose()
                 else:
                     records.append((pbase, self.reject_in_browser(pbase, rec)))
         self.assertEqual(self.snapshot(), before, 'Rejection must not apply proposals')
-        self.page.get_by_role('button', name='Voltar para projetos', exact=True).click()
+        self.page.locator('.breadcrumb').get_by_role('link', name='Projetos', exact=True).click()
         self.open_project(initial_backlog=True)
         bbase = self.bbase+'/recommendations'
         rec = self.generate_in_browser(bbase, 'initial_backlog')
@@ -366,9 +366,9 @@ engine.dispose()
         else:
             self.call('post', bbase+'/'+rec['id']+'/approve', self.owner, {'expected_version': 1}, 409)
             records[-1] = (bbase, self.reject_in_browser(bbase, rec))
-        self.page.get_by_role('button', name='Voltar para projetos', exact=True).click()
+        self.page.locator('.breadcrumb').get_by_role('link', name='Projetos', exact=True).click()
         self.page.locator('#projects-back').click()
-        self.page.get_by_role('button', name='Administração', exact=True).click()
+        self.page.get_by_role('link', name='Administração', exact=True).click()
         self.page.get_by_role('button', name='Análise de acessos', exact=True).click()
         abase = self.auth_url+'/admin/recommendations'
         self.call('post', abase, self.private, {'kind': 'access_anomalies'}, 403)

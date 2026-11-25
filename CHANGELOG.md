@@ -1,5 +1,47 @@
 # Changelog
 
+## 0.10.0 — navegação e refinamento visual, 25/11/2026
+
+- Barra comum dos módulos (`public/nav.js`, combinada entre os grupos) no topo de
+  todas as telas, com o Módulo 1 ativo e o endereço do Módulo 2 (GitHub Sync).
+  O link "Ir para o conteúdo" continua sendo a primeira parada do teclado.
+- Cabeçalho do módulo renomeado para **Projetos** (Módulo 1 · Contas, projetos e
+  backlog), com ícone de pasta, favicon e título da aba alinhados.
+- Entrada com painel navy e o texto original de apresentação ao lado do formulário;
+  conta em cartões; listas de projetos e histórias com linha clicável inteira;
+  busca de projetos em grade; verificação de acesso em faixa única.
+- Estados refinados: foco com cor de foco por tema, anel nos campos, botões com
+  passo de 1px e seta, sublinhado desenhado nas ações de texto. Paleta, Inter e
+  contratos HTTP preservados; sem dependências ou build.
+- Navegação reorganizada: menu lateral fixo após o login (folha de tela cheia no
+  celular), com Início, Projetos, Equipes e alocação, Notificações, Segurança e
+  sessões, Administração para administradores e um único Sair.
+- Página única do projeto com trilha e abas, que substitui o detalhe abaixo da
+  lista e os botões "Gerenciar projeto e planejamento", "Abrir quadro e itens" e
+  "Voltar…". A antiga aba Contexto passa a se chamar Planejamento; criar um
+  projeto abre a página dele.
+- Endereço por tela (`#/inicio`, `#/projetos/<id>/<aba>`…): voltar e avançar do
+  navegador funcionam; links públicos de e-mail e recuperação continuam valendo.
+- Visual de gerenciador de issues (inspirado no YouTrack) na mesma paleta navy:
+  menu lateral cinza com "Novo projeto" e opção de recolher para ícones, conteúdo
+  plano com linhas finas, controles compactos com mouse, listas com selos de
+  prioridade e estado, cartões do quadro com faixa MoSCoW e painel de campos na
+  visão geral e na edição de história.
+- Sem barra de cabeçalho do módulo; o tema alterna por um botão redondo fixo no
+  canto inferior direito.
+- O indicador das abas cobre exatamente o texto da aba ativa.
+- "Confira seu acesso" aparece no login e, depois de entrar, somente em Segurança
+  e sessões.
+- Conteúdo legível dentro dos campos: seleção múltipla mostra todas as opções
+  (antes ficava cortada em 34px), campo de arquivo estilizado, competências do
+  perfil em uma linha, tabelas sem palavras partidas e coluna de ações alinhada.
+- Endereço inicial restaurado após concluir o login; telas de confirmação e
+  recuperação são limpas ao voltar à navegação autenticada.
+- Acesso revogado ou projeto indisponível apaga detalhes e ações em cache e
+  retorna à lista atualizada, preservando a sessão nos erros 403/404.
+- Menu móvel contém o foco e bloqueia os controles encobertos; fechar, sair ou
+  ampliar a tela restaura a interação com o conteúdo.
+
 ## 0.9.0 — artefatos no projeto, 24/11/2026
 
 - Aba Artefatos com vínculo explícito ao projeto M3, filtros, versões e download.

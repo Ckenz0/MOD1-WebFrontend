@@ -56,7 +56,7 @@ class BacklogRealApiTests(projects_real.ProjectsRealApiTests):
         with self.page.expect_response(lambda r: r.request.method == 'POST' and r.url == self.projects_url+'/projects') as created:
             self.page.get_by_role('button', name='Criar projeto', exact=True).click()
         project = created.value.json()
-        expect(self.page.locator('#projects-status')).to_contain_text('Projeto criado')
+        expect(self.page.locator('#workspace-status')).to_contain_text('Projeto criado')
         self.page.get_by_role('button', name='Backlog', exact=True).click()
         expect(self.page.get_by_role('button', name='Criar história', exact=True)).to_be_enabled()
         self.page.get_by_label('Título da história', exact=True).fill('Consultar minhas solicitações')
@@ -93,7 +93,7 @@ class BacklogRealApiTests(projects_real.ProjectsRealApiTests):
         expect(self.page.locator('#backlog-list')).to_contain_text('Alta · Concluído')
         self.page.get_by_role('button', name='Consultar minhas solicitações', exact=True).click()
         expect(self.page.get_by_label('Status da história', exact=True)).to_have_value('done')
-        self.page.locator('#backlog-logout').click()
+        self.page.locator('#logout-button').click()
         self.register('backlog-b@example.com')
         token_b = self.context.request.post(self.auth_url+'/auth/token', form={
             'username': 'backlog-b@example.com', 'password': 'ProjetoMvp!2026'}).json()['access_token']

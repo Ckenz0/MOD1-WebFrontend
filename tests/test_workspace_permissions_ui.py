@@ -81,7 +81,7 @@ class WorkspacePermissionsUiTests(BrowserCase):
         self.open_project(['project:read'])
         for label in ['Quadro e itens', 'Equipes', 'Papéis e acessos', 'Histórico', 'Recomendações']:
             expect(self.page.get_by_role('button', name=label, exact=True)).to_have_count(0)
-        expect(self.page.get_by_role('button', name='Contexto', exact=True)).to_be_visible()
+        expect(self.page.get_by_role('button', name='Planejamento', exact=True)).to_be_visible()
 
     def test_backlog_reader_is_not_offered_backlog_generation(self):
         self.open_project(['project:read', 'backlog:read'], initial='board')

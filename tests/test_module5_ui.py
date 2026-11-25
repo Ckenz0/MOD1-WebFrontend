@@ -150,7 +150,7 @@ class Module5UiTests(BrowserCase):
         self.open_curation()
         expect(self.page.get_by_text('A curadoria está desativada.', exact=True)).to_be_visible()
         expect(self.search).to_have_count(0)
-        self.page.get_by_role('button', name='Contexto', exact=True).click()
+        self.page.get_by_role('button', name='Planejamento', exact=True).click()
         self.evaluate("()=>{window.feedError='unavailable';}")
         self.open_curation()
         expect(self.page.get_by_text('O feed está indisponível no momento.', exact=True)).to_be_visible()
@@ -186,7 +186,7 @@ class Module5UiTests(BrowserCase):
         self.open_curation()
         expect(self.page.get_by_text('Carregando feed…', exact=True)).to_be_visible()
         self.page.wait_for_function('Boolean(window.finishFeed)')
-        self.page.get_by_role('button', name='Contexto', exact=True).click()
+        self.page.get_by_role('button', name='Planejamento', exact=True).click()
         expect(self.page.get_by_text('Carregando feed…', exact=True)).to_have_count(0)
         self.evaluate('''async ()=>{await workspace.openProject(otherProject);
           window.finishFeed(result([article('Resultado do projeto anterior')]));}''')
@@ -197,24 +197,20 @@ class Module5UiTests(BrowserCase):
     def test_curation_releases_context_loading_and_late_context_cannot_unlock_a_new_load(self):
         self.open_project()
         workspace = self.page.locator('#workspace-view')
-        back = self.page.get_by_role('button', name='Voltar para projetos', exact=True)
-        context = self.page.get_by_role('button', name='Contexto', exact=True)
+        context = self.page.get_by_role('button', name='Planejamento', exact=True)
         self.evaluate('()=>{window.holdSummary=true;window.holdFeed=true;}')
         context.click()
         self.page.wait_for_function('window.pendingSummaries.length === 1')
         expect(workspace).to_have_attribute('aria-busy', 'true')
-        expect(back).to_be_disabled()
 
         self.open_curation()
         self.page.wait_for_function('Boolean(window.finishFeed)')
         expect(self.page.get_by_text('Carregando feed…', exact=True)).to_be_visible()
         self.assertTrue(self.evaluate('()=>pendingSummaries[0].signal.aborted'))
         expect(workspace).to_have_attribute('aria-busy', 'false')
-        expect(back).to_be_enabled()
         self.evaluate("()=>{window.finishFeed(result());}")
         expect(self.question).to_be_editable()
         expect(workspace).to_have_attribute('aria-busy', 'false')
-        expect(back).to_be_enabled()
 
         context.click()
         self.page.wait_for_function('window.pendingSummaries.length === 2')
@@ -223,12 +219,10 @@ class Module5UiTests(BrowserCase):
           await new Promise(resolve=>requestAnimationFrame(resolve));
         }''')
         expect(workspace).to_have_attribute('aria-busy', 'true')
-        expect(back).to_be_disabled()
         self.evaluate("()=>{pendingSummaries[1].resolve({teams:[{name:'Equipe atual'}]});}")
         expect(self.page.get_by_text('Equipe atual', exact=True)).to_be_visible()
         expect(self.page.get_by_text('Equipe de resposta obsoleta', exact=True)).to_have_count(0)
         expect(workspace).to_have_attribute('aria-busy', 'false')
-        expect(back).to_be_enabled()
 
     def test_session_change_discards_an_in_flight_query_result(self):
         self.open_project()

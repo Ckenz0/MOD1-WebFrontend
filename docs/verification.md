@@ -392,3 +392,23 @@ Sem publicação, push, merge, tags, grants remotos ou autoria/coautoria de IA.
 Trocar senha encerra a sessão local; revogar JWT nos consumidores, MFA, equipes/RBAC
 e recuperação por e-mail permanecem fora deste lote. Migração de Projetos e permissões
 do banco devem ser executadas explicitamente pelo operador antes de publicar.
+
+
+## Navegação 0.10.0 — 25/11/2026
+
+Os testes de interface usam Edge headless e respostas sintéticas. O arquivo
+`tests/test_navigation_regressions_ui.py` cobre login iniciado em Segurança,
+remoção de detalhes e ações após GET de projeto 403/404, saída de confirmação
+de e-mail para a aplicação e foco do menu móvel, incluindo logout e mudança
+para desktop. Essas regressões foram reproduzidas antes das correções.
+
+```powershell
+python -m unittest discover -s tests -q
+```
+
+Os testes opt-in `*_real_api.py` e `*_integration_api.py` iniciam serviços
+locais com SQLite temporário e chaves de teste; sua execução exige os caminhos
+dos backends. Essa evidência fica separada dos testes com respostas simuladas.
+Nunca aponte suas fixtures de inicialização ou limpeza a um banco remoto.
+Testes externos de Gemini/Resend continuam exigindo suas opções explícitas;
+sucesso do CI normal não afirma que foram executados.

@@ -27,7 +27,7 @@ class WorkspaceFeaturesUiTests(BrowserCase):
             sessions.pop()
             route.fulfill(status=204)
         self.page.route('**/auth/sessions/44444444-4444-4444-8444-444444444444', revoke)
-        self.page.get_by_role('button', name='Segurança e sessões', exact=True).click()
+        self.page.get_by_role('link', name='Segurança e sessões', exact=True).click()
         expect(self.page.get_by_role('heading', name='Sessões ativas', exact=True)).to_be_visible()
         self.page.get_by_role('button', name='Revogar sessão de Navegador de teste', exact=True).click()
         expect(self.page.get_by_role('button', name='Revogar sessão de Navegador de teste', exact=True)).to_have_count(0)
@@ -50,7 +50,7 @@ class WorkspaceFeaturesUiTests(BrowserCase):
         accepted = []
         self.page.route('**/team-invitations/accept', lambda route: (
             accepted.append(route.request.post_data_json), route.fulfill(json={'team_id': '55555555-5555-4555-8555-555555555555'})))
-        self.page.get_by_role('button', name='Equipes e alocação', exact=True).click()
+        self.page.get_by_role('link', name='Equipes e alocação', exact=True).click()
         self.page.get_by_label('Nome da equipe', exact=True).fill('Equipe de integração')
         self.page.get_by_label('Descrição da equipe', exact=True).fill('Fluxos do módulo 1')
         self.page.get_by_label('Centro de custo', exact=True).fill('ENG-01')
@@ -66,13 +66,13 @@ class WorkspaceFeaturesUiTests(BrowserCase):
         self.mock_auth(identity={**self.identity, 'is_admin': False})
         self.page.get_by_role('button', name='Sair', exact=True).click()
         self.login()
-        expect(self.page.get_by_role('button', name='Administração', exact=True)).to_be_hidden()
+        expect(self.page.get_by_role('link', name='Administração', exact=True)).to_be_hidden()
 
     def test_dark_workspace_keyboard_focus_has_visible_contrast(self):
         self.page.route('**/auth/sessions', lambda route: route.fulfill(json={
             'items': [], 'total': 0, 'limit': 20, 'offset': 0}))
         self.page.locator('html').evaluate("node => node.dataset.theme = 'dark'")
-        self.page.get_by_role('button', name='Segurança e sessões', exact=True).click()
+        self.page.get_by_role('link', name='Segurança e sessões', exact=True).click()
         button = self.page.get_by_role('button', name='Sessões', exact=True)
         expect(button).to_be_enabled()
         self.page.keyboard.press('Tab')
@@ -108,7 +108,7 @@ class WorkspaceFeaturesUiTests(BrowserCase):
             notification['read_at'] = '2026-10-30T12:01:00Z'
             route.fulfill(json=notification)
         self.page.route('**/notifications/44444444-4444-4444-8444-444444444444/read', mark)
-        self.page.get_by_role('button', name='Notificações', exact=True).click()
+        self.page.get_by_role('link', name='Notificações', exact=True).click()
         expect(self.page.get_by_role('table', name='Minhas notificações')).to_contain_text('Equipe aprovada')
         self.page.get_by_role('button', name='Marcar como lida', exact=True).click()
         expect(self.page.locator('#workspace-status')).to_contain_text('Mensagem marcada como lida')
@@ -166,7 +166,7 @@ class WorkspaceFeaturesUiTests(BrowserCase):
         self.page.route('**/projects/' + pid + '/recommendations/' + rid + '/approve', approve)
         self.page.get_by_role('button', name='Meus projetos', exact=True).click()
         self.page.get_by_role('button', name='Projeto de revisão', exact=True).click()
-        self.page.get_by_role('button', name='Gerenciar projeto e planejamento', exact=True).click()
+        self.page.get_by_role('button', name='Planejamento', exact=True).click()
         self.page.get_by_role('button', name='Recomendações', exact=True).click()
         self.page.get_by_label('Tipo de recomendação', exact=True).select_option('access_revocation')
         self.page.get_by_label('Dias sem atividade autorizada observada', exact=True).fill('45')

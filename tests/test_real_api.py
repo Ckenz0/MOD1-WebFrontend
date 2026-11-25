@@ -151,6 +151,7 @@ class RealApiTests(BrowserCase):
         self.page.get_by_label('Senha', exact=True).fill('  senha-nova-12345  ')
         self.page.get_by_role('button', name='Entrar', exact=True).click()
         expect(self.page.get_by_text('nova@example.com', exact=True)).to_be_visible()
+        self.page.get_by_role('link', name='Segurança e sessões', exact=True).click()
         self.page.get_by_role('button', name='Verificar acesso', exact=True).click()
         expect(self.page.locator('#access-result')).to_contain_text('Acesso permitido')
         self.page.get_by_role('button', name='Sair', exact=True).click()
