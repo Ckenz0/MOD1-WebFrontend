@@ -117,7 +117,7 @@ export function createMembersController({ api, getToken, getSessionKey = getToke
     if (!projectId) return;
     const current = ++generation; controller?.abort(); controller = new AbortController();
     const { signal } = controller;
-    const valid = () => current === generation && sessionKey === getSessionKey() && projectId === project?.id && !byId("projects-view").hidden;
+    const valid = () => current === generation && sessionKey === getSessionKey() && projectId === project?.id && !byId("members-panel").hidden;
     setBusy(true); message("members-status", "Conferindo acessos…");
     try {
       const result = await action(token, projectId, signal);
@@ -193,7 +193,6 @@ export function createMembersController({ api, getToken, getSessionKey = getToke
     }, () => removed ? "Integrante removido. " : "");
   });
   byId("member-edit-cancel").addEventListener("click", () => { if (!busy) { editForm.hidden = true; editForm.reset(); selected = null; } });
-  byId("members-close").addEventListener("click", () => { clear(); byId("project-members").focus(); });
   byId("members-refresh").addEventListener("click", () => { if (!busy) load(page.offset); });
   byId("members-previous").addEventListener("click", () => { if (!busy) load(Math.max(0, page.offset - 20)); });
   byId("members-next").addEventListener("click", () => { if (!busy) load(page.offset + 20); });

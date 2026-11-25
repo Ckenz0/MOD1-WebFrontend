@@ -5,6 +5,13 @@ superpowers/
 # Instruções locais de agentes
 AGENTS.md
 agents.md
+CLAUDE.md
+claude.md
+CLAUDE.local.md
+.claude/
+.agents/
+skills-lock.json
+.impeccable/config.json
 .local/
 .venv/
 __pycache__/

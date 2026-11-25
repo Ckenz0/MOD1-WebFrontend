@@ -32,7 +32,7 @@ class GeminiRecommendationsUiTests(BrowserCase):
         expect(self.page.locator('#profile-view')).to_be_visible()
         self.page.get_by_role('button', name='Meus projetos', exact=True).click()
         self.page.get_by_role('button', name=project['name'], exact=True).click()
-        self.page.get_by_role('button', name='Gerenciar projeto e planejamento', exact=True).click()
+        self.page.get_by_role('button', name='Planejamento', exact=True).click()
         self.page.get_by_role('button', name='Recomendações', exact=True).click()
         expect(self.page.get_by_role('button', name='Solicitar recomendação', exact=True)).to_be_enabled()
 

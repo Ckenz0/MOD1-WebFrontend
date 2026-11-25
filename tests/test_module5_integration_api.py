@@ -115,8 +115,8 @@ class Module5IntegrationApiTests(real.BacklogRealApiTests):
         self.sign_in('curadoria@example.com')
         self.page.get_by_role('button', name='Meus projetos', exact=True).click()
         self.page.get_by_role('button', name='Curadoria de um projeto de estudo', exact=True).click()
-        self.page.get_by_role('button', name='Gerenciar projeto e planejamento', exact=True).click()
-        expect(self.page.get_by_role('heading', name='Contexto do projeto', exact=True)).to_be_visible()
+        self.page.get_by_role('button', name='Planejamento', exact=True).click()
+        expect(self.page.get_by_role('heading', name='Planejamento do projeto', exact=True)).to_be_visible()
 
     def open_feed(self, status=200):
         entry = self.page.get_by_role('button', name='Curadoria', exact=True)
@@ -169,7 +169,7 @@ class Module5IntegrationApiTests(real.BacklogRealApiTests):
         expect(self.page.get_by_text('Detalhe privado', exact=False)).to_have_count(0)
         expect(self.page.get_by_role('button', name='Buscar artigos', exact=True)).to_be_enabled()
 
-        self.page.get_by_role('button', name='Contexto', exact=True).click()
+        self.page.get_by_role('button', name='Planejamento', exact=True).click()
         self.provider.feed_unavailable = True
         self.open_feed(status=503)
         expect(self.page.get_by_text('O feed está indisponível no momento.', exact=True)).to_be_visible()
@@ -189,8 +189,8 @@ class Module5IntegrationApiTests(real.BacklogRealApiTests):
                 self.page.get_by_role('button', name='Ativar tema escuro', exact=True).click()
             expect(self.page.get_by_label('Pergunta sobre tecnologia', exact=True)).to_be_editable()
             expect(self.page.get_by_role('button', name='Buscar artigos', exact=True)).to_be_enabled()
-            expect(self.page.get_by_role('button', name='Contexto', exact=True)).to_be_enabled()
-            expect(self.page.get_by_role('button', name='Voltar para projetos', exact=True)).to_be_enabled()
+            expect(self.page.get_by_role('button', name='Planejamento', exact=True)).to_be_enabled()
+            expect(self.page.get_by_role('button', name='Artefatos', exact=True)).to_be_enabled()
             expect(self.page.locator('#workspace-view')).to_have_attribute('aria-busy', 'false')
             self.assertTrue(self.page.evaluate('''() =>
                 document.documentElement.scrollWidth === window.innerWidth &&

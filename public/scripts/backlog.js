@@ -9,7 +9,8 @@ const statuses = { todo: "A fazer", in_progress: "Em andamento", done: "Concluí
 const date = value => new Intl.DateTimeFormat("pt-BR", { dateStyle: "short", timeStyle: "short" }).format(new Date(value));
 const emptyPage = () => ({ items: [], total: 0, limit: 20, offset: 0 });
 
-export function createBacklogController({ api, getProject, getUserId, getToken, getSessionKey = getToken, onUnauthorized, onBack, onOpenWorkspace }) {
+// Backlog tab of the project page; the workspace tabs replace its former back and board buttons.
+export function createBacklogController({ api, getProject, getUserId, getToken, getSessionKey = getToken, onUnauthorized }) {
   const application = createWorkspaceApplication({ projects: { get: getProject }, backlog: api });
   let generation = 0, controller = null, busy = false, project = null, selected = null;
   let page = emptyPage();
@@ -94,7 +95,13 @@ export function createBacklogController({ api, getProject, getUserId, getToken, 
           if (busy) return;
           hideDetail(); run((token, id, signal) => api.get(token, id, story.id, { signal }), renderDetail);
         });
-        meta.className = "story-meta"; meta.textContent = `${priorities[story.priority]} · ${statuses[story.status]}`;
+        // Priority and state read as badges; the separator stays in the text for assistive technology.
+        meta.className = "story-meta";
+        const priority = document.createElement("span"), separator = document.createElement("span"), state = document.createElement("span");
+        priority.className = "story-priority"; priority.dataset.priority = story.priority; priority.textContent = priorities[story.priority];
+        separator.className = "story-separator"; separator.textContent = " · ";
+        state.className = "story-state"; state.dataset.status = story.status; state.textContent = statuses[story.status];
+        meta.append(priority, separator, state);
         li.append(button, meta); ul.append(li);
       }
       list.append(ul);
@@ -182,12 +189,6 @@ export function createBacklogController({ api, getProject, getUserId, getToken, 
   byId("backlog-refresh").addEventListener("click", () => { if (!busy) load(page.offset); });
   byId("backlog-previous").addEventListener("click", () => { if (!busy) load(Math.max(0, page.offset - 20)); });
   byId("backlog-next").addEventListener("click", () => { if (!busy) load(page.offset + 20); });
-  byId("backlog-back").addEventListener("click", () => { clear(); onBack(); });
-  const advanced = document.createElement("button"); advanced.type = "button";
-  advanced.className = "button button-secondary"; advanced.textContent = "Abrir quadro e itens";
-  advanced.hidden = !onOpenWorkspace;
-  advanced.addEventListener("click", () => { if (!busy && project) onOpenWorkspace?.({ ...project, permissions: [...permissions] }); });
-  byId("backlog-back").parentElement.append(advanced);
   setBusy(false);
   return { async open(value) {
     clear(); project = { id: value.id, name: value.name };

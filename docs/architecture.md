@@ -8,13 +8,31 @@ HTML e CSS. O frontend não é um quarto backend e não possui banco próprio.
 
 | Camada | Componentes | Responsabilidade |
 | --- | --- | --- |
-| Apresentação | `public/index.html`, `styles/app.css`, `styles/workspace.css`, `styles/premium.css`, `app.js`, `projects.js`, `backlog.js`, `collaboration.js`, `professional-profile.js`, `public-auth-controller.js`, `workspace-controller.js`, `workspace-view.js`, `validation.js` | Eventos, campos, renderização, mensagens, foco, acessibilidade e ciclo de vida das telas. Os controladores recebem clientes por injeção; não executam `fetch`. |
+| Apresentação | `public/index.html`, `public/nav.js` (barra comum da plataforma, compartilhada entre os grupos), `styles/app.css`, `styles/workspace.css`, `styles/premium.css`, `app.js`, `projects.js`, `backlog.js`, `collaboration.js`, `professional-profile.js`, `public-auth-controller.js`, `workspace-controller.js`, `workspace-view.js`, `validation.js` | Eventos, campos, renderização, mensagens, foco, acessibilidade e ciclo de vida das telas. Os controladores recebem clientes por injeção; não executam `fetch`. |
 | Aplicação | `account-application.js`, `session-application.js`, `workspace-application.js` | Coordenar login, identidade, sessão/renovação, troca de senha e leituras compostas de backlog/membros com permissões atuais. Sem DOM, URLs ou clientes HTTP concretos. |
 | Domínio e contratos | `auth-domain.js`, `project-domain.js`, `story-domain.js`, `collaboration-domain.js`, `planning-domain.js`, `validation-rules.js`, `permissions.js`, `session.js`, `api-errors.js` | Valores válidos, normalização, contratos de resposta, permissões, seleção de alterações e sessão em memória. Sem transporte ou DOM. |
 | Infraestrutura | `api.js`, `projects-api.js`, `backlog-api.js`, `platform-api.js`, `service-readiness.js` | HTTP, Bearer, serialização, status, timeout, cancelamento, preparação dos serviços e validação de respostas com contratos puros. |
 | Composição | Inicialização de `app.js` e `config.js` | Construir clientes concretos, sessão, casos de uso, controladores e callbacks. É o ponto que conhece as demais camadas. |
 
 Os nomes na tabela são relativos a `public/scripts/`, exceto caminhos explícitos.
+
+### Navegação e página do projeto
+
+`app.js` mantém um endereço por tela (`#/inicio`, `#/projetos`,
+`#/projetos/<id>/<aba>`, `#/equipes`, `#/notificacoes`, `#/seguranca`,
+`#/administracao`) com `history.pushState`; `popstate`/`hashchange` só roteiam
+endereços `#/...`, depois de `public-auth-controller.js` consumir links públicos.
+Sem sessão nada é roteado, e sair limpa o endereço. O menu lateral (`#app-sidebar`)
+e a trilha marcam a seção atual com `aria-current`.
+
+A página do projeto é o modo `project` de `workspace-controller.js`. Ele recebe por
+injeção `projectPanels` (painéis estáticos de `index.html`) e `projectTabs`, as abas
+de outras telas: Visão geral (`projects.js`), Backlog (`backlog.js`) e Membros e
+papéis (`collaboration.js`, via `projects.js`). O workspace decide a visibilidade
+pelas permissões, abre e fecha a aba externa e informa a troca por `onNavigate`.
+Seus estados de ocupado não alteram os botões desses painéis, que seguem as
+próprias permissões. Cada controlador continua descartando respostas atrasadas
+pela própria geração e pela visibilidade do próprio painel.
 As camadas são responsabilidades, não novos diretórios obrigatórios. A separação
 não implica Clean Architecture ou um conjunto de interfaces abstratas.
 

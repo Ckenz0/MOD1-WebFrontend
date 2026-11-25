@@ -151,7 +151,7 @@ class ProjectsRealApiTests(BrowserCase):
         self.page.get_by_role('button', name='Meus projetos', exact=True).click()
         self.page.get_by_role('button', name='Projeto persistente', exact=True).click()
         expect(self.page.locator('#project-detail')).to_contain_text('Minha primeira entrega')
-        self.page.locator('#projects-logout').click()
+        self.page.locator('#logout-button').click()
         self.register('projetos-b@example.com')
         self.sign_in('projetos-b@example.com')
         self.page.get_by_role('button', name='Meus projetos', exact=True).click()

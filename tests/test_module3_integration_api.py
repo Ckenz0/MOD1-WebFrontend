@@ -85,7 +85,7 @@ class Module3IntegrationApiTests(real.ProjectsRealApiTests):
         self.sign_in('artefatos@example.com')
         self.page.get_by_role('button', name='Meus projetos', exact=True).click()
         self.page.get_by_role('button', name='Artefatos de um projeto de estudo', exact=True).click()
-        self.page.get_by_role('button', name='Gerenciar projeto e planejamento', exact=True).click()
+        self.page.get_by_role('button', name='Planejamento', exact=True).click()
         self.page.get_by_role('button', name='Artefatos', exact=True).click()
         expect(self.page.get_by_text('Nenhum projeto do Módulo 3 vinculado.', exact=True)).to_be_visible()
         self.assertEqual(self.provider.calls, [])

@@ -50,10 +50,14 @@ class ProjectsUiTests(BrowserCase):
         self.page.get_by_label('Nome do projeto', exact=True).fill('  Primeiro projeto  ')
         self.page.get_by_label('Descrição', exact=True).fill('linha 1\nlinha 2')
         self.page.get_by_role('button', name='Criar projeto', exact=True).click()
-        expect(self.page.locator('#projects-list')).to_contain_text('Primeiro projeto')
+        # Creating a project opens its page on the overview tab, with the confirmation above the tabs.
+        expect(self.page.locator('#workspace-title')).to_have_text('Primeiro projeto')
+        expect(self.page.locator('#workspace-status')).to_contain_text('Projeto criado')
         expect(self.page.locator('#project-detail')).to_contain_text('linha 1\nlinha 2')
         self.assertEqual(self.posts, [{'name': 'Primeiro projeto', 'description': 'linha 1\nlinha 2'}])
-        self.page.get_by_role('button', name='Voltar para minha conta', exact=True).click()
+        self.page.locator('.breadcrumb').get_by_role('link', name='Projetos', exact=True).click()
+        expect(self.page.locator('#projects-list')).to_contain_text('Primeiro projeto')
+        self.page.get_by_role('link', name='Início', exact=True).click()
         expect(self.page.locator('#profile-view')).to_be_visible()
 
     def test_project_field_validation_and_keyboard(self):
@@ -93,8 +97,9 @@ class ProjectsUiTests(BrowserCase):
         self.items = [p]
         self.open_projects()
         self.page.get_by_role('button', name=p['name'], exact=True).click()
-        expect(self.page.locator('#project-detail')).to_contain_text(p['name'])
-        self.assertEqual(self.page.locator('#project-detail img').count(), 0)
+        expect(self.page.locator('#workspace-title')).to_have_text(p['name'])
+        expect(self.page.locator('.breadcrumb [aria-current="page"]')).to_have_text(p['name'])
+        self.assertEqual(self.page.locator('#workspace-view img').count(), 0)
         self.assertEqual(self.page.locator('#project-detail-description').inner_text(), p['description'])
 
     def test_unauthorized_ends_session(self):

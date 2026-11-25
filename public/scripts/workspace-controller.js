@@ -15,17 +15,30 @@ const pageItems = value => Array.isArray(value) ? value : value?.items || [];
 const identityLabel = value => value.display_name || value.user_id || value.id;
 const roleLabel = key => ROLE_NAMES[key] || key;
 
-export function createWorkspaceController({ clients, account, session, getIdentity, onEnter, onBack, onUnauthorized }) {
+// projectTabs: panels owned by other screens (overview, backlog, members) shown as tabs of the project page.
+// onNavigate(mode, tab, project) lets the composition root keep the address bar in step.
+export function createWorkspaceController({ clients, account, session, getIdentity, onEnter, onBack, onUnauthorized,
+  projectPanels = null, projectTabs = [], onNavigate = () => {} }) {
   const root = el("section", null, { id: "workspace-view", class: "workspace-panel", hidden: true, "aria-labelledby": "workspace-title" });
+  const crumbs = el("nav", null, { class: "breadcrumb", "aria-label": "Trilha de navegação", hidden: true });
+  const crumbList = el("ol"), crumbHome = el("li"), crumbCurrent = el("li", "", { "aria-current": "page" });
+  const crumbLink = el("a", "Projetos", { href: "#/projetos" });
+  crumbLink.addEventListener("click", event => { event.preventDefault(); const target = project; clear(); onBack(target); });
+  crumbHome.append(crumbLink); crumbList.append(crumbHome, crumbCurrent); crumbs.append(crumbList);
   const header = el("div", null, { class: "projects-heading" }), titles = el("div");
   const heading = el("h1", "", { id: "workspace-title", tabindex: "-1" }), scope = el("p", "", { class: "intro" });
-  const back = action("Voltar para minha conta", () => { const target = project; clear(); onBack(target); });
-  titles.append(heading, scope); header.append(titles, back);
+  titles.append(heading, scope); header.append(titles);
+  const tabStrip = el("div", null, { class: "workspace-tabs" });
   const navigation = el("nav", null, { class: "workspace-nav", "aria-label": "Seções do espaço de trabalho" });
+  const indicator = el("span", null, { class: "tab-indicator", "aria-hidden": "true", hidden: true });
+  tabStrip.append(navigation, indicator);
   const notice = el("p", "", { id: "workspace-status", class: "message", role: "status", "aria-live": "polite", hidden: true });
   const content = el("div", null, { id: "workspace-content" });
-  root.append(header, navigation, notice, content); document.getElementById("main").append(root);
+  root.append(crumbs, header, tabStrip, notice, content);
+  if (projectPanels) root.append(projectPanels);
+  document.getElementById("main").append(root);
   let generation = 0, controller = null, busy = false, mode = "", tab = "", project = null, selectedTeam = null, selectedItem = null;
+  let external = null;
   let roleCatalog = [], itemPage = [], boardVersion = 0, itemQuery = {}, adminQuery = "", teamQuery = "";
   const reviewAttempts = new Map();
   const unresolvedReviews = new Map();
@@ -46,16 +59,24 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     busy = value;
     if (!manageButtons) return;
     root.setAttribute("aria-busy", String(value));
-    for (const button of root.querySelectorAll("button")) button.disabled = value;
+    // Embedded panels keep their own permission-driven button states.
+    for (const button of root.querySelectorAll("button")) if (!projectPanels?.contains(button)) button.disabled = value;
+  }
+  function closeExternal() {
+    if (!external) return;
+    const definition = external; external = null; definition.close();
+    if (projectPanels) projectPanels.hidden = true;
   }
   function invalidate() {
+    closeExternal();
     artifactCleanup?.(); artifactCleanup = null;
     generation += 1; controller?.abort(); controller = null;
     setBusy(false, root.getAttribute("aria-busy") === "true");
     if (["curation", "artifacts"].includes(tab)) content.replaceChildren();
   }
   function clear() {
-    invalidate(); root.hidden = true; content.replaceChildren(); navigation.replaceChildren();
+    invalidate(); root.hidden = true; content.replaceChildren(); navigation.replaceChildren(); indicator.hidden = true; crumbs.hidden = true;
+    delete root.dataset.mode;
     project = selectedTeam = selectedItem = null; tab = ""; roleCatalog = []; itemPage = []; status();
     reviewAttempts.clear();
     unresolvedReviews.clear();
@@ -96,8 +117,38 @@ export function createWorkspaceController({ clients, account, session, getIdenti
       if (name === active) button.setAttribute("aria-current", "page");
       navigation.append(button);
     }
+    placeIndicator();
   }
-  function go(next, loader) { invalidate(); tab = next; status(); return loader(); }
+  // One indicator slides under the current tab's label, matching the text's width
+  // (transform only; CSS drops the transition under reduced motion).
+  function placeIndicator() {
+    const current = navigation.querySelector('[aria-current="page"]');
+    indicator.hidden = !current || root.hidden;
+    if (indicator.hidden) return;
+    const box = getComputedStyle(current);
+    const inset = parseFloat(box.paddingLeft) || 0, width = current.offsetWidth - inset - (parseFloat(box.paddingRight) || 0);
+    indicator.style.setProperty("--tab-x", `${current.offsetLeft + inset}px`);
+    indicator.style.setProperty("--tab-y", `${current.offsetTop + current.offsetHeight - 2}px`);
+    indicator.style.setProperty("--tab-w", String(Math.max(0, width)));
+    const left = current.offsetLeft, right = left + current.offsetWidth;
+    if (left < tabStrip.scrollLeft || right > tabStrip.scrollLeft + tabStrip.clientWidth) tabStrip.scrollLeft = Math.max(0, left - 16);
+    markOverflow();
+  }
+  // On phones the tabs scroll sideways; a faded edge says more tabs follow.
+  function markOverflow() {
+    tabStrip.dataset.more = String(tabStrip.scrollLeft + tabStrip.clientWidth < tabStrip.scrollWidth - 4);
+  }
+  window.addEventListener("resize", placeIndicator);
+  document.fonts?.ready.then(placeIndicator);
+  tabStrip.addEventListener("scroll", markOverflow, { passive: true });
+  function go(next, loader) { invalidate(); tab = next; status(); onNavigate(mode, next, project); return loader(); }
+  function goExternal(definition) {
+    invalidate(); tab = definition.name; status(); content.replaceChildren();
+    projectNavigation(definition.name);
+    external = definition; if (projectPanels) projectPanels.hidden = false;
+    onNavigate(mode, definition.name, project);
+    return definition.open(project);
+  }
   function pagination(page, loader) {
     const list = el("div", null, { class: "projects-pagination" });
     const offset = page.offset || 0, limit = page.limit || 20, total = page.total ?? pageItems(page).length;
@@ -315,21 +366,42 @@ export function createWorkspaceController({ clients, account, session, getIdenti
       rows(data.teams || [], [{ label: "Equipe", value: row => row.name || row.team_name || row.team_id }], { caption: "Vínculos com equipes" })); content.replaceChildren(panel);
   }); }
 
+  // Project page tabs, most used first. External tabs come from other screens through projectTabs.
+  const projectSections = () => [
+    ["overview"], ["backlog"],
+    ["board", "Quadro e itens", renderBoard, () => can("backlog:read")],
+    ["members"],
+    ["roles", "Papéis e acessos", renderRoles, () => can("project:members:read")],
+    ["project-teams", "Equipes", renderProjectTeams, () => can("project:members:read")],
+    ["context", "Planejamento", renderProject, () => true],
+    ["curation", "Curadoria", renderCuration, () => can("project:read")],
+    ["artifacts", "Artefatos", renderArtifacts, () => can("project:read")],
+    ["history", "Histórico", renderProjectHistory, () => can("project:audit:read")],
+    ["recommendations", "Recomendações", () => renderRecommendations("projects"), () => can("project:members:manage")],
+  ];
+  const externalTab = name => projectTabs.find(item => item.name === name && (!item.permission || can(item.permission)));
   function projectNavigation(active) {
-    const tabs = [["context", "Contexto", () => go("context", renderProject)]];
-    if (can("backlog:read")) tabs.push(["board", "Quadro e itens", () => go("board", renderBoard)]);
-    if (can("project:members:read")) tabs.push(["project-teams", "Equipes", () => go("project-teams", renderProjectTeams)]);
-    if (can("project:members:read")) tabs.push(["roles", "Papéis e acessos", () => go("roles", renderRoles)]);
-    if (can("project:audit:read")) tabs.push(["history", "Histórico", () => go("history", renderProjectHistory)]);
-    if (can("project:members:manage")) tabs.push(["recommendations", "Recomendações", () => go("recommendations", () => renderRecommendations("projects"))]);
-    if (can("project:read")) tabs.push(["curation", "Curadoria", () => go("curation", renderCuration)]);
-    if (can("project:read")) tabs.push(["artifacts", "Artefatos", () => go("artifacts", renderArtifacts)]);
-    show(project?.name || "Projeto", "Contexto, planejamento e colaboração do projeto.", tabs, active);
+    const tabs = [];
+    for (const [name, label, render, allowed] of projectSections()) {
+      if (!render) { const definition = externalTab(name); if (definition) tabs.push([name, definition.label, () => goExternal(definition)]); }
+      else if (allowed()) tabs.push([name, label, () => go(name, render)]);
+    }
+    const situation = `${PROJECT_STATUSES[project?.status] || "Ativo"}${project?.archived ? " · arquivado" : ""}`;
+    show(project?.name || "Projeto", `Situação: ${situation}`, tabs, active);
+    crumbCurrent.textContent = project?.name || "Projeto";
+  }
+  function openProjectTab(name) {
+    const definition = externalTab(name);
+    if (definition) return goExternal(definition);
+    const section = projectSections().find(([key, , render, allowed]) => key === name && render && allowed());
+    if (section) return go(section[0], section[2]);
+    const overview = externalTab("overview");
+    return overview ? goExternal(overview) : go("context", renderProject);
   }
   async function refreshProject(request) { project = await request("projects", "GET", `/projects/${project.id}`); return project; }
   function renderProject() { projectNavigation("context"); return run(async request => {
     await refreshProject(request); projectNavigation("context");
-    const panel = section("Contexto do projeto", project.description);
+    const panel = section("Planejamento do projeto", project.description);
     panel.append(details({ "Objetivo": project.objective, "Situação": `${PROJECT_STATUSES[project.status] || "Ativo"}${project.archived ? " · arquivado" : ""}`,
       "Orçamento": project.budget_amount !== null && project.budget_amount !== undefined ? `${project.budget_currency || "BRL"} ${project.budget_amount}` : "Não informado",
       "Etiquetas": project.tags?.join(", "), "Stack": project.technology_stack?.join(", "), "Início previsto": project.planned_start, "Término previsto": project.planned_end }));
@@ -372,7 +444,7 @@ export function createWorkspaceController({ clients, account, session, getIdenti
           await req("projects", "DELETE", `/projects/${project.id}`); clear(); onBack({ deleted: true });
         }); }));
     }
-    panel.append(action("Atualizar contexto", () => go("context", renderProject))); content.replaceChildren(panel);
+    panel.append(action("Atualizar planejamento", () => go("context", renderProject))); content.replaceChildren(panel);
   }); }
   function renderProjectHistory(offset = 0) { projectNavigation("history"); return run(async request => {
     const page = await request("projects", "GET", `/projects/${project.id}/history?limit=20&offset=${offset}`);
@@ -469,7 +541,8 @@ export function createWorkspaceController({ clients, account, session, getIdenti
     for (const [state, label] of Object.entries(ITEM_STATUSES)) {
       const column = el("section", null, { class: "board-column", "aria-label": label });
       const group = Array.isArray(columns) ? columns.find(entry => entry.status === state)?.items || [] : columns[state] || [];
-      column.append(el("h3", `${label} · ${group.length}`));
+      const title = el("h3", label); title.append(" ", el("span", String(group.length), { class: "board-count", "aria-label": `${group.length} ${group.length === 1 ? "item" : "itens"}` }));
+      column.append(title);
       column.addEventListener("dragover", event => { if (canWrite("backlog:update_status")) event.preventDefault(); });
       column.addEventListener("drop", event => {
         event.preventDefault(); const id = event.dataTransfer.getData("text/plain");
@@ -477,7 +550,7 @@ export function createWorkspaceController({ clients, account, session, getIdenti
         if (item && canWrite("backlog:update_status") && item.status !== state) changeItemStatus(item, state);
       });
       for (const item of group) {
-        const row = el("article", null, { class: "board-item" });
+        const row = el("article", null, { class: "board-item", "data-moscow": item.moscow_priority || "none", "data-kind": item.kind || "story" });
         row.draggable = canWrite("backlog:update_status") || canWrite("backlog:reorder");
         row.addEventListener("dragstart", event => event.dataTransfer.setData("text/plain", item.id));
         row.addEventListener("dragover", event => { if (canWrite("backlog:reorder")) event.preventDefault(); });
@@ -489,7 +562,9 @@ export function createWorkspaceController({ clients, account, session, getIdenti
           if (source.status !== item.status) { if (canWrite("backlog:update_status")) changeItemStatus(source, item.status); }
           else reorderBefore(source.id, item.id);
         });
-        row.append(action(item.title, () => openItem(item)), el("p", `${ITEM_KINDS[item.kind] || "História"} · ${MOSCOW[item.moscow_priority] || "MoSCoW não definida"}`, { class: "field-hint" }));
+        const tags = el("p", null, { class: "board-tags" });
+        tags.append(el("span", ITEM_KINDS[item.kind] || "História", { class: "board-tag" }), el("span", MOSCOW[item.moscow_priority] || "MoSCoW não definida", { class: "board-tag board-moscow" }));
+        row.append(action(item.title, () => openItem(item)), tags);
         if (item.is_blocked) row.append(el("p", `Bloqueado: ${item.blocked_reason}`, { class: "board-blocked" }));
         const pending = data.unresolved_dependencies?.[item.id] || [];
         if (pending.length) row.append(el("p", `${pending.length} dependência(s) ainda não concluída(s).`, { class: "field-hint" }));
@@ -786,15 +861,23 @@ export function createWorkspaceController({ clients, account, session, getIdenti
 
   function enter(nextMode) {
     invalidate(); mode = nextMode; tab = ""; selectedTeam = selectedItem = null; status(); root.hidden = false;
-    back.textContent = nextMode === "project" ? "Voltar para projetos" : "Voltar para minha conta";
-    back.setAttribute("aria-label", back.textContent); onEnter();
+    root.dataset.mode = nextMode;
+    crumbs.hidden = nextMode !== "project"; onEnter(); onNavigate(nextMode, "", project);
   }
   return {
     clear,
+    notify(text) { status(text); },
+    showProjectTab(name) { if (mode === "project" && project && !root.hidden) return openProjectTab(name); },
+    currentProject() { return mode === "project" && !root.hidden ? project : null; },
+    updateProject(value) {
+      if (mode !== "project" || !project || value?.id !== project.id) return;
+      project = { ...project, ...value };
+      if (!root.hidden) projectNavigation(tab);
+    },
     openSecurity() { project = null; enter("security"); const result = renderSessions(); heading.focus(); return result; },
     openTeams() { project = null; enter("teams"); const result = renderTeams(); heading.focus(); return result; },
     openNotifications() { project = null; enter("notifications"); const result = renderNotifications(); heading.focus(); return result; },
     openAdmin() { if (!getIdentity()?.is_admin) return; project = null; enter("admin"); const result = renderAdmin(); heading.focus(); return result; },
-    openProject(value, initial = "context") { project = value; itemQuery = {}; enter("project"); const result = initial === "board" ? renderBoard() : renderProject(); heading.focus(); return result; },
+    openProject(value, initial = "overview") { project = value; itemQuery = {}; enter("project"); const result = openProjectTab(initial); heading.focus(); return result; },
   };
 }

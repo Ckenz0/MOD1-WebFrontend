@@ -82,7 +82,7 @@ class Module4RealApiTests(real.BacklogRealApiTests):
         self.page.goto(self.base_url); self.sign_in('module4@example.com')
         self.page.get_by_role('button', name='Meus projetos', exact=True).click()
         self.page.get_by_role('button', name='Revisão local de código', exact=True).click()
-        self.page.get_by_role('button', name='Gerenciar projeto e planejamento', exact=True).click()
+        self.page.get_by_role('button', name='Planejamento', exact=True).click()
         self.page.get_by_role('button', name='Quadro e itens', exact=True).click()
         self.page.get_by_role('table', name='Itens do projeto').get_by_role('button', name='Revisar função Python', exact=True).click()
         self.page.get_by_role('button', name='Revisões de código', exact=True).click()

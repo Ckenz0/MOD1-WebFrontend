@@ -40,6 +40,8 @@ export function form(prefix, descriptors, submitLabel, onSubmit, { secondaryLabe
       if (type === "multiselect") input.multiple = true;
       const entries = Array.isArray(options) ? options.map(item => typeof item === "string" ? [item, item] : [item.value, item.label]) : Object.entries(options);
       for (const [key, caption] of entries) input.append(el("option", caption, { value: key }));
+      // A multi-select shows its choices without inner scrolling (up to six rows).
+      if (type === "multiselect") input.size = Math.min(Math.max(entries.length, 2), 6);
     } else input = el("input", null, { type });
     input.id = id; input.name = name; input.required = required;
     if (type === "checkbox") input.checked = Boolean(value);

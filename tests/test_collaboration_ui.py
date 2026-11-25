@@ -255,7 +255,7 @@ class CollaborationUiTests(BrowserCase):
         expect(self.page.locator('#project-invite-form')).to_be_hidden()
         expect(self.page.get_by_role('button', name='Editar projeto', exact=True)).to_be_hidden()
         self.assertEqual(self.page.get_by_role('button', name='Editar acessos de ' + OTHER, exact=True).count(), 0)
-        self.page.get_by_role('button', name='Fechar membros', exact=True).click()
+        self.page.get_by_role('button', name='Visão geral', exact=True).click()
         self.page.get_by_role('button', name='Membros e papéis', exact=True).click()
         expect(self.page.locator('#members-list')).to_contain_text(OTHER)
         expect(self.page.locator('#project-invite-form')).to_be_hidden()

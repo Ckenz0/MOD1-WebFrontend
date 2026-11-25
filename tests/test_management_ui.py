@@ -106,20 +106,23 @@ class ManagementUiTests(BrowserCase):
         self.page.get_by_role('button', name='Editar projeto', exact=True).click()
         self.page.get_by_label('Nome do projeto para edição', exact=True).fill('Descartar rascunho')
         self.page.get_by_role('button', name='Cancelar edição do projeto', exact=True).click()
-        expect(self.page.locator('#project-detail-title')).to_have_text(PROJECT['name'])
+        expect(self.page.locator('#project-edit-form')).to_be_hidden()
+        expect(self.page.locator('#workspace-title')).to_have_text(PROJECT['name'])
         self.assertEqual(self.writes, [])
         self.page.get_by_role('button', name='Editar projeto', exact=True).click()
         self.page.get_by_label('Nome do projeto para edição', exact=True).fill('  Projeto revisado  ')
         self.page.get_by_label('Descrição do projeto para edição', exact=True).fill('<b>texto literal</b>')
         self.page.get_by_label('Objetivo do projeto para edição', exact=True).fill('Entregar valor verificável')
         self.page.get_by_role('button', name='Salvar projeto', exact=True).click()
-        expect(self.page.locator('#projects-status')).to_contain_text('Projeto atualizado')
+        expect(self.page.locator('#project-detail-status')).to_contain_text('Projeto atualizado')
         expect(self.page.locator('#project-detail-objective')).to_have_text('Entregar valor verificável')
+        expect(self.page.locator('#workspace-title')).to_have_text('Projeto revisado')
         self.assertEqual(self.writes[-1], ('project', {
             'name': 'Projeto revisado', 'description': '<b>texto literal</b>',
             'objective': 'Entregar valor verificável'
         }))
         self.assertEqual(self.page.locator('#project-detail-description b').count(), 0)
+        self.page.locator('.breadcrumb').get_by_role('link', name='Projetos', exact=True).click()
         self.page.get_by_label('Buscar projetos pelo nome', exact=True).fill('inexistente')
         self.page.get_by_role('button', name='Buscar projetos', exact=True).click()
         expect(self.page.locator('#projects-list')).to_contain_text('Nenhum projeto encontrado')
@@ -152,9 +155,9 @@ class ManagementUiTests(BrowserCase):
         self.page.get_by_label('Nome do projeto para edição', exact=True).fill('Rascunho importante')
         self.page.route('**/projects/' + PROJECT['id'], lambda r: r.fulfill(status=503))
         self.page.get_by_role('button', name='Salvar projeto', exact=True).click()
-        expect(self.page.locator('#projects-status')).to_contain_text('indisponível')
+        expect(self.page.locator('#project-detail-status')).to_contain_text('indisponível')
         expect(self.page.get_by_label('Nome do projeto para edição', exact=True)).to_have_value('Rascunho importante')
-        self.page.locator('#projects-logout').click()
+        self.page.locator('#logout-button').click()
         expect(self.page.locator('#project-edit-name')).to_have_value('')
 
     def test_client_contracts_include_edits_and_filter_parameters(self):
@@ -199,35 +202,40 @@ class ManagementUiTests(BrowserCase):
         expect(self.page.locator('#profile-view')).to_be_hidden()
         expect(self.page.locator('#current-password')).to_have_value('')
 
-    def test_saved_project_followed_by_reload_failure_confirms_write(self):
+    def test_saved_project_followed_by_list_failure_confirms_write(self):
         self.open_project()
         self.page.get_by_role('button', name='Editar projeto', exact=True).click()
         self.page.get_by_label('Nome do projeto para edição', exact=True).fill('Projeto confirmado')
         self.page.route('**/projects?*', lambda r: r.fulfill(status=503))
         self.page.get_by_role('button', name='Salvar projeto', exact=True).click()
-        expect(self.page.locator('#projects-status')).to_contain_text('Projeto atualizado. Atualize a lista')
-        expect(self.page.locator('#project-detail-title')).to_have_text('Projeto confirmado')
+        expect(self.page.locator('#project-detail-status')).to_contain_text('Projeto atualizado')
+        expect(self.page.locator('#workspace-title')).to_have_text('Projeto confirmado')
+        self.page.locator('.breadcrumb').get_by_role('link', name='Projetos', exact=True).click()
+        expect(self.page.locator('#projects-status')).to_contain_text('indisponível')
         self.assertEqual(len(self.writes), 1)
 
-    def test_saved_project_followed_by_reload_401_keeps_success_notice(self):
+    def test_saved_project_then_expired_list_ends_session_after_confirming_write(self):
         self.open_project()
         self.page.get_by_role('button', name='Editar projeto', exact=True).click()
         self.page.get_by_label('Nome do projeto para edição', exact=True).fill('Salvo antes do 401')
         self.page.route('**/projects?*', lambda r: r.fulfill(status=401))
         self.page.get_by_role('button', name='Salvar projeto', exact=True).click()
-        expect(self.page.locator('#login-message')).to_contain_text('Projeto atualizado')
-        expect(self.page.locator('#login-message')).to_contain_text('Sua sessão terminou')
+        expect(self.page.locator('#project-detail-status')).to_contain_text('Projeto atualizado')
         self.assertEqual(self.project['name'], 'Salvo antes do 401')
+        self.page.locator('.breadcrumb').get_by_role('link', name='Projetos', exact=True).click()
+        expect(self.page.locator('#login-message')).to_contain_text('Sua sessão terminou')
+        expect(self.page.locator('#app-sidebar')).to_be_hidden()
 
-    def test_refresh_failure_preserves_project_edit_draft(self):
+    def test_leaving_the_overview_discards_an_unsaved_project_draft_without_writing(self):
         self.open_project()
         self.page.get_by_role('button', name='Editar projeto', exact=True).click()
         self.page.get_by_label('Nome do projeto para edição', exact=True).fill('Rascunho sem salvar')
-        self.page.route('**/projects?*', lambda r: r.fulfill(status=503))
-        self.page.get_by_role('button', name='Atualizar projetos', exact=True).click()
-        expect(self.page.locator('#projects-status')).to_contain_text('indisponível')
-        expect(self.page.locator('#project-edit-form')).to_be_visible()
-        expect(self.page.locator('#project-edit-name')).to_have_value('Rascunho sem salvar')
+        self.page.get_by_role('button', name='Backlog', exact=True).click()
+        expect(self.page.locator('#backlog-view')).to_be_visible()
+        self.page.get_by_role('button', name='Visão geral', exact=True).click()
+        expect(self.page.locator('#project-edit-form')).to_be_hidden()
+        expect(self.page.locator('#workspace-title')).to_have_text(PROJECT['name'])
+        self.assertEqual(self.writes, [])
 
     def test_refresh_failure_preserves_story_edit_draft(self):
         self.open_project()

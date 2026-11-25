@@ -17,6 +17,9 @@ import { createFormValidation, emailError, loginPasswordError, nameError,
   newPasswordError, confirmationError } from "./validation.js";
 
 const byId = (id) => document.getElementById(id);
+// The shared platform bar (nav.js) mounts before this module; the skip link stays the first keyboard stop.
+const skipLink = document.querySelector(".skip-link");
+if (skipLink && document.body.firstElementChild !== skipLink) document.body.prepend(skipLink);
 const session = createSession();
 function preparation(...baseUrls) {
   if (!baseUrls.every(value => new URL(value).protocol === "https:")) return null;
@@ -55,9 +58,7 @@ try {
     getProject: (token, id, options) => projectsApi.get(token, id, options),
     getUserId: () => identity?.id,
     getToken: () => session.getRequestToken(), getSessionKey,
-    onOpenWorkspace: project => workspace.openProject(project, "board"),
     onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar."),
-    onBack: () => projects.open(),
   });
 } catch { backlogConfigurationFailed = true; }
 let projectsConfigurationFailed = false;
@@ -66,18 +67,11 @@ try {
     readiness: preparation(API_BASE_URL, PROJECTS_API_BASE_URL) }), { account, session });
   projects = createProjectsController({ api: projectsApi,
     getToken: () => session.getRequestToken(), getSessionKey,
-    onOpenWorkspace: project => workspace.openProject(project),
     getUserId: () => identity?.id,
     onUnauthorized: (notice = "") => endSession(notice + "Sua sessão terminou. Entre novamente para continuar."),
-    onBack: () => { byId("profile-view").hidden = false; byId("profile-title").focus(); },
-    onOpenBacklog: project => {
-      if (!checkExpiry()) return;
-      if (backlogConfigurationFailed) {
-        byId("projects-status").textContent = "O serviço de backlog não está configurado. Informe o responsável do módulo.";
-        byId("projects-status").hidden = false; return;
-      }
-      projects.close(); backlog.open(project);
-    },
+    onOpenProject: (project, notice) => openProject(project, "overview", notice),
+    onProjectChange: project => workspace.updateProject(project),
+    onShowList: () => openProjects(),
   });
 } catch { projectsConfigurationFailed = true; }
 const professionalProfile = createProfessionalProfile({ api: protectedApi, getToken: () => session.getRequestToken(), getSessionKey,
@@ -88,18 +82,145 @@ function hideMainViews() {
   professionalProfile.clear(); invitations.clear(); projects?.close(); backlog?.close();
   for (const id of ["login-view", "register-view", "profile-view"]) byId(id).hidden = true;
 }
+// Project page tabs owned by the projects and backlog screens; the workspace hosts them beside its own tabs.
+const projectTabs = [];
+if (projects) projectTabs.push({ name: "overview", label: "Visão geral", open: project => projects.openOverview(project), close: () => projects.closeOverview() });
+if (backlog) projectTabs.push({ name: "backlog", label: "Backlog", permission: "backlog:read", open: project => backlog.open(project), close: () => backlog.close() });
+if (projects) projectTabs.push({ name: "members", label: "Membros e papéis", permission: "project:members:read", open: project => projects.openMembers(project), close: () => projects.closeMembers() });
 const workspace = createWorkspaceController({ clients, account, session, getIdentity: () => identity,
-  onEnter: hideMainViews, onBack: project => {
-    if (project) { projects.open(); return; }
-    byId("profile-view").hidden = false; byId("profile-title").focus();
-  },
+  projectPanels: byId("project-panels"), projectTabs,
+  onEnter: hideMainViews, onBack: () => openProjects(),
+  onNavigate: (mode, tab, project) => syncWorkspaceRoute(mode, tab, project),
   onUnauthorized: () => endSession("Sua sessão terminou. Entre novamente para continuar.") });
 const publicAuth = createPublicAuthController({ client: clients.identity, account, onEnter: () => { workspace.clear(); hideMainViews(); },
-  onBack: () => endSession(), onIdentity: renderIdentity });
+  onBack: () => endSession(), onIdentity: user => { renderIdentity(user); routeAfterLogin(); } });
 byId("open-recovery").addEventListener("click", () => { if (!busy) publicAuth.openRecovery(); });
-for (const [id, open] of [["open-security", () => workspace.openSecurity()], ["open-teams", () => workspace.openTeams()], ["open-notifications", () => workspace.openNotifications()], ["open-admin", () => workspace.openAdmin()]]) {
-  byId(id).addEventListener("click", () => { if (identity && checkExpiry() && !busy) open(); });
+
+// Navigation: one address per screen so the sidebar, the breadcrumb and the browser's back button agree.
+const TAB_SLUGS = { overview: "visao-geral", backlog: "backlog", board: "quadro", members: "membros", roles: "papeis",
+  "project-teams": "equipes", context: "planejamento", curation: "curadoria", artifacts: "artefatos", history: "historico",
+  recommendations: "recomendacoes" };
+const SLUG_TABS = Object.fromEntries(Object.entries(TAB_SLUGS).map(([tab, slug]) => [slug, tab]));
+const MODE_ROUTES = { security: "#/seguranca", teams: "#/equipes", notifications: "#/notificacoes", admin: "#/administracao" };
+const knownProjects = new Map();
+let currentRoute = "", replaceRoute = false;
+const sidebar = byId("app-sidebar"), sidebarToggle = byId("sidebar-toggle");
+function markSidebar(path) {
+  const section = path.replace(/^#\/?/, "").split("/")[0] || "inicio";
+  for (const link of sidebar.querySelectorAll(".sidebar-links a")) {
+    if (link.dataset.route === section) link.setAttribute("aria-current", "page"); else link.removeAttribute("aria-current");
+  }
+  byId("sidebar-current").textContent = sidebar.querySelector(`.sidebar-links a[data-route="${section}"]`)?.textContent || "";
 }
+function setRoute(path) {
+  currentRoute = path; markSidebar(path);
+  if (location.hash !== path) history[replaceRoute ? "replaceState" : "pushState"](null, "", path);
+}
+function clearRoute() {
+  currentRoute = ""; markSidebar("");
+  if (location.hash) history.replaceState(null, "", location.pathname + location.search);
+}
+function showHome() {
+  if (!identity) return;
+  workspace.clear(); projects?.close(); backlog?.close();
+  byId("profile-view").hidden = false; byId("profile-title").focus();
+  setRoute("#/inicio");
+}
+function openProjects() {
+  if (!identity || !checkExpiry()) return;
+  if (projectsConfigurationFailed) {
+    showHome(); message("profile", "O serviço de projetos não está configurado. Informe o responsável do módulo."); return;
+  }
+  workspace.clear(); hideMainViews(); clearPasswordChange();
+  setRoute("#/projetos");
+  return projects.open();
+}
+function openProject(project, tab = "overview", notice = "") {
+  if (!identity || !checkExpiry()) return;
+  knownProjects.set(project.id, project);
+  const result = workspace.currentProject()?.id === project.id ? workspace.showProjectTab(tab) : workspace.openProject(project, tab);
+  if (notice) workspace.notify(notice);
+  return result;
+}
+function syncWorkspaceRoute(mode, tab, project) {
+  if (mode === "project" && project) {
+    knownProjects.set(project.id, project);
+    if (TAB_SLUGS[tab]) setRoute(`#/projetos/${project.id}/${TAB_SLUGS[tab]}`);
+  } else if (MODE_ROUTES[mode]) setRoute(MODE_ROUTES[mode]);
+}
+const ROUTES = {
+  inicio: () => showHome(),
+  projetos: () => openProjects(),
+  equipes: () => workspace.openTeams(),
+  notificacoes: () => workspace.openNotifications(),
+  seguranca: () => workspace.openSecurity(),
+  administracao: () => identity?.is_admin === true ? workspace.openAdmin() : showHome(),
+};
+function route(path, { fromHistory = false } = {}) {
+  if (!identity || busy || !checkExpiry()) return;
+  replaceRoute = fromHistory;
+  try {
+    const [section, id, slug] = path.replace(/^#\/?/, "").split("/");
+    if (section === "projetos" && id) {
+      const project = knownProjects.get(id);
+      return project ? openProject(project, SLUG_TABS[slug] || "overview") : openProjects();
+    }
+    return (ROUTES[section] || ROUTES.inicio)();
+  } finally { replaceRoute = false; }
+}
+function routeAfterLogin() {
+  const target = location.hash;
+  if (/^#\/(projetos|equipes|notificacoes|seguranca|administracao)$/.test(target)) { route(target, { fromHistory: true }); return; }
+  replaceRoute = true; setRoute("#/inicio"); replaceRoute = false;
+}
+function openMenu() {
+  sidebar.dataset.open = "true"; sidebarToggle.setAttribute("aria-expanded", "true");
+  byId("sidebar-close").focus();
+}
+function closeMenu(returnFocus = true) {
+  if (sidebar.dataset.open !== "true") return;
+  delete sidebar.dataset.open; sidebarToggle.setAttribute("aria-expanded", "false");
+  if (returnFocus) sidebarToggle.focus();
+}
+sidebarToggle.addEventListener("click", () => sidebar.dataset.open === "true" ? closeMenu() : openMenu());
+// Desktop rail: the sidebar can collapse to icons; the choice is remembered on this browser only.
+const collapse = byId("sidebar-collapse");
+function setCollapsed(value) {
+  document.body.classList.toggle("sidebar-collapsed", value);
+  collapse.setAttribute("aria-pressed", String(value));
+  collapse.setAttribute("aria-label", value ? "Expandir menu" : "Recolher menu");
+  collapse.querySelector(".sidebar-label").textContent = value ? "Expandir menu" : "Recolher menu";
+  // Icons alone need a visible name on hover; the accessible names never change.
+  for (const control of sidebar.querySelectorAll(".sidebar-links a, .sidebar-create, .sidebar-logout, .sidebar-collapse")) {
+    if (value) control.title = control.querySelector(".sidebar-label")?.textContent || ""; else control.removeAttribute("title");
+  }
+}
+let collapsedPreference = false;
+try { collapsedPreference = localStorage.getItem("mod1-sidebar") === "collapsed"; } catch { /* Works without storage. */ }
+setCollapsed(collapsedPreference);
+collapse.addEventListener("click", () => {
+  const value = !document.body.classList.contains("sidebar-collapsed"); setCollapsed(value);
+  try { localStorage.setItem("mod1-sidebar", value ? "collapsed" : "expanded"); } catch { /* Keep current-tab preference. */ }
+});
+byId("sidebar-new-project").addEventListener("click", async () => {
+  closeMenu(false);
+  if (!identity || busy) return;
+  await openProjects();
+  if (!byId("projects-view").hidden && !byId("project-name").disabled) byId("project-name").focus();
+});
+// Signed-in chrome: the sidebar frames the workspace; the theme button stays fixed in its corner.
+function setSignedInChrome(value) { document.body.classList.toggle("is-signed-in", value); }
+byId("sidebar-close").addEventListener("click", () => closeMenu());
+document.addEventListener("keydown", event => { if (event.key === "Escape") closeMenu(); });
+for (const link of sidebar.querySelectorAll(".sidebar-links a")) {
+  link.addEventListener("click", event => { event.preventDefault(); closeMenu(false); route(link.getAttribute("href")); });
+}
+// Public links (#verify-email=, #recovery=) are consumed first; only app addresses (#/...) are routed.
+function onAddressChange() {
+  if (publicAuth.consumeLink()) return;
+  if (identity && /^#\//.test(location.hash) && location.hash !== currentRoute) route(location.hash, { fromHistory: true });
+}
+window.addEventListener("popstate", onAddressChange);
 const loginValidation = createFormValidation("login-form", {
   email: emailError, password: loginPasswordError,
 });
@@ -259,6 +380,7 @@ function endSession(text = "", tone = "notice") {
   passwordHidden();
   setBusy(false, "login");
   byId("profile-view").hidden = true;
+  byId("app-sidebar").hidden = true; closeMenu(false); knownProjects.clear(); clearRoute(); setSignedInChrome(false);
   byId("login-view").hidden = false;
   message("profile");
   byId("profile-progress").textContent = "";
@@ -288,13 +410,16 @@ function renderIdentity(user) {
   backlog?.close();
   projects?.close();
   identity = user;
-  byId("open-admin").hidden = user.is_admin !== true;
+  const initials = user.display_name.trim().split(/\s+/).slice(0, 2).map((part) => Array.from(part)[0]).join("").toLocaleUpperCase("pt-BR");
+  byId("nav-admin").hidden = user.is_admin !== true;
+  byId("sidebar-name").textContent = user.display_name;
+  byId("sidebar-avatar").textContent = initials; byId("app-sidebar").hidden = false; setSignedInChrome(true);
   clearPasswordChange();
   byId("profile-title").textContent = `Olá, ${user.display_name}`;
   byId("profile-email").textContent = user.email;
   byId("profile-user-id").textContent = user.id;
   byId("profile-created").textContent = new Intl.DateTimeFormat("pt-BR", { dateStyle: "long" }).format(new Date(user.created_at));
-  byId("avatar").textContent = user.display_name.trim().split(/\s+/).slice(0, 2).map((part) => Array.from(part)[0]).join("").toLocaleUpperCase("pt-BR");
+  byId("avatar").textContent = initials;
   byId("login-view").hidden = true;
   byId("profile-view").hidden = false;
   byId("register-view").hidden = true;
@@ -327,6 +452,7 @@ byId("login-form").addEventListener("submit", async (event) => {
     passwordHidden();
     message("profile");
     byId("profile-title").focus();
+    routeAfterLogin();
   } catch (error) {
     if (current !== epoch) return;
     account.logout();
@@ -391,18 +517,9 @@ byId("password-change-form").addEventListener("submit", async event => {
   }
 });
 byId("logout-button").addEventListener("click", () => endSession("Você saiu da sua conta."));
-byId("projects-logout").addEventListener("click", () => endSession("Você saiu da sua conta."));
-byId("backlog-logout").addEventListener("click", () => endSession("Você saiu da sua conta."));
 byId("open-projects").addEventListener("click", () => {
   if (!checkExpiry() || busy || !identity) return;
-  if (projectsConfigurationFailed) {
-    message("profile", "O serviço de projetos não está configurado. Informe o responsável do módulo.");
-    return;
-  }
-  byId("profile-view").hidden = true;
-  professionalProfile.clear(); invitations.clear();
-  clearPasswordChange();
-  projects.open();
+  openProjects();
 });
 
 byId("register-form").addEventListener("submit", async (event) => {
@@ -475,7 +592,7 @@ async function foregroundActivity(event) {
 }
 document.addEventListener("pointerdown", foregroundActivity, { passive: true });
 document.addEventListener("keydown", foregroundActivity, { passive: true });
-window.addEventListener("hashchange", () => publicAuth.consumeLink());
+window.addEventListener("hashchange", onAddressChange);
 publicAuth.consumeLink();
 
 // Credentials stay inert until all handlers have initialized successfully.

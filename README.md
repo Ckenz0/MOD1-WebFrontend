@@ -64,6 +64,18 @@ esta interface demonstra o recorte local e permite reaproveitar clientes/tokens 
 
 ## Refinamento visual
 
+A barra comum da plataforma (`public/nav.js`, combinada entre os grupos) fica no
+topo e leva aos outros módulos; o Módulo 1 aparece como **Projetos**. Endereços e
+manutenção em [integração entre módulos](docs/integracao-outros-modulos.md).
+A entrada tem painel navy com o texto original de apresentação ao lado do formulário. Depois de
+entrar, um menu lateral fixo (folha de tela cheia no celular) leva a Início,
+Projetos, Equipes, Notificações e Segurança, com um único **Sair**. Cada projeto é
+uma página com trilha e abas (Visão geral, Backlog, Quadro e itens, Membros e
+papéis, Planejamento, Curadoria, Artefatos e as demais permitidas). Cada tela tem
+endereço próprio, então o voltar/avançar do navegador funciona. O visual segue um
+gerenciador de issues (inspirado no YouTrack) sem trocar a paleta navy, e o tema
+alterna pelo botão redondo no canto inferior direito.
+
 Entrada com contexto no desktop, conta com dados e atalhos separados e workspace
 com filtros, tabelas e quadro refinados. A identidade do módulo 6, as cores, Inter,
 as fontes locais e as camadas existentes foram preservadas, sem novas dependências

@@ -29,6 +29,29 @@ Bearer atual e `project:read`. A integração externa é configurada nesse backe
 | Projetos | https://mod1-projects.whitemeadow-deba1090.brazilsouth.azurecontainerapps.io |
 | Backlog | https://mod1-backlog.whitemeadow-deba1090.brazilsouth.azurecontainerapps.io |
 
+## Barra comum da plataforma — 25/11/2026
+
+A página do Módulo 1 carrega `public/nav.js`, o arquivo combinado entre os grupos,
+com `window.MODULO_ATUAL = 1`. A barra aparece no topo de todas as telas e leva aos
+outros front-ends; o Módulo 1 fica marcado com `aria-current="page"`.
+
+| Módulo | Rótulo | Endereço |
+| --- | --- | --- |
+| 1 | Projetos | `https://green-river-02e44e810.2.azurestaticapps.net/` |
+| 2 | GitHub Sync | `https://ai-platform-github-service-eduardo-frapb8fbbcd0bfdm.brazilsouth-01.azurewebsites.net/` |
+| 3 | Artefatos | `https://modulo3-fhgjdpa6d5bbfvff.canadacentral-01.azurewebsites.net/app/` |
+| 4 | Code Review | `https://revisor-codigo-ia-gio-ach9dbg3g9ekazf3.chilecentral-01.azurewebsites.net/` |
+| 5 | Curadoria | `https://frontmodulo5-ecaqg8fghzhyeuh2.brazilsouth-01.azurewebsites.net/` |
+| 6 | Notificações | ainda não informado (aparece desativado) |
+| 7 | MackAI | `https://mackai-conversas.calmfield-d7c6c49f.brazilsouth.azurecontainerapps.io/` |
+
+Para trocar um endereço, edite somente a lista `MODULOS` no arquivo e repasse a
+mudança aos outros grupos, que mantêm cópias próprias. A cópia deste repositório já
+inclui o endereço do Módulo 2, informado em 25/11/2026; a versão distribuída
+originalmente trazia `null`. O restante do arquivo segue sem alterações. Neste
+front-end, `app.js` apenas reposiciona o link "Ir para o conteúdo" antes da barra,
+para que ele continue sendo a primeira parada do teclado.
+
 ## Banco e compatibilidade — 23/11/2026
 
 O banco foi migrado do Neon para PostgreSQL exclusivo na Azure, restaurando o
