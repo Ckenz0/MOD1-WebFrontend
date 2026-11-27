@@ -17,17 +17,18 @@ class PlatformNavigationUiTests(BrowserCase):
         expect(self.nav).to_be_visible()
         current = self.nav.get_by_role('link', name='Projetos', exact=True)
         expect(current).to_have_attribute('aria-current', 'page')
-        for name in ['GitHub Sync', 'Artefatos', 'Code Review', 'Curadoria', 'MackAI']:
+        for name in ['GitHub Sync', 'Artefatos', 'Code Review', 'Curadoria', 'Notificações', 'MackAI']:
             link = self.nav.get_by_role('link', name=name, exact=True)
             expect(link).to_have_attribute('href', re.compile(r'^https://'))
             expect(link).not_to_have_attribute('aria-current', 'page')
-        self.assertEqual(self.nav.get_by_role('link').count(), 6)
+        self.assertEqual(self.nav.get_by_role('link').count(), 7)
 
-    def test_module_without_address_is_shown_disabled_not_as_a_broken_link(self):
-        disabled = self.nav.locator('.bm-off', has_text='Notificações')
-        expect(disabled).to_be_visible()
-        expect(disabled).to_have_attribute('title', 'Endereço ainda não informado')
-        expect(self.nav.get_by_role('link', name='Notificações')).to_have_count(0)
+    def test_notifications_links_to_the_announced_module6_frontend(self):
+        link = self.nav.get_by_role('link', name='Notificações', exact=True)
+        expect(link).to_be_visible()
+        expect(link).to_have_attribute(
+            'href', 'https://software6-web-eefaf6f8aqe0e8bz.canadacentral-01.azurewebsites.net/')
+        expect(self.nav.locator('.bm-off', has_text='Notificações')).to_have_count(0)
 
     def test_skip_link_stays_the_first_keyboard_stop_above_the_bar(self):
         expect(self.page.get_by_label('E-mail', exact=True)).to_be_enabled()

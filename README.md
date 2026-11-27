@@ -4,7 +4,7 @@ O frontend segue arquitetura multicamadas com apresentação, casos de uso,
 domínio e clientes HTTP separados. Componentes e fluxos reais estão em
 [Arquitetura](docs/architecture.md).
 
-## Recursos da versão 0.10.0
+## Recursos da versão 0.10.1
 
 Sessões persistentes no backend, renovação, bloqueio por tentativas, recuperação,
 confirmação de e-mail, MFA e administração global. Na conta, abra **Segurança e
@@ -54,7 +54,7 @@ limitado também pela expiração do vínculo. O Resend fica somente no backend 
 Identidade; envio a outros destinatários exige remetente/domínio autorizado.
 
 Criar conta, entrar, organizar projetos e acompanhar histórias priorizadas até a
-conclusão continua sendo o fluxo principal. Versão SemVer `0.10.0` em
+conclusão continua sendo o fluxo principal. Versão SemVer `0.10.1` em
 [VERSION](VERSION), com navegação lateral, páginas de projeto e curadoria. Alterações em
 [CHANGELOG.md](CHANGELOG.md). A versão no arquivo não comprova deploy.
 

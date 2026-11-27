@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.1 — endereço do Módulo 6, 27/11/2026
+
+- Ativa o link Notificações na barra comum com o frontend informado pelo Módulo 6.
+- Atualiza o guia de integração e a verificação do destino da navegação.
+
 ## 0.10.0 — navegação e refinamento visual, 25/11/2026
 
 - Barra comum dos módulos (`public/nav.js`, combinada entre os grupos) no topo de

@@ -42,7 +42,7 @@ outros front-ends; o Módulo 1 fica marcado com `aria-current="page"`.
 | 3 | Artefatos | `https://modulo3-fhgjdpa6d5bbfvff.canadacentral-01.azurewebsites.net/app/` |
 | 4 | Code Review | `https://revisor-codigo-ia-gio-ach9dbg3g9ekazf3.chilecentral-01.azurewebsites.net/` |
 | 5 | Curadoria | `https://frontmodulo5-ecaqg8fghzhyeuh2.brazilsouth-01.azurewebsites.net/` |
-| 6 | Notificações | ainda não informado (aparece desativado) |
+| 6 | Notificações | `https://software6-web-eefaf6f8aqe0e8bz.canadacentral-01.azurewebsites.net/` |
 | 7 | MackAI | `https://mackai-conversas.calmfield-d7c6c49f.brazilsouth.azurecontainerapps.io/` |
 
 Para trocar um endereço, edite somente a lista `MODULOS` no arquivo e repasse a

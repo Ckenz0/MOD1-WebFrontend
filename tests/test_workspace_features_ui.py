@@ -108,7 +108,7 @@ class WorkspaceFeaturesUiTests(BrowserCase):
             notification['read_at'] = '2026-10-30T12:01:00Z'
             route.fulfill(json=notification)
         self.page.route('**/notifications/44444444-4444-4444-8444-444444444444/read', mark)
-        self.page.get_by_role('link', name='Notificações', exact=True).click()
+        self.page.locator('#nav-notifications').click()
         expect(self.page.get_by_role('table', name='Minhas notificações')).to_contain_text('Equipe aprovada')
         self.page.get_by_role('button', name='Marcar como lida', exact=True).click()
         expect(self.page.locator('#workspace-status')).to_contain_text('Mensagem marcada como lida')
