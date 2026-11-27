@@ -91,6 +91,32 @@ class SessionReloadUiTests(BrowserCase):
         self.sign_in()
         expect(self.page.locator('#app-sidebar')).to_be_visible()
 
+    def test_mfa_challenge_is_not_persisted_as_a_session(self):
+        self.mock_auth(token={'mfa_required': True, 'challenge_token': 'private-challenge', 'expires_in': 300})
+        self.page.goto(self.base_url)
+        self.login()
+        expect(self.page.get_by_role('heading', name='Confirmar segundo fator')).to_be_visible()
+        self.assertIsNone(self.page.evaluate("sessionStorage.getItem('mod1-session-v1')"))
+        self.assertNotIn('private-challenge', self.page.evaluate('JSON.stringify(sessionStorage)'))
+
+    def test_recovery_link_takes_precedence_over_saved_login(self):
+        self.sign_in()
+        self.page.route('**/auth/me', lambda route: self.fail('Recovery must not restore the profile'))
+        self.page.goto(self.base_url + '/#recovery=private-recovery')
+        expect(self.page.get_by_role('heading', name='Definir nova senha')).to_be_visible()
+        expect(self.page.locator('#profile-view')).to_be_hidden()
+        self.assertNotIn('private-recovery', self.page.evaluate('JSON.stringify(sessionStorage)'))
+
+    def test_expired_access_without_refresh_is_discarded_on_reload(self):
+        self.page.clock.install()
+        self.sign_in(token={**self.token_response, 'expires_in': 30})
+        self.page.clock.set_system_time(self.page.evaluate('Date.now()+31000'))
+        self.page.route('**/auth/me', lambda route: self.fail('Expired credentials must not be restored'))
+        self.page.reload()
+        expect(self.page.get_by_role('button', name='Entrar', exact=True)).to_be_enabled()
+        expect(self.page.locator('#app-sidebar')).to_be_hidden()
+        self.assertIsNone(self.page.evaluate("sessionStorage.getItem('mod1-session-v1')"))
+
     def test_transient_identity_failure_preserves_saved_session_for_reload_retry(self):
         self.sign_in()
         self.page.route('**/auth/me', lambda route: route.fulfill(status=503))

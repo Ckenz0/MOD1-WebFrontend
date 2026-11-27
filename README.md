@@ -4,7 +4,7 @@ O frontend segue arquitetura multicamadas com apresentação, casos de uso,
 domínio e clientes HTTP separados. Componentes e fluxos reais estão em
 [Arquitetura](docs/architecture.md).
 
-## Recursos da versão 0.10.1
+## Recursos da versão 0.10.2
 
 Sessões persistentes no backend, renovação, bloqueio por tentativas, recuperação,
 confirmação de e-mail, MFA e administração global. Na conta, abra **Segurança e
@@ -41,7 +41,7 @@ Em **Membros e papéis**, gestores convidam e editam os papéis fixos e a expira
 do vínculo, ou removem integrantes. O proprietário permanece protegido.
 Desenvolvedor pode consultar o backlog e alterar somente status; PO/PM também
 refinam/criam. O servidor autoriza cada operação; 403 não encerra a sessão.
-Códigos e JWT ficam somente em memória e são limpos ao sair.
+Códigos de revisão ficam somente em memória. A sessão usa o `sessionStorage` da aba e é limpa ao sair.
 
 Atualizar acessos/histórias consulta as permissões atuais e remove controles
 revogados. Se o perfil não carregar, a edição permanece desativada e o botão
@@ -131,7 +131,12 @@ Para hospedagem, use HTTPS e CORS correspondente à origem publicada.
 O valor é tornar necessidades, critérios de entrega, prioridades e progresso visíveis,
 preservando dados e acesso por conta. [Resultados e capturas](docs/verification.md).
 
-JWT fica somente em memória; recarregar a página exige login. Só o tema pode persistir.
+O login sobrevive ao F5: tokens e prazos da sessão ficam no `sessionStorage` da aba,
+sem senha, identidade ou desafios MFA. Ao recarregar, a interface valida `/auth/me`
+antes de mostrar a conta e renova o acesso quando necessário. O F5 mantém os
+prazos originais de expiração e inatividade. Armazenamento bloqueado permite login
+na página atual, mas exige entrar novamente após recarregar. Preferências visuais
+continuam no `localStorage`; credenciais não são guardadas nele.
 Logout revoga a sessão no servidor e limpa imediatamente a aba. Troca/reset de
 senha revogam todas as sessões; consumidores consultam o estado online.
 Cadastro permite login imediato, com confirmação de e-mail disponível separadamente.

@@ -83,9 +83,18 @@ sequenceDiagram
     A-->>T: Identidade para renderização
 ```
 
-`session.js` depende somente do contrato puro de autenticação. JWT permanece
-em memória, sem persistência em localStorage/sessionStorage. Recarregar a página
-exige novo login. Apenas a preferência de tema persiste. Na versão 0.5.0,
+`session.js` depende somente do contrato puro de autenticação e de um armazenamento
+opcional injetado. Na versão 0.10.2, `app.js` injeta `session-storage.js`, adaptador
+que guarda tokens, identificador e prazos absolutos no `sessionStorage` da aba.
+O domínio continua sem acesso a APIs do navegador; clientes HTTP não acessam
+armazenamento. Senhas, identidade, desafios MFA e dados de projetos não são salvos.
+Ao recarregar, `account.currentUser()` renova o token se necessário e consulta
+`/auth/me` antes de renderizar a área autenticada. O reload não reinicia os prazos.
+Logout, expiração e rejeição da sessão removem a cópia salva. Dados inválidos são
+descartados; armazenamento indisponível mantém o funcionamento em memória. Falhas
+temporárias na restauração preservam a cópia para nova tentativa por reload, sem
+mostrar dados protegidos. Links públicos de recuperação/validação têm prioridade.
+Preferências visuais continuam no `localStorage`, sem credenciais. Na versão 0.5.0,
 `session-application.js` coordena renovação compartilhada e descarte de respostas
 tardias. Logout revoga a sessão no servidor; troca/reset de senha revogam todas
 as sessões. Projetos e Backlog verificam o estado online na Identidade, além da

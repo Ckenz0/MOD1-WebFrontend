@@ -15,6 +15,7 @@ DOMAIN = {
 }
 APPLICATION = {'account-application.js', 'workspace-application.js', 'session-application.js'}
 INFRASTRUCTURE = {'api.js', 'projects-api.js', 'backlog-api.js', 'service-readiness.js', 'platform-api.js', 'artifact-download.js'}
+STORAGE = {'session-storage.js'}
 PRESENTATION = {
     'validation.js', 'projects.js', 'backlog.js', 'collaboration.js', 'professional-profile.js',
     'workspace-controller.js', 'workspace-view.js', 'public-auth-controller.js', 'module4-view.js',
@@ -63,6 +64,11 @@ class LayerDependencyTests(unittest.TestCase):
                 violations.append(f'{filename} -> {dependency}')
         self.assertEqual(violations, [], 'Domain imports must remain inside the domain')
 
+    def test_storage_adapter_does_not_access_views_network_or_local_storage(self):
+        forbidden = {'document', 'window', 'fetch', 'XMLHttpRequest', 'localStorage'}
+        for filename in STORAGE:
+            self.assertEqual(browser_global_violations((SCRIPTS / filename).read_text(encoding='utf-8'), forbidden), [])
+
     def test_application_only_uses_injected_adapters_and_domain(self):
         for filename in APPLICATION:
             path = SCRIPTS / filename
@@ -72,7 +78,7 @@ class LayerDependencyTests(unittest.TestCase):
             self.assertLessEqual(dependencies, DOMAIN | APPLICATION)
 
     def test_infrastructure_cannot_import_screens(self):
-        for filename in INFRASTRUCTURE:
+        for filename in INFRASTRUCTURE | STORAGE:
             path = SCRIPTS / filename
             dependencies = {Path(name).name for name in IMPORT.findall(path.read_text(encoding='utf-8'))}
             self.assertFalse(dependencies & (PRESENTATION | {'app.js'}), filename)
@@ -83,6 +89,6 @@ class LayerDependencyTests(unittest.TestCase):
         for filename in PRESENTATION:
             dependencies = {Path(name).name for name in IMPORT.findall(
                 (SCRIPTS / filename).read_text(encoding='utf-8'))}
-            for dependency in dependencies & INFRASTRUCTURE:
+            for dependency in dependencies & (INFRASTRUCTURE | STORAGE):
                 violations.append(f'{filename} -> {dependency}')
         self.assertEqual(violations, [], 'Screens use injected clients and shared error types')
