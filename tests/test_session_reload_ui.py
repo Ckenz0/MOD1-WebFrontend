@@ -107,6 +107,20 @@ class SessionReloadUiTests(BrowserCase):
         expect(self.page.locator('#profile-view')).to_be_hidden()
         self.assertNotIn('private-recovery', self.page.evaluate('JSON.stringify(sessionStorage)'))
 
+    def test_public_link_during_restore_survives_late_identity_response(self):
+        self.sign_in()
+        pending = []
+        self.page.route('**/auth/me', lambda route: pending.append(route))
+        with self.page.expect_request('**/auth/me'):
+            self.page.reload()
+        self.page.evaluate("location.hash='recovery=private-recovery'")
+        expect(self.page.get_by_role('heading', name='Definir nova senha')).to_be_visible()
+        pending[0].fulfill(json=self.identity)
+        # The following event-loop round must not replace the public form with a profile.
+        self.page.wait_for_function("document.querySelector('#login-form').getAttribute('aria-busy') === 'false'")
+        expect(self.page.get_by_role('heading', name='Definir nova senha')).to_be_visible()
+        expect(self.page.locator('#profile-view')).to_be_hidden()
+
     def test_expired_access_without_refresh_is_discarded_on_reload(self):
         self.page.clock.install()
         self.sign_in(token={**self.token_response, 'expires_in': 30})
