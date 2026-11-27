@@ -37,6 +37,9 @@ class NavigationRegressionsUiTests(BrowserCase):
             route.fulfill(json=self.project)
 
     def sign_in(self, path=''):
+        # Each subcase requests a fresh login; navigation now preserves the session.
+        if self.page.url.startswith(self.base_url):
+            self.page.evaluate("sessionStorage.removeItem('mod1-session-v1')")
         self.page.goto(self.base_url + '/' + path)
         self.login()
 

@@ -1,6 +1,6 @@
 import { isTokenResponse } from "./auth-domain.js";
 
-export function createSession({ now = Date.now } = {}) {
+export function createSession({ now = Date.now, store = null } = {}) {
   let token = null;
   let expiresAt = 0;
   let refreshToken = null, sessionId = null;
@@ -11,6 +11,33 @@ export function createSession({ now = Date.now } = {}) {
     expiresAt = 0;
     refreshToken = sessionId = null;
     idleExpiresAt = absoluteExpiresAt = Infinity;
+    store?.clear();
+  }
+
+  function persist() {
+    store?.save({ version: 1, token, refreshToken, sessionId, accessExpiresAt: expiresAt,
+      idleExpiresAt: Number.isFinite(idleExpiresAt) ? idleExpiresAt : null,
+      absoluteExpiresAt: Number.isFinite(absoluteExpiresAt) ? absoluteExpiresAt : null });
+  }
+
+  function restore() {
+    const saved = store?.load();
+    if (saved === null || saved === undefined) return;
+    const credential = value => typeof value === "string" && value.trim().length > 0;
+    const timestamp = value => typeof value === "number" && Number.isFinite(value) && value >= 0;
+    const optionalDeadline = value => value === null || timestamp(value);
+    if (!saved || saved.version !== 1 || !credential(saved.token)
+        || !(saved.refreshToken === null || credential(saved.refreshToken))
+        || !(saved.sessionId === null || credential(saved.sessionId))
+        || !timestamp(saved.accessExpiresAt) || !optionalDeadline(saved.idleExpiresAt)
+        || !optionalDeadline(saved.absoluteExpiresAt)) { clear(); return; }
+    token = saved.token;
+    refreshToken = saved.refreshToken;
+    sessionId = saved.sessionId;
+    expiresAt = saved.accessExpiresAt;
+    absoluteExpiresAt = saved.absoluteExpiresAt === null ? Infinity : saved.absoluteExpiresAt;
+    idleExpiresAt = Math.min(saved.idleExpiresAt === null ? Infinity : saved.idleExpiresAt, absoluteExpiresAt);
+    isSessionAlive();
   }
 
   function isSessionAlive() {
@@ -29,6 +56,8 @@ export function createSession({ now = Date.now } = {}) {
     return parsed;
   }
 
+  restore();
+
   return {
     start(response) {
       if (!isTokenResponse(response)) throw new TypeError("Invalid authentication response");
@@ -42,6 +71,7 @@ export function createSession({ now = Date.now } = {}) {
       sessionId = response.session_id || null;
       absoluteExpiresAt = absolute;
       idleExpiresAt = Math.min(idle, absolute);
+      persist();
     },
     isActive,
     isSessionAlive,
@@ -55,6 +85,7 @@ export function createSession({ now = Date.now } = {}) {
       if (!isSessionAlive()) return;
       absoluteExpiresAt = Math.min(absoluteExpiresAt, deadline(response.absolute_expires_at));
       idleExpiresAt = Math.min(deadline(response.idle_expires_at), absoluteExpiresAt);
+      persist();
     },
     clear,
   };

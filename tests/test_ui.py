@@ -46,7 +46,8 @@ class UiTests(BrowserCase):
         self.login()
         expect(self.page.get_by_text('conta@example.com', exact=True)).to_be_visible()
         self.assertNotIn('synthetic-token', self.page.content())
-        self.assertEqual(self.page.evaluate('sessionStorage.length'), 0)
+        self.assertIsNotNone(self.page.evaluate("sessionStorage.getItem('mod1-session-v1')"))
+        self.assertNotIn('password12345', self.page.evaluate('JSON.stringify(sessionStorage)'))
         self.assertNotIn('synthetic-token', self.page.evaluate('JSON.stringify(localStorage)'))
         self.page.get_by_role('button', name='Sair', exact=True).click()
         expect(self.page.get_by_role('button', name='Entrar', exact=True)).to_be_visible()
@@ -184,14 +185,15 @@ class UiTests(BrowserCase):
             }''')
             self.assertGreaterEqual(contrast, 4.5, f'Selected text must be readable in {theme} theme')
 
-    def test_reload_loses_session_and_preserves_theme(self):
+    def test_reload_preserves_session_and_theme(self):
         self.mock_auth()
         self.page.goto(self.base_url)
         self.page.get_by_role('button', name='Ativar tema escuro').click()
         self.login()
         expect(self.page.get_by_text('conta@example.com', exact=True)).to_be_visible()
         self.page.reload()
-        expect(self.page.get_by_role('button', name='Entrar', exact=True)).to_be_visible()
+        expect(self.page.get_by_text('conta@example.com', exact=True)).to_be_visible()
+        expect(self.page.get_by_role('button', name='Sair', exact=True)).to_be_visible()
         self.assertEqual(self.page.locator('html').get_attribute('data-theme'), 'dark')
 
     def test_password_toggle_and_keyboard_submission(self):

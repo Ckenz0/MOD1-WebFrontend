@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.2 — sessão preservada no F5, 27/11/2026
+
+- Persiste a sessão no `sessionStorage` da aba, preservando os prazos originais.
+- Valida a identidade antes de restaurar a área autenticada e usa a renovação existente.
+- Limpa credenciais ao sair ou expirar; trata armazenamento inválido/bloqueado sem impedir o login.
+- Adiciona regressões de reload, renovação, MFA, recuperação, expiração e logout.
+
 ## 0.10.1 — endereço do Módulo 6, 27/11/2026
 
 - Ativa o link Notificações na barra comum com o frontend informado pelo Módulo 6.

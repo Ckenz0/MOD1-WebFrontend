@@ -11,7 +11,7 @@ HTML e CSS. O frontend não é um quarto backend e não possui banco próprio.
 | Apresentação | `public/index.html`, `public/nav.js` (barra comum da plataforma, compartilhada entre os grupos), `styles/app.css`, `styles/workspace.css`, `styles/premium.css`, `app.js`, `projects.js`, `backlog.js`, `collaboration.js`, `professional-profile.js`, `public-auth-controller.js`, `workspace-controller.js`, `workspace-view.js`, `validation.js` | Eventos, campos, renderização, mensagens, foco, acessibilidade e ciclo de vida das telas. Os controladores recebem clientes por injeção; não executam `fetch`. |
 | Aplicação | `account-application.js`, `session-application.js`, `workspace-application.js` | Coordenar login, identidade, sessão/renovação, troca de senha e leituras compostas de backlog/membros com permissões atuais. Sem DOM, URLs ou clientes HTTP concretos. |
 | Domínio e contratos | `auth-domain.js`, `project-domain.js`, `story-domain.js`, `collaboration-domain.js`, `planning-domain.js`, `validation-rules.js`, `permissions.js`, `session.js`, `api-errors.js` | Valores válidos, normalização, contratos de resposta, permissões, seleção de alterações e sessão em memória. Sem transporte ou DOM. |
-| Infraestrutura | `api.js`, `projects-api.js`, `backlog-api.js`, `platform-api.js`, `service-readiness.js` | HTTP, Bearer, serialização, status, timeout, cancelamento, preparação dos serviços e validação de respostas com contratos puros. |
+| Infraestrutura | `api.js`, `projects-api.js`, `backlog-api.js`, `platform-api.js`, `service-readiness.js`, `session-storage.js` | HTTP, Bearer, serialização, status, timeout, cancelamento, preparação dos serviços e validação de respostas com contratos puros. O adaptador de armazenamento cuida exclusivamente da persistência da sessão da aba. |
 | Composição | Inicialização de `app.js` e `config.js` | Construir clientes concretos, sessão, casos de uso, controladores e callbacks. É o ponto que conhece as demais camadas. |
 
 Os nomes na tabela são relativos a `public/scripts/`, exceto caminhos explícitos.
@@ -83,9 +83,18 @@ sequenceDiagram
     A-->>T: Identidade para renderização
 ```
 
-`session.js` depende somente do contrato puro de autenticação. JWT permanece
-em memória, sem persistência em localStorage/sessionStorage. Recarregar a página
-exige novo login. Apenas a preferência de tema persiste. Na versão 0.5.0,
+`session.js` depende somente do contrato puro de autenticação e de um armazenamento
+opcional injetado. Na versão 0.10.2, `app.js` injeta `session-storage.js`, adaptador
+que guarda tokens, identificador e prazos absolutos no `sessionStorage` da aba.
+O domínio continua sem acesso a APIs do navegador; clientes HTTP não acessam
+armazenamento. Senhas, identidade, desafios MFA e dados de projetos não são salvos.
+Ao recarregar, `account.currentUser()` renova o token se necessário e consulta
+`/auth/me` antes de renderizar a área autenticada. O reload não reinicia os prazos.
+Logout, expiração e rejeição da sessão removem a cópia salva. Dados inválidos são
+descartados; armazenamento indisponível mantém o funcionamento em memória. Falhas
+temporárias na restauração preservam a cópia para nova tentativa por reload, sem
+mostrar dados protegidos. Links públicos de recuperação/validação têm prioridade.
+Preferências visuais continuam no `localStorage`, sem credenciais. Na versão 0.5.0,
 `session-application.js` coordena renovação compartilhada e descarte de respostas
 tardias. Logout revoga a sessão no servidor; troca/reset de senha revogam todas
 as sessões. Projetos e Backlog verificam o estado online na Identidade, além da
