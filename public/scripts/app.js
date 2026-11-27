@@ -46,6 +46,7 @@ let epoch = 0;
 let controller = null;
 let identity = null;
 let busy = false;
+let restoringSession = false;
 let projects;
 let projectsApi;
 let backlog;
@@ -95,7 +96,14 @@ const workspace = createWorkspaceController({ clients, account, session, getIden
   onEnter: hideMainViews, onBack: () => openProjects(),
   onNavigate: (mode, tab, project) => syncWorkspaceRoute(mode, tab, project),
   onUnauthorized: () => endSession("Sua sessão terminou. Entre novamente para continuar.") });
-const publicAuth = createPublicAuthController({ client: clients.identity, account, onEnter: () => { workspace.clear(); hideMainViews(); },
+function cancelSessionRestore() {
+  if (!restoringSession) return;
+  restoringSession = false;
+  epoch += 1;
+  controller?.abort(); controller = null;
+  setBusy(false, "login");
+}
+const publicAuth = createPublicAuthController({ client: clients.identity, account, onEnter: () => { cancelSessionRestore(); workspace.clear(); hideMainViews(); },
   onBack: () => endSession(), onIdentity: user => { renderIdentity(user); routeAfterLogin(); } });
 byId("open-recovery").addEventListener("click", () => { if (!busy) publicAuth.openRecovery(); });
 
@@ -401,6 +409,7 @@ function endSession(text = "", tone = "notice") {
   controller?.abort();
   controller = null;
   account.logout();
+  restoringSession = false;
   identity = null;
   byId("profile-title").textContent = "";
   byId("profile-email").textContent = "";
@@ -640,6 +649,7 @@ byId("initialization-message").hidden = true;
 
 async function restoreSession() {
   if (publicAuthLink || !session.isSessionAlive()) return;
+  restoringSession = true;
   const current = ++epoch;
   controller = new AbortController();
   const { signal } = controller;
@@ -657,6 +667,7 @@ async function restoreSession() {
     else message("login", "Não foi possível restaurar sua sessão. Recarregue a página para tentar novamente ou entre na sua conta.");
   } finally {
     if (current === epoch) {
+      restoringSession = false;
       controller = null; setBusy(false, "login");
       if (restoreRoute) routeAfterLogin();
     }
